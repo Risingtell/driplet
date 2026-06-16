@@ -105,7 +105,7 @@ export default function Landing() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <a href="#how">See how it works</a>
+              <Link href="/watch/ada-live">Watch the live demo</Link>
             </Button>
           </div>
 
