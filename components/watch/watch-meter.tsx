@@ -7,11 +7,17 @@ import type { Stream } from "@/lib/streams";
 
 type Status = "idle" | "connecting" | "streaming" | "retrying";
 
+// How often (in paid seconds) the stream treasury pays the AI captions agent.
+// Kept short so the autonomous agent-to-agent payment is visible in a demo.
+const AGENT_PAY_EVERY = 20;
+
 export function WatchMeter({ stream }: { stream: Stream }) {
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
+  const [caption, setCaption] = useState<string | null>(null);
   const watchingRef = useRef(false);
+  const tickCountRef = useRef(0);
 
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
@@ -26,6 +32,16 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         setPaid((p) => p + parseFloat(j.amount));
         setSeconds((s) => s + 1);
         setStatus("streaming");
+        tickCountRef.current += 1;
+        // Periodically, the treasury autonomously pays the AI captions agent.
+        if (tickCountRef.current % AGENT_PAY_EVERY === 0) {
+          fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
+            .then((res) => res.json())
+            .then((aj) => {
+              if (aj?.caption) setCaption(aj.caption);
+            })
+            .catch(() => {});
+        }
       } else {
         setStatus("retrying");
       }
@@ -80,6 +96,14 @@ export function WatchMeter({ stream }: { stream: Stream }) {
                 style={{ left: `${left}%`, animationDelay: `${i * 0.55}s` }}
               />
             ))}
+          </div>
+        )}
+
+        {watching && caption && (
+          <div className="absolute inset-x-0 bottom-12 flex justify-center px-4">
+            <span className="max-w-[90%] rounded-md bg-black/60 px-3 py-1 text-center text-sm text-white backdrop-blur">
+              {caption}
+            </span>
           </div>
         )}
 

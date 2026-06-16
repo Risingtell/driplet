@@ -44,7 +44,10 @@ interface PaymentPayload {
   extensions?: Record<string, unknown>;
 }
 
-function buildPaymentRequirements(price: string) {
+function buildPaymentRequirements(
+  price: string,
+  payTo: `0x${string}` = sellerAddress,
+) {
   // Parse dollar amount to USDC atomic units (6 decimals)
   const amount = Math.round(parseFloat(price.replace("$", "")) * 1_000_000);
 
@@ -53,7 +56,7 @@ function buildPaymentRequirements(price: string) {
     network: ARC_TESTNET_NETWORK,
     asset: ARC_TESTNET_USDC,
     amount: amount.toString(),
-    payTo: sellerAddress,
+    payTo,
     // Circle Gateway requires the EIP-3009 authorization to be valid for at
     // least 7 days (604800s) in the future, plus a small buffer, or it rejects
     // with `authorization_validity_too_short`. The arc-nanopayments sample's
@@ -77,8 +80,9 @@ export function withGateway(
   handler: (req: NextRequest) => Promise<NextResponse>,
   price: string,
   endpoint: string,
+  payTo?: `0x${string}`,
 ) {
-  const requirements = buildPaymentRequirements(price);
+  const requirements = buildPaymentRequirements(price, payTo);
 
   return async (req: NextRequest) => {
     const paymentSignature = req.headers.get("payment-signature");

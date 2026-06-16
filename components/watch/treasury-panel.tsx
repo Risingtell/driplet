@@ -14,6 +14,8 @@ interface Payee {
 interface Treasury {
   total: number;
   count: number;
+  agentPaid: number;
+  agentCount: number;
   payees: Payee[];
 }
 
@@ -23,6 +25,8 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
   const [data, setData] = useState<Treasury>({
     total: 0,
     count: 0,
+    agentPaid: 0,
+    agentCount: 0,
     payees: stream.split.map((p) => ({ ...p, amount: 0 })),
   });
 
@@ -100,9 +104,21 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
         ))}
       </ul>
 
+      {/* autonomous agent outflow */}
+      <div className="mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3">
+        <span className="flex items-center gap-2 text-sm">
+          <span className="size-2 rounded-full bg-primary animate-live" />
+          <span className="font-medium">Autonomously paid AI Captions agent</span>
+        </span>
+        <span className="tabular font-mono text-sm">
+          ${data.agentPaid.toFixed(4)}
+          <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
+        </span>
+      </div>
+
       <p className="mt-4 text-xs text-muted-foreground">
-        The stream holds its own balance and splits each payment across its
-        people and the tools it runs — no platform in the middle.
+        The stream holds its own balance, splits each payment across its people,
+        and pays the AI agent it runs — agent-to-agent, no human in the loop.
       </p>
     </div>
   );

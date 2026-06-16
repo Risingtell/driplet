@@ -23,14 +23,18 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("payment_events")
-    .select("amount_usdc")
-    .eq("endpoint", streamEndpoint(slug));
+    .select("endpoint, amount_usdc")
+    .in("endpoint", [streamEndpoint(slug), "/agents/captions"]);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const total = (data ?? []).reduce(
+  const inflow = (data ?? []).filter((r) => r.endpoint === streamEndpoint(slug));
+  const agentRows = (data ?? []).filter((r) => r.endpoint === "/agents/captions");
+
+  const total = inflow.reduce((sum, row) => sum + parseFloat(row.amount_usdc), 0);
+  const agentPaid = agentRows.reduce(
     (sum, row) => sum + parseFloat(row.amount_usdc),
     0,
   );
@@ -42,5 +46,11 @@ export async function GET(
     amount: total * p.share,
   }));
 
-  return NextResponse.json({ total, count: data?.length ?? 0, payees });
+  return NextResponse.json({
+    total,
+    count: inflow.length,
+    agentPaid,
+    agentCount: agentRows.length,
+    payees,
+  });
 }
