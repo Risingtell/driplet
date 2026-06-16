@@ -19,7 +19,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -150,6 +152,11 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
+  const totalEarned = useMemo(
+    () => events.reduce((sum, e) => sum + parseFloat(e.amount_usdc || "0"), 0),
+    [events],
+  );
+
   function handleSort(field: SortField) {
     if (sortField === field) {
       const next = nextSortDirection(sortDirection);
@@ -240,11 +247,43 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Welcome back!</h1>
-        <p className="text-muted-foreground text-sm">
-          Monitor incoming nanopayments and manage withdrawals.
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Your earnings</h1>
+          <p className="text-muted-foreground text-sm">
+            Every second your audience watches, settled in USDC on Arc.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/watch/ada-live">Open your stream</Link>
+        </Button>
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <div className="glass rounded-2xl p-5">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Total earned
+          </p>
+          <p className="text-gradient tabular mt-2 font-mono text-3xl font-semibold leading-none">
+            ${totalEarned.toFixed(4)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/40 p-5">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Drips settled
+          </p>
+          <p className="tabular mt-2 font-mono text-3xl font-semibold leading-none">
+            {events.length.toLocaleString()}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/40 p-5">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Average per drip
+          </p>
+          <p className="tabular mt-2 font-mono text-3xl font-semibold leading-none">
+            ${events.length ? (totalEarned / events.length).toFixed(4) : "0.0000"}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 mb-4">
@@ -289,7 +328,7 @@ export default function Dashboard() {
         }}
       >
         <TabsList className="w-full">
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="payments">Earnings</TabsTrigger>
           <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
         </TabsList>
 
@@ -299,8 +338,8 @@ export default function Dashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Transaction</TableHead>
-                  <TableHead>Payer</TableHead>
-                  <TableHead>Endpoint</TableHead>
+                  <TableHead>Viewer</TableHead>
+                  <TableHead>Stream</TableHead>
                   <TableHead className="text-right">
                     <button
                       className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"

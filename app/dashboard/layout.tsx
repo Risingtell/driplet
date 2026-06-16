@@ -16,9 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import Link from "next/link";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { TopBarGatewayControls } from "@/components/dashboard/top-bar-gateway-controls";
+import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LogOut } from "lucide-react";
 
 export default function DashboardLayout({
@@ -28,14 +31,25 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b">
+      <header className="border-b border-border">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <TopBarGatewayControls />
-          <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit">
-              <LogOut size={16} className="text-muted-foreground" />
-            </Button>
-          </form>
+          <Link href="/">
+            <Logo />
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <TopBarGatewayControls />
+            <ThemeToggle />
+            <form action={logout}>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="submit"
+                aria-label="Log out"
+              >
+                <LogOut size={16} className="text-muted-foreground" />
+              </Button>
+            </form>
+          </div>
         </div>
       </header>
       <main className="flex-1 p-6">{children}</main>
