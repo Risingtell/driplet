@@ -22,19 +22,20 @@ export function proxy(request: NextRequest) {
   const session = request.cookies.get("session")?.value;
   const { pathname } = request.nextUrl;
 
-  // Logged-in user trying to access sign-in page -> redirect to dashboard
-  if (pathname === "/" && session === "authenticated") {
+  // Already signed in but hitting the login page -> go to the dashboard
+  if (pathname === "/login" && session === "authenticated") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Logged-out user trying to access protected routes -> redirect to sign-in
+  // Logged-out user trying to access protected routes -> send to login
   if (pathname.startsWith("/dashboard") && session !== "authenticated") {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*"],
+  // "/" is now the public landing page and intentionally left unguarded.
+  matcher: ["/login", "/dashboard/:path*"],
 };
