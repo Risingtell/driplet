@@ -16,7 +16,11 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
     try {
-      const r = await fetch("/api/watch/tick", { method: "POST" });
+      const r = await fetch("/api/watch/tick", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stream: stream.slug }),
+      });
       const j = await r.json();
       if (j.ok) {
         setPaid((p) => p + parseFloat(j.amount));
@@ -29,7 +33,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
       setStatus("retrying");
     }
     if (watchingRef.current) setTimeout(loop, 1000);
-  }, []);
+  }, [stream.slug]);
 
   const start = useCallback(() => {
     if (watchingRef.current) return;

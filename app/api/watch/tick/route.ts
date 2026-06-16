@@ -7,7 +7,9 @@ import { getViewerGateway, ensureFunded } from "@/lib/server-gateway";
  * The browser calls this once per second while the player is running.
  */
 export async function POST(req: NextRequest) {
-  const chargeUrl = `${new URL(req.url).origin}/api/watch/charge`;
+  const body = await req.json().catch(() => ({}) as { stream?: string });
+  const slug = (body as { stream?: string }).stream ?? "ada-live";
+  const chargeUrl = `${new URL(req.url).origin}/api/watch/${slug}/charge`;
   const gw = getViewerGateway();
 
   try {
