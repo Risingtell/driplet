@@ -1,0 +1,87 @@
+/**
+ * Copyright 2026 Circle Internet Group, Inc.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 255 16.47% 33.33%;
+  --card: 0 0% 100%;
+  --card-foreground: 255 16.47% 33.33%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 255 16.47% 33.33%;
+  --primary: 204.62 100% 38.24%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 100% 97.25%;
+  --secondary-foreground: 204.62 100% 38.24%;
+  --muted: 252 20% 95.1%;
+  --muted-foreground: 253.33 11.79% 44.9%;
+  --accent: 258 100% 96.08%;
+  --accent-foreground: 255 25.53% 18.43%;
+  --destructive: 353.92 83.15% 65.1%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 253.33 16.36% 89.22%;
+  --input: 253.33 16.36% 89.22%;
+  --ring: 204.1 100% 55.1%;
+  --chart-1: 204.1 100% 55.1%;
+  --chart-2: 259.15 100% 72.35%;
+  --chart-3: 150.98 75.41% 47.84%;
+  --chart-4: 21.9 100% 73.14%;
+  --chart-5: 294.95 88.43% 76.27%;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
