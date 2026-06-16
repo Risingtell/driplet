@@ -1,12 +1,46 @@
-/* Driplet design system — deep teal-ink dark theme with an aqua "liquid" accent.
- * Built on Tailwind v4 + shadcn token conventions.
+/* Driplet design system — aqua "liquid" identity with light + dark themes.
+ * Built on Tailwind v4 + shadcn token conventions; theme class toggled by next-themes.
  * (Base scaffolding adapted from Circle's arc-nanopayments sample, Apache-2.0.)
  */
 
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Light theme (default) ---- */
 :root {
+  color-scheme: light;
+
+  --background: 195 50% 99%;
+  --foreground: 200 45% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 45% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 45% 11%;
+  --primary: 190 92% 38%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 195 40% 94%;
+  --secondary-foreground: 200 45% 16%;
+  --muted: 196 30% 95%;
+  --muted-foreground: 200 12% 40%;
+  --accent: 190 70% 92%;
+  --accent-foreground: 192 92% 26%;
+  --destructive: 354 75% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 200 24% 88%;
+  --input: 200 24% 88%;
+  --ring: 190 92% 40%;
+  --chart-1: 190 92% 42%;
+  --chart-2: 199 89% 50%;
+  --chart-3: 165 75% 42%;
+  --chart-4: 210 90% 55%;
+  --chart-5: 250 75% 60%;
+  --radius: 0.75rem;
+}
+
+/* ---- Dark theme (deep teal-ink) ---- */
+.dark {
   color-scheme: dark;
 
   --background: 200 60% 4%;
@@ -33,7 +67,6 @@
   --chart-3: 165 80% 48%;
   --chart-4: 210 90% 62%;
   --chart-5: 250 80% 66%;
-  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -74,54 +107,68 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Subtle aqua glow pooled at the top, fading into the ink. */
+    /* Light: a soft aqua wash. */
+    background-image:
+      radial-gradient(60rem 40rem at 50% -10rem, hsl(187 92% 50% / 0.08), transparent 70%),
+      radial-gradient(40rem 30rem at 85% 5%, hsl(210 90% 55% / 0.05), transparent 70%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    /* Dark: a brighter aqua glow pooled in the ink. */
     background-image:
       radial-gradient(60rem 40rem at 50% -10rem, hsl(187 92% 50% / 0.12), transparent 70%),
       radial-gradient(40rem 30rem at 85% 5%, hsl(210 90% 55% / 0.08), transparent 70%);
-    background-attachment: fixed;
   }
 }
 
 /* ---- Brand utilities ---- */
 
-/* Aqua→blue gradient text for headlines and the live money counter. */
 .text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    hsl(190 90% 42%),
+    hsl(199 90% 45%) 45%,
+    hsl(165 80% 40%)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .text-gradient {
   background-image: linear-gradient(
     100deg,
     hsl(187 95% 62%),
     hsl(199 95% 60%) 45%,
     hsl(165 85% 55%)
   );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
-/* Glassy surface for elevated cards. */
 .glass {
-  background: linear-gradient(
-    180deg,
-    hsl(200 40% 10% / 0.7),
-    hsl(200 50% 6% / 0.6)
-  );
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.8), hsl(195 40% 98% / 0.6));
   backdrop-filter: blur(12px);
+  border: 1px solid hsl(200 24% 88% / 0.8);
+}
+.dark .glass {
+  background: linear-gradient(180deg, hsl(200 40% 10% / 0.7), hsl(200 50% 6% / 0.6));
   border: 1px solid hsl(187 60% 70% / 0.1);
 }
 
-/* Soft cyan halo behind key elements. */
 .drip-glow {
+  box-shadow:
+    0 0 0 1px hsl(187 92% 45% / 0.12),
+    0 18px 60px -16px hsl(187 92% 45% / 0.25);
+}
+.dark .drip-glow {
   box-shadow:
     0 0 0 1px hsl(187 92% 60% / 0.15),
     0 18px 60px -12px hsl(187 92% 50% / 0.35);
 }
 
-/* Tabular figures so the streaming counter doesn't jitter. */
 .tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* A single falling drip. */
 @keyframes drip-fall {
   0% { transform: translateY(-120%); opacity: 0; }
   20% { opacity: 1; }

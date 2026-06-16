@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,9 @@ export default function SignIn() {
       <Link href="/" className="absolute left-5 top-6">
         <Logo />
       </Link>
+      <div className="absolute right-5 top-5">
+        <ThemeToggle />
+      </div>
 
       <div className="glass drip-glow w-full max-w-sm rounded-2xl p-8">
         <h1 className="text-2xl font-semibold tracking-tight">
