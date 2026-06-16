@@ -125,14 +125,7 @@ export function withGateway(
 
       if (!verifyResult.isValid) {
         console.error(
-          `[x402][DEBUG] verify failed for ${endpoint}\n` +
-            `  invalidReason: ${verifyResult.invalidReason}\n` +
-            `  payload.network: ${JSON.stringify((paymentPayload as Record<string, unknown>).network)}\n` +
-            `  req.network: ${requirements.network}\n` +
-            `  req.asset: ${requirements.asset}\n` +
-            `  req.extra: ${JSON.stringify(requirements.extra)}\n` +
-            `  payload keys: ${JSON.stringify(Object.keys(paymentPayload))}\n` +
-            `  payload: ${JSON.stringify(paymentPayload).slice(0, 600)}`,
+          `[x402] verify failed for ${endpoint}: ${verifyResult.invalidReason} (network ${requirements.network})`,
         );
         return NextResponse.json(
           {
