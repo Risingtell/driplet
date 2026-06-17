@@ -4,7 +4,7 @@
 
 A creator goes live; viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own **autonomous on-chain treasury** that splits incoming drips in real time between the creator, collaborators, and the **AI agent it pays for its own captions** — money flows *in* from the audience and *out* to people and agents, with no platform in the middle.
 
-> Built for the **Lepton Agents Hackathon** (Canteen × Circle on Arc). Live demo: **https://driplet-vert.vercel.app**
+> Built for the **Lepton Agents Hackathon** (Canteen × Circle on Arc). Live demo: **https://trydriplet.vercel.app**
 
 ---
 
