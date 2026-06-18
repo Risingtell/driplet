@@ -33,7 +33,17 @@ export function LiveDrip() {
   return (
     <div className="glass drip-glow relative overflow-hidden rounded-2xl p-6">
       {/* faux video surface */}
-      <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl bg-[radial-gradient(120%_120%_at_50%_0%,hsl(199_89%_22%),hsl(200_60%_6%))]">
+      <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl bg-black">
+        <video
+          className="absolute inset-0 size-full object-cover"
+          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/40" />
+
         <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-destructive/90 px-2 py-1 text-xs font-semibold text-white">
           <span className="size-1.5 rounded-full bg-white animate-live" />
           LIVE

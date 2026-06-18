@@ -19,6 +19,7 @@ export interface Stream {
   creator: string;
   location: string;
   ratePerSecond: number; // USDC charged per second watched
+  videoUrl: string; // the live feed shown in the player (swap for a real creator clip later)
   split: Payee[];
 }
 
@@ -29,6 +30,8 @@ export const streams: Stream[] = [
     creator: "Ada",
     location: "Kano, Nigeria",
     ratePerSecond: 0.0003,
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
     split: [
       { name: "Ada", role: "Creator", share: 0.7 },
       { name: "Bode", role: "Co-host", share: 0.2 },
