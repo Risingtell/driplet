@@ -21,23 +21,33 @@ export async function GET(
     return NextResponse.json({ error: "Unknown stream" }, { status: 404 });
   }
 
-  const { data, error } = await supabase
-    .from("payment_events")
-    .select("endpoint, amount_usdc")
-    .in("endpoint", [streamEndpoint(slug), "/agents/captions"]);
+  // Count exact rows (uncapped) instead of fetching them — payments are a fixed
+  // price per call, so totals are count x price. This stays accurate past the
+  // REST 1000-row page limit.
+  const AGENT_PRICE = 0.005;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const [watch, agent] = await Promise.all([
+    supabase
+      .from("payment_events")
+      .select("id", { count: "exact", head: true })
+      .eq("endpoint", streamEndpoint(slug)),
+    supabase
+      .from("payment_events")
+      .select("id", { count: "exact", head: true })
+      .eq("endpoint", "/agents/captions"),
+  ]);
+
+  if (watch.error || agent.error) {
+    return NextResponse.json(
+      { error: (watch.error ?? agent.error)!.message },
+      { status: 500 },
+    );
   }
 
-  const inflow = (data ?? []).filter((r) => r.endpoint === streamEndpoint(slug));
-  const agentRows = (data ?? []).filter((r) => r.endpoint === "/agents/captions");
-
-  const total = inflow.reduce((sum, row) => sum + parseFloat(row.amount_usdc), 0);
-  const agentPaid = agentRows.reduce(
-    (sum, row) => sum + parseFloat(row.amount_usdc),
-    0,
-  );
+  const count = watch.count ?? 0;
+  const agentCount = agent.count ?? 0;
+  const total = count * stream.ratePerSecond;
+  const agentPaid = agentCount * AGENT_PRICE;
 
   const payees = stream.split.map((p) => ({
     name: p.name,
@@ -46,11 +56,5 @@ export async function GET(
     amount: total * p.share,
   }));
 
-  return NextResponse.json({
-    total,
-    count: inflow.length,
-    agentPaid,
-    agentCount: agentRows.length,
-    payees,
-  });
+  return NextResponse.json({ total, count, agentPaid, agentCount, payees });
 }
