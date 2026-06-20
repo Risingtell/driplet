@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCreatorGateway, ensureCreatorFunded } from "@/lib/server-gateway";
 
+// The treasury may top up before paying the agent; allow headroom.
+export const maxDuration = 60;
+
 /**
  * Autonomous agent-to-agent payment: the stream treasury (creator wallet) pays
  * the live-captions AI agent for a minute of work, out of its own earnings —

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getViewerGateway, ensureFunded } from "@/lib/server-gateway";
 
+// A tick may need to top up the Gateway balance (deposit + wait for it to be
+// credited), which can take longer than the default serverless limit. Give it
+// room so a real viewer's payment never gets cut off mid-settlement.
+export const maxDuration = 60;
+
 /**
  * One "second" of watching: the viewer wallet pays a single sub-cent
  * nanopayment to the creator's per-second charge endpoint via Circle Gateway.
