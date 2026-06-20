@@ -10,7 +10,7 @@ Refresh the traction numbers right before submitting (live values are at
 ## Links
 - **Live app:** https://trydriplet.vercel.app
 - **Source code:** https://github.com/Risingtell/driplet
-- **Demo video:** <paste your YouTube Unlisted / Loom link>
+- **Demo video:** https://youtu.be/O2HQRyAxLY0
 - **Try it:** open https://trydriplet.vercel.app/watch/ada-live and just watch — you'll
   see real per-second USDC payments settle on Arc. Creator view:
   /dashboard (login `admin@example.com` / `123456`).
