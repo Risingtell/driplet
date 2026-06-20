@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
+import { ConnectArc } from "@/components/wallet/connect-arc";
 
 export default function WatchPage({
   params,
@@ -18,7 +19,10 @@ export default function WatchPage({
         <Link href="/">
           <Logo />
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <ConnectArc />
+          <ThemeToggle />
+        </div>
       </header>
 
       <Suspense fallback={<WatchSkeleton />}>
