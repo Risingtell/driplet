@@ -9,6 +9,7 @@ Refresh the traction numbers right before submitting (live values are at
 
 ## Links
 - **Live app:** https://trydriplet.vercel.app
+- **Live proof feed (verify traction in real time):** https://trydriplet.vercel.app/impact
 - **Source code:** https://github.com/Risingtell/driplet
 - **Demo video:** https://youtu.be/O2HQRyAxLY0
 - **Try it:** open https://trydriplet.vercel.app/watch/ada-live and just watch — you'll
@@ -58,10 +59,12 @@ automatic, and the AI agent is a first-class economic participant, not a feature
 ## Traction (real people, real on-chain payments)
 Driplet is **already in front of real users.** I shared it into real WhatsApp creator
 communities in Kano and people used it. Live, on-chain, on Arc testnet:
-- **6,499** real per-second watch-payments (≈108 minutes streamed and paid for)
-- **321** autonomous payments to the AI agent
-- **~$1.95** streamed end-to-end (creator + co-host + agent), split correctly 70/20/10
+- **10,730+** real per-second watch-payments (~179 minutes streamed and paid for)
+- **529** autonomous payments to the AI agent
+- **~$3.22** streamed end-to-end (creator + co-host + agent), split correctly 70/20/10
 - **0% failed payments**
+- **Verify it live:** https://trydriplet.vercel.app/impact streams every settlement with
+  its Circle Gateway settlement id, updating in real time — open it and watch traction land.
 - Visitor analytics via Vercel Web Analytics (the on-chain count can't dedupe people
   because payments come from a shared demo viewer wallet).
 
