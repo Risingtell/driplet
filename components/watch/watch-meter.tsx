@@ -33,7 +33,9 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         setSeconds((s) => s + 1);
         setStatus("streaming");
         tickCountRef.current += 1;
-        // Periodically, the treasury autonomously pays the AI captions agent.
+        // Periodically, the treasury autonomously (a) pays the AI captions agent
+        // and (b) splits the interval's income out to each human payee's own
+        // wallet on Arc — money flows out, not just in.
         if (tickCountRef.current % AGENT_PAY_EVERY === 0) {
           fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
             .then((res) => res.json())
@@ -41,6 +43,11 @@ export function WatchMeter({ stream }: { stream: Stream }) {
               if (aj?.caption) setCaption(aj.caption);
             })
             .catch(() => {});
+          fetch(`/api/streams/${stream.slug}/settle`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ seconds: AGENT_PAY_EVERY }),
+          }).catch(() => {});
         }
       } else {
         setStatus("retrying");

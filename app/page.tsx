@@ -75,7 +75,7 @@ export default function Landing() {
             <Link href="/login">Creator login</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/login">Start earning</Link>
+            <Link href="/go-live">Go live</Link>
           </Button>
         </div>
       </header>
@@ -100,8 +100,8 @@ export default function Landing() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
-              <Link href="/login">
-                Start earning <ArrowRight className="size-4" />
+              <Link href="/go-live">
+                Go live <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
@@ -205,8 +205,8 @@ export default function Landing() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button asChild size="lg">
-              <Link href="/login">
-                Start earning <ArrowRight className="size-4" />
+              <Link href="/go-live">
+                Go live <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>

@@ -11,6 +11,8 @@ export interface Payee {
   role: string;
   /** Share of every incoming drip, 0–1. Shares must sum to 1. */
   share: number;
+  /** Arc address this payee is paid out to (optional for in-code demo payees). */
+  address?: string;
 }
 
 export interface Stream {
@@ -47,4 +49,15 @@ export function getStream(slug: string): Stream | null {
 /** Stable endpoint label used to attribute settled payments to a stream. */
 export function streamEndpoint(slug: string): string {
   return `/watch/${slug}`;
+}
+
+/** Turn a stream title into a URL-safe slug with a short random suffix. */
+export function slugify(title: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const suffix = Math.random().toString(36).slice(2, 7);
+  return `${base || "stream"}-${suffix}`;
 }

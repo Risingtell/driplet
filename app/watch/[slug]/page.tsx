@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getStream } from "@/lib/streams";
+import { resolveStream } from "@/lib/streams-db";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WatchMeter } from "@/components/watch/watch-meter";
@@ -42,7 +42,7 @@ async function WatchContent({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const stream = getStream(slug);
+  const stream = await resolveStream(slug);
   if (!stream) notFound();
 
   return (

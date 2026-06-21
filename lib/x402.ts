@@ -27,7 +27,7 @@ const ARC_TESTNET_GATEWAY_WALLET = "0x0077777d7EBA4688BDeF3E311b846F25870A19B9";
 
 export const sellerAddress = process.env.SELLER_ADDRESS as `0x${string}`;
 
-const facilitator = new BatchFacilitatorClient({
+export const facilitator = new BatchFacilitatorClient({
   url: "https://gateway-api-testnet.circle.com",
 });
 
@@ -44,7 +44,7 @@ interface PaymentPayload {
   extensions?: Record<string, unknown>;
 }
 
-function buildPaymentRequirements(
+export function buildPaymentRequirements(
   price: string,
   payTo: `0x${string}` = sellerAddress,
 ) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getStream, streamEndpoint } from "@/lib/streams";
+import { streamEndpoint } from "@/lib/streams";
+import { resolveStream } from "@/lib/streams-db";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,7 @@ export async function GET(
   ctx: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await ctx.params;
-  const stream = getStream(slug);
+  const stream = await resolveStream(slug);
   if (!stream) {
     return NextResponse.json({ error: "Unknown stream" }, { status: 404 });
   }
@@ -54,6 +55,7 @@ export async function GET(
     role: p.role,
     share: p.share,
     amount: total * p.share,
+    address: p.address ?? null,
   }));
 
   return NextResponse.json({ total, count, agentPaid, agentCount, payees });

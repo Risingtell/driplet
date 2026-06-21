@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createStream } from "@/lib/streams-db";
+import { slugify, type Payee } from "@/lib/streams";
+
+const RATE_PER_SECOND = 0.0003; // fixed denomination for v1
+const isAddress = (a: unknown): a is string =>
+  typeof a === "string" && /^0x[0-9a-fA-F]{40}$/.test(a);
+
+interface Body {
+  title?: string;
+  creator?: string;
+  location?: string;
+  videoUrl?: string;
+  hostAddress?: string;
+  cohostName?: string;
+  cohostAddress?: string;
+  agentAddress?: string;
+}
+
+/**
+ * Create a creator stream. The host's connected wallet is the creator payout
+ * address; a co-host and the AI captions agent are optional payees. Returns the
+ * shareable slug. Splits default to 70/20/10 (host/co-host/agent), or 90/10
+ * (host/agent) when there is no co-host.
+ */
+export async function POST(req: NextRequest) {
+  const body = (await req.json().catch(() => ({}))) as Body;
+  const title = (body.title ?? "").trim();
+  const creator = (body.creator ?? "").trim();
+  const videoUrl = (body.videoUrl ?? "").trim();
+
+  if (!title || !creator || !videoUrl) {
+    return NextResponse.json(
+      { error: "title, creator and videoUrl are required" },
+      { status: 400 },
+    );
+  }
+  if (!isAddress(body.hostAddress)) {
+    return NextResponse.json(
+      { error: "Connect a wallet — a valid host payout address is required" },
+      { status: 400 },
+    );
+  }
+  if (!/^https?:\/\//.test(videoUrl)) {
+    return NextResponse.json({ error: "videoUrl must be an http(s) URL" }, { status: 400 });
+  }
+
+  const hasCohost = isAddress(body.cohostAddress);
+  const agentAddress = isAddress(body.agentAddress)
+    ? body.agentAddress
+    : process.env.CAPTIONS_AGENT_ADDRESS;
+
+  const split: Payee[] = [
+    {
+      name: creator,
+      role: "Creator",
+      share: hasCohost ? 0.7 : 0.9,
+      address: body.hostAddress,
+    },
+  ];
+  if (hasCohost) {
+    split.push({
+      name: (body.cohostName ?? "Co-host").trim() || "Co-host",
+      role: "Co-host",
+      share: 0.2,
+      address: body.cohostAddress,
+    });
+  }
+  split.push({
+    name: "AI Captions",
+    role: "Live captions agent",
+    share: 0.1,
+    ...(agentAddress ? { address: agentAddress } : {}),
+  });
+
+  // Generate a slug; retry once on the unlikely collision.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const slug = slugify(title);
+    try {
+      const stream = await createStream({
+        slug,
+        title,
+        creator,
+        location: (body.location ?? "").trim(),
+        videoUrl,
+        ratePerSecond: RATE_PER_SECOND,
+        split,
+      });
+      return NextResponse.json({ ok: true, slug: stream.slug, watchUrl: `/watch/${stream.slug}` });
+    } catch (e) {
+      if (attempt === 2) {
+        return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+      }
+    }
+  }
+  return NextResponse.json({ error: "could not create stream" }, { status: 500 });
+}

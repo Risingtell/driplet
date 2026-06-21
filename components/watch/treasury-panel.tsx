@@ -9,6 +9,7 @@ interface Payee {
   role: string;
   share: number;
   amount: number;
+  address?: string | null;
 }
 
 interface Treasury {
@@ -95,6 +96,11 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
               <span className="text-sm font-medium">{p.name}</span>
               <span className="text-xs text-muted-foreground">
                 {p.role} · {Math.round(p.share * 100)}%
+                {p.address ? (
+                  <span className="ml-1 font-mono">
+                    → {p.address.slice(0, 6)}…{p.address.slice(-4)}
+                  </span>
+                ) : null}
               </span>
             </span>
             <span className="tabular font-mono text-sm text-foreground/90">

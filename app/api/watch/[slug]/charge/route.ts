@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withGateway } from "@/lib/x402";
-import { getStream, streamEndpoint } from "@/lib/streams";
+import { streamEndpoint } from "@/lib/streams";
+import { resolveStream } from "@/lib/streams-db";
 
 // Settlement can include a Gateway top-up on the creator side; allow headroom.
 export const maxDuration = 60;
@@ -15,7 +16,7 @@ export async function GET(
   ctx: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await ctx.params;
-  const stream = getStream(slug);
+  const stream = await resolveStream(slug);
   if (!stream) {
     return NextResponse.json({ error: "Unknown stream" }, { status: 404 });
   }
