@@ -18,6 +18,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const [caption, setCaption] = useState<string | null>(null);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
@@ -62,12 +63,14 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     if (watchingRef.current) return;
     watchingRef.current = true;
     setStatus("connecting");
+    videoRef.current?.play().catch(() => {});
     loop();
   }, [loop]);
 
   const stop = useCallback(() => {
     watchingRef.current = false;
     setStatus("idle");
+    videoRef.current?.pause();
   }, []);
 
   const watching = status !== "idle";
@@ -86,11 +89,11 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     <div className="glass drip-glow overflow-hidden rounded-2xl p-5 sm:p-6">
       {/* video surface */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-        {/* The live feed itself. Always playing (muted loop); pressing Watch starts paying. */}
+        {/* The live feed. Plays while watching+paying; Stop pauses it too. */}
         <video
+          ref={videoRef}
           className="absolute inset-0 size-full object-cover"
           src={stream.videoUrl}
-          autoPlay
           muted
           loop
           playsInline
