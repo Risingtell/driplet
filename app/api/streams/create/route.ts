@@ -11,6 +11,7 @@ interface Body {
   creator?: string;
   location?: string;
   videoUrl?: string;
+  isLive?: boolean;
   hostAddress?: string;
   cohostName?: string;
   cohostAddress?: string;
@@ -28,10 +29,11 @@ export async function POST(req: NextRequest) {
   const title = (body.title ?? "").trim();
   const creator = (body.creator ?? "").trim();
   const videoUrl = (body.videoUrl ?? "").trim();
+  const isLive = !!body.isLive;
 
-  if (!title || !creator || !videoUrl) {
+  if (!title || !creator) {
     return NextResponse.json(
-      { error: "title, creator and videoUrl are required" },
+      { error: "title and creator are required" },
       { status: 400 },
     );
   }
@@ -41,8 +43,17 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  if (!/^https?:\/\//.test(videoUrl)) {
-    return NextResponse.json({ error: "videoUrl must be an http(s) URL" }, { status: 400 });
+  // A recorded stream needs a video URL; a live stream broadcasts the camera instead.
+  if (!isLive) {
+    if (!videoUrl) {
+      return NextResponse.json(
+        { error: "Add a video URL, or choose to go live with your camera" },
+        { status: 400 },
+      );
+    }
+    if (!/^https?:\/\//.test(videoUrl)) {
+      return NextResponse.json({ error: "videoUrl must be an http(s) URL" }, { status: 400 });
+    }
   }
 
   const hasCohost = isAddress(body.cohostAddress);
@@ -82,7 +93,8 @@ export async function POST(req: NextRequest) {
         title,
         creator,
         location: (body.location ?? "").trim(),
-        videoUrl,
+        videoUrl: isLive ? "" : videoUrl,
+        isLive,
         ratePerSecond: RATE_PER_SECOND,
         split,
       });

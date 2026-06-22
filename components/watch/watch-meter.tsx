@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Play, Pause, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LiveVideo } from "@/components/watch/live-video";
 import type { Stream } from "@/lib/streams";
 
 type Status = "idle" | "connecting" | "streaming" | "retrying";
@@ -89,16 +90,21 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     <div className="glass drip-glow overflow-hidden rounded-2xl p-5 sm:p-6">
       {/* video surface */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-        {/* The live feed: autoplays muted as a preview; Watch resumes + pays, Stop pauses it. */}
-        <video
-          ref={videoRef}
-          className="absolute inset-0 size-full object-cover"
-          src={stream.videoUrl}
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+        {/* Live streams show the host's real camera (LiveKit); recorded streams
+            autoplay the video file (Watch resumes + pays, Stop pauses it). */}
+        {stream.isLive ? (
+          <LiveVideo slug={stream.slug} />
+        ) : (
+          <video
+            ref={videoRef}
+            className="absolute inset-0 size-full object-cover"
+            src={stream.videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/40" />
 
         <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-destructive/90 px-2 py-1 text-xs font-semibold text-white">

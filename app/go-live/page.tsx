@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, Radio, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Check, Copy, Film, Radio, Video, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
 
 export default function GoLivePage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<"live" | "video">("live");
   const [host, setHost] = useState<string | null>(null);
   const [walletErr, setWalletErr] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -48,10 +51,14 @@ export default function GoLivePage() {
       const res = await fetch("/api/streams/create", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, hostAddress: host }),
+        body: JSON.stringify({ ...form, isLive: mode === "live", hostAddress: host }),
       });
       const json = (await res.json()) as { slug?: string; error?: string };
       if (!res.ok || !json.slug) throw new Error(json.error ?? "Could not create stream");
+      if (mode === "live") {
+        router.push(`/broadcast/${json.slug}`);
+        return;
+      }
       setCreated(json.slug);
     } catch (e) {
       setError((e as Error).message);
@@ -124,7 +131,32 @@ export default function GoLivePage() {
             get paid into your own wallets, automatically.
           </p>
 
-          <div className="glass mt-6 rounded-2xl border border-border/60 p-4">
+          <div className="mt-6 grid grid-cols-2 gap-2 rounded-xl border border-border/60 p-1">
+            <button
+              type="button"
+              onClick={() => setMode("live")}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                mode === "live"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Video className="h-4 w-4" /> Go live (camera)
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("video")}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                mode === "video"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Film className="h-4 w-4" /> Use a video
+            </button>
+          </div>
+
+          <div className="glass mt-4 rounded-2xl border border-border/60 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">Your payout wallet</div>
@@ -155,9 +187,11 @@ export default function GoLivePage() {
             <Field label="Location">
               <input className={inputCls} value={form.location} onChange={set("location")} placeholder="Kano, Nigeria" />
             </Field>
-            <Field label="Recorded video URL" required hint="An .mp4 or HLS link viewers will watch.">
-              <input className={inputCls} value={form.videoUrl} onChange={set("videoUrl")} placeholder="https://…/clip.mp4" />
-            </Field>
+            {mode === "video" && (
+              <Field label="Video URL" required hint="An .mp4 or HLS link viewers will watch. Upload support coming next.">
+                <input className={inputCls} value={form.videoUrl} onChange={set("videoUrl")} placeholder="https://…/clip.mp4" />
+              </Field>
+            )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Co-host name">
@@ -176,7 +210,7 @@ export default function GoLivePage() {
             {error && <p className="text-sm text-amber-500">{error}</p>}
 
             <Button type="submit" disabled={busy} className="w-full">
-              {busy ? "Creating…" : "Go live"}
+              {busy ? "Creating…" : mode === "live" ? "Go live with my camera" : "Publish stream"}
             </Button>
           </form>
         </section>

@@ -21,7 +21,8 @@ export interface Stream {
   creator: string;
   location: string;
   ratePerSecond: number; // USDC charged per second watched
-  videoUrl: string; // the live feed shown in the player (swap for a real creator clip later)
+  videoUrl: string; // recorded clip URL shown in the player; "" for a real camera live stream
+  isLive: boolean; // true = creator broadcasts their camera via LiveKit (room = slug)
   split: Payee[];
 }
 
@@ -33,6 +34,7 @@ export const streams: Stream[] = [
     location: "Kano, Nigeria",
     ratePerSecond: 0.0003,
     videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    isLive: false,
     split: [
       { name: "Ada", role: "Creator", share: 0.7 },
       { name: "Bode", role: "Co-host", share: 0.2 },

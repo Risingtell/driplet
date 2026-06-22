@@ -19,7 +19,8 @@ interface StreamRow {
   creator: string;
   location: string;
   rate_per_second: number;
-  video_url: string;
+  video_url: string | null;
+  is_live: boolean | null;
   split: Payee[];
 }
 
@@ -30,16 +31,19 @@ function rowToStream(r: StreamRow): Stream {
     creator: r.creator,
     location: r.location,
     ratePerSecond: Number(r.rate_per_second),
-    videoUrl: r.video_url,
+    videoUrl: r.video_url ?? "",
+    isLive: !!r.is_live,
     split: r.split,
   };
 }
+
+const STREAM_COLS = "slug, title, creator, location, rate_per_second, video_url, is_live, split";
 
 /** Resolve a stream by slug: database first, then the in-code demo catalog. */
 export async function resolveStream(slug: string): Promise<Stream | null> {
   const { data, error } = await supabase
     .from("streams")
-    .select("slug, title, creator, location, rate_per_second, video_url, split")
+    .select(STREAM_COLS)
     .eq("slug", slug)
     .maybeSingle();
   if (!error && data) return rowToStream(data as StreamRow);
@@ -52,6 +56,7 @@ export interface NewStream {
   creator: string;
   location: string;
   videoUrl: string;
+  isLive: boolean;
   ratePerSecond: number;
   split: Payee[];
 }
@@ -67,9 +72,10 @@ export async function createStream(input: NewStream): Promise<Stream> {
       location: input.location,
       rate_per_second: input.ratePerSecond,
       video_url: input.videoUrl,
+      is_live: input.isLive,
       split: input.split,
     })
-    .select("slug, title, creator, location, rate_per_second, video_url, split")
+    .select(STREAM_COLS)
     .single();
   if (error) throw new Error(error.message);
   return rowToStream(data as StreamRow);
