@@ -11,10 +11,19 @@ type State = "connecting" | "waiting" | "live" | "error";
  * a subscriber and attaches the host's camera + mic. Shows a friendly overlay
  * while connecting or before the host has started broadcasting.
  */
-export function LiveVideo({ slug }: { slug: string }) {
+export function LiveVideo({
+  slug,
+  onLiveChange,
+}: {
+  slug: string;
+  /** Fires true once the host's video is playing, false while waiting/ended. */
+  onLiveChange?: (live: boolean) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioWrap = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>("connecting");
+  const cb = useRef(onLiveChange);
+  cb.current = onLiveChange;
 
   useEffect(() => {
     let room: Room | null = null;
@@ -39,13 +48,17 @@ export function LiveVideo({ slug }: { slug: string }) {
           if (track.kind === Track.Kind.Video && videoRef.current) {
             track.attach(videoRef.current);
             setState("live");
+            cb.current?.(true);
           } else if (track.kind === Track.Kind.Audio && audioWrap.current) {
             audioWrap.current.appendChild(track.attach());
           }
         });
         room.on(RoomEvent.TrackUnsubscribed, (track) => {
           track.detach();
-          if (track.kind === Track.Kind.Video) setState("waiting");
+          if (track.kind === Track.Kind.Video) {
+            setState("waiting");
+            cb.current?.(false);
+          }
         });
 
         await room.connect(j.url, j.token);
@@ -56,6 +69,7 @@ export function LiveVideo({ slug }: { slug: string }) {
         setState((s) => (s === "live" ? s : "waiting"));
       } catch {
         setState("error");
+        cb.current?.(false);
       }
     })();
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
 import type { Stream } from "@/lib/streams";
 
-type Status = "idle" | "connecting" | "streaming" | "retrying";
+type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
 
 // How often (in paid seconds) the stream treasury pays the AI captions agent.
 // Kept short so the autonomous agent-to-agent payment is visible in a demo.
@@ -20,9 +20,20 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  // For live streams, only charge while the host is actually broadcasting.
+  const hostLiveRef = useRef(false);
+  const setHostLive = useCallback((live: boolean) => {
+    hostLiveRef.current = live;
+  }, []);
 
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
+    // Don't charge a live stream until the host's camera is actually on air.
+    if (stream.isLive && !hostLiveRef.current) {
+      setStatus("waiting");
+      if (watchingRef.current) setTimeout(loop, 1000);
+      return;
+    }
     try {
       const r = await fetch("/api/watch/tick", {
         method: "POST",
@@ -84,6 +95,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     connecting: "Connecting your stream…",
     streaming: "Paying the creator, live",
     retrying: "Reconnecting…",
+    waiting: "Waiting for the host — not charging yet",
   };
 
   return (
@@ -93,7 +105,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         {/* Live streams show the host's real camera (LiveKit); recorded streams
             autoplay the video file (Watch resumes + pays, Stop pauses it). */}
         {stream.isLive ? (
-          <LiveVideo slug={stream.slug} />
+          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} />
         ) : (
           <video
             ref={videoRef}
