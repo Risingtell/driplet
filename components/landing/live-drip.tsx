@@ -36,7 +36,7 @@ export function LiveDrip() {
       <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl bg-black">
         <video
           className="absolute inset-0 size-full object-cover"
-          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+          src="https://media.w3.org/2010/05/sintel/trailer.mp4"
           autoPlay
           muted
           loop

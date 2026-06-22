@@ -32,8 +32,7 @@ export const streams: Stream[] = [
     creator: "Ada",
     location: "Kano, Nigeria",
     ratePerSecond: 0.0003,
-    videoUrl:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
     split: [
       { name: "Ada", role: "Creator", share: 0.7 },
       { name: "Bode", role: "Co-host", share: 0.2 },
