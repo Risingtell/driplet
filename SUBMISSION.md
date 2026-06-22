@@ -20,6 +20,11 @@ Driplet
 ## One-liner
 Pay creators by the second. You watch a stream and your wallet sends a fraction of a cent in USDC every second, on Arc. Stop watching and the payments stop. No bank account, no subscription, no minimum payout.
 
+## Project description
+Driplet lets people pay creators by the second. You open a stream, and for every second you watch, your wallet sends a tiny amount of USDC, as little as $0.0003, straight to the creator on Arc. Stop watching and the payments stop. There's no bank account, no subscription, and no minimum payout to clear. Behind each stream is a treasury that runs on its own: as money comes in, it splits in real time between the creator, a co-host, and an AI agent that the stream pays for live captions out of its own earnings. The payments are batched through Circle Gateway so they stay gas-free, which is the only reason sub-cent amounts work at all. It's a payment rail for creators who have an audience but no practical way to get paid online today, and it's already live with real people using it.
+
+Short version: Pay creators by the second. You watch a stream and your wallet sends a fraction of a cent in USDC every second on Arc; stop watching and it stops. Each stream's treasury splits the income live between the creator, a co-host, and an AI agent it pays out of its own earnings. Already live with real users.
+
 ## What it does
 Driplet turns watch time into income, one second at a time. A viewer opens a stream and starts paying the creator a sub-cent amount of USDC per second (as little as $0.0003), settled on Arc through Circle's nanopayments. Each stream has its own treasury that handles the money on its own: as income comes in, it splits in real time between the creator, a co-host, and an AI agent that the stream pays for live captions out of its own earnings. So money comes in and goes back out automatically, second by second, without anyone managing it.
 
