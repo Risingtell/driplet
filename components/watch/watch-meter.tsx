@@ -89,11 +89,12 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     <div className="glass drip-glow overflow-hidden rounded-2xl p-5 sm:p-6">
       {/* video surface */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-        {/* The live feed. Plays while watching+paying; Stop pauses it too. */}
+        {/* The live feed: autoplays muted as a preview; Watch resumes + pays, Stop pauses it. */}
         <video
           ref={videoRef}
           className="absolute inset-0 size-full object-cover"
           src={stream.videoUrl}
+          autoPlay
           muted
           loop
           playsInline
