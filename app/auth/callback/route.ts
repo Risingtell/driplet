@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
       try {
         await ensureWallet();
       } catch {
-        // The /creator page will retry ensureWallet if this fails.
+        // The studio layout will retry ensureWallet if this fails.
       }
-      return NextResponse.redirect(`${origin}/creator`);
+      return NextResponse.redirect(`${origin}/studio`);
     }
   }
-  return NextResponse.redirect(`${origin}/creator?error=auth`);
+  return NextResponse.redirect(`${origin}/signin?error=auth`);
 }

@@ -72,10 +72,10 @@ export default function Landing() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button asChild variant="ghost" size="sm">
-            <Link href="/login">Creator login</Link>
+            <Link href="/signin">Sign in</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/go-live">Go live</Link>
+            <Link href="/studio/go-live">Go live</Link>
           </Button>
         </div>
       </header>
@@ -100,7 +100,7 @@ export default function Landing() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
-              <Link href="/go-live">
+              <Link href="/studio/go-live">
                 Go live <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -205,7 +205,7 @@ export default function Landing() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button asChild size="lg">
-              <Link href="/go-live">
+              <Link href="/studio/go-live">
                 Go live <ArrowRight className="size-4" />
               </Link>
             </Button>

@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createCreatorWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
@@ -112,4 +113,59 @@ export async function withdraw(formData: FormData) {
 export async function signOutCreator() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  redirect("/");
+}
+
+export interface CreatorStream {
+  slug: string;
+  title: string;
+  isLive: boolean;
+  drips: number;
+  streamed: number;
+}
+
+/** Streams created by the signed-in creator (matched by their wallet in the split). */
+export async function getCreatorStreams(): Promise<CreatorStream[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const admin = adminClient();
+  const { data: creator } = await admin
+    .from("creators")
+    .select("address")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!creator?.address) return [];
+  const addr = creator.address.toLowerCase();
+
+  const { data: rows } = await admin
+    .from("streams")
+    .select("slug, title, is_live, rate_per_second, split, created_at")
+    .order("created_at", { ascending: false });
+
+  const mine = (rows ?? []).filter(
+    (r) =>
+      Array.isArray(r.split) &&
+      r.split.some((p: { address?: string }) => (p.address ?? "").toLowerCase() === addr),
+  );
+
+  const out: CreatorStream[] = [];
+  for (const r of mine) {
+    const { count } = await admin
+      .from("payment_events")
+      .select("id", { count: "exact", head: true })
+      .eq("endpoint", `/watch/${r.slug}`);
+    const drips = count ?? 0;
+    out.push({
+      slug: r.slug,
+      title: r.title,
+      isLive: !!r.is_live,
+      drips,
+      streamed: drips * Number(r.rate_per_second),
+    });
+  }
+  return out;
 }

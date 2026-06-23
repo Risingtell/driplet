@@ -1,20 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Check, Copy, Loader2, LogOut, RefreshCw, Video, Wallet } from "lucide-react";
+import { Check, Copy, Loader2, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getWalletInfo, withdraw, signOutCreator } from "@/app/creator/actions";
+import { getWalletInfo, withdraw } from "@/app/creator/actions";
 
-export function WalletPanel({
-  email,
-  address,
-  balance,
-}: {
-  email: string;
-  address: string;
-  balance: number;
-}) {
+export function WalletPanel({ address, balance }: { address: string; balance: number }) {
   const [bal, setBal] = useState(balance);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -41,16 +32,8 @@ export function WalletPanel({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your wallet</h1>
-          <p className="text-sm text-muted-foreground">{email}</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => signOutCreator()}>
-          <LogOut className="size-4" /> Sign out
-        </Button>
-      </div>
+    <div className="max-w-xl space-y-5">
+      <h1 className="text-2xl font-semibold tracking-tight">Wallet</h1>
 
       <div className="glass drip-glow rounded-2xl p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
@@ -110,12 +93,6 @@ export function WalletPanel({
           {wPending ? <Loader2 className="size-4 animate-spin" /> : null} Withdraw
         </Button>
       </form>
-
-      <Link href="/go-live">
-        <Button className="w-full">
-          <Video className="size-4" /> Go live
-        </Button>
-      </Link>
     </div>
   );
 }
