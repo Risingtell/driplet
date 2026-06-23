@@ -11,6 +11,7 @@
     "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts"
   },
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.6.0",
     "@circle-fin/x402-batching": "^2.0.4",
     "@langchain/core": "^1.1.32",
     "@langchain/openai": "^1.2.13",
