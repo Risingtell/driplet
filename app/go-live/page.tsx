@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Copy, Film, Radio, Video, Wallet } from "lucide-react";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
+import { getWalletInfo } from "@/app/creator/actions";
 
 export default function GoLivePage() {
   const router = useRouter();
@@ -26,6 +27,17 @@ export default function GoLivePage() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // If the creator is signed in, use their auto-created Circle wallet as payout.
+  const [creatorWallet, setCreatorWallet] = useState<string | null>(null);
+
+  useEffect(() => {
+    getWalletInfo().then((info) => {
+      if (info.address) {
+        setHost(info.address);
+        setCreatorWallet(info.address);
+      }
+    });
+  }, []);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -161,7 +173,9 @@ export default function GoLivePage() {
               <div>
                 <div className="text-sm font-medium">Your payout wallet</div>
                 <div className="text-xs text-muted-foreground">
-                  Where your share lands. We auto-add &amp; switch to Arc Testnet.
+                  {creatorWallet
+                    ? "Your Driplet wallet (from email sign-in). Earnings land here."
+                    : "Where your share lands. We auto-add & switch to Arc Testnet."}
                 </div>
               </div>
               {host ? (
