@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Play, Pause, Radio, Maximize, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Radio, Maximize, Volume2, VolumeX, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
+import { naira } from "@/lib/currency";
 import type { Stream } from "@/lib/streams";
 
 type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
@@ -16,7 +17,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
-  const [caption, setCaption] = useState<string | null>(null);
+  const [agentFlash, setAgentFlash] = useState(false);
   const [muted, setMuted] = useState(true);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
@@ -67,7 +68,10 @@ export function WatchMeter({ stream }: { stream: Stream }) {
           fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
             .then((res) => res.json())
             .then((aj) => {
-              if (aj?.caption) setCaption(aj.caption);
+              if (aj?.ok) {
+                setAgentFlash(true);
+                setTimeout(() => setAgentFlash(false), 2500);
+              }
             })
             .catch(() => {});
           fetch(`/api/streams/${stream.slug}/settle`, {
@@ -184,11 +188,14 @@ export function WatchMeter({ stream }: { stream: Stream }) {
           </div>
         )}
 
-        {watching && caption && (
-          <div className="absolute inset-x-0 bottom-12 flex justify-center px-4">
-            <span className="max-w-[90%] rounded-md bg-black/60 px-3 py-1 text-center text-sm text-white backdrop-blur">
-              {caption}
-            </span>
+        {watching && (
+          <div className="absolute left-3 top-11 inline-flex items-center gap-1.5 rounded-md bg-black/40 px-2 py-1 text-xs text-white/85 backdrop-blur">
+            <Bot
+              className={`size-3.5 transition-colors ${
+                agentFlash ? "text-emerald-400" : "text-white/55"
+              }`}
+            />
+            <span>AI agent{agentFlash ? " · paid" : ""}</span>
           </div>
         )}
 
@@ -217,13 +224,19 @@ export function WatchMeter({ stream }: { stream: Stream }) {
             You&apos;ve paid {stream.creator}
           </p>
           <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
-            ${paid.toFixed(4)}
+            {naira(paid)}
+          </p>
+          <p className="tabular mt-1 text-xs text-muted-foreground">
+            ≈ ${paid.toFixed(4)} USDC
           </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Rate</p>
           <p className="tabular mt-1 font-mono text-sm text-foreground/80">
-            ${stream.ratePerSecond.toFixed(4)}/sec
+            {naira(stream.ratePerSecond)}/sec
+          </p>
+          <p className="tabular text-xs text-muted-foreground">
+            ${stream.ratePerSecond.toFixed(4)}
           </p>
         </div>
       </div>

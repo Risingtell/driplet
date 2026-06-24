@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
+import { LiveChat } from "@/components/chat/live-chat";
 import { ConnectArc } from "@/components/wallet/connect-arc";
 
 export default function WatchPage({
@@ -54,6 +55,9 @@ async function WatchContent({
         </p>
       </div>
       <WatchMeter stream={stream} />
+      <div className="mt-4">
+        <LiveChat slug={stream.slug} />
+      </div>
       <TreasuryPanel stream={stream} />
     </>
   );

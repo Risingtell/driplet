@@ -5,6 +5,7 @@ import { resolveStream } from "@/lib/streams-db";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Broadcaster } from "@/components/broadcast/broadcaster";
+import { LiveChat } from "@/components/chat/live-chat";
 
 export default function BroadcastPage({
   params,
@@ -45,5 +46,12 @@ async function BroadcastContent({ params }: { params: Promise<{ slug: string }> 
   const { slug } = await params;
   const stream = await resolveStream(slug);
   if (!stream) notFound();
-  return <Broadcaster slug={slug} title={stream.title} />;
+  return (
+    <>
+      <Broadcaster slug={slug} title={stream.title} />
+      <div className="pb-10">
+        <LiveChat slug={slug} host />
+      </div>
+    </>
+  );
 }

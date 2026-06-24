@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track, VideoPresets } from "livekit-client";
-import { Check, Copy, Loader2, Radio, Video, VideoOff } from "lucide-react";
+import { Check, Copy, Loader2, MonitorUp, Radio, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type State = "idle" | "connecting" | "live" | "error";
@@ -19,6 +19,19 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
   const [viewers, setViewers] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [sharingScreen, setSharingScreen] = useState(false);
+
+  async function toggleScreenShare() {
+    const room = roomRef.current;
+    if (!room) return;
+    try {
+      const next = !sharingScreen;
+      await room.localParticipant.setScreenShareEnabled(next);
+      setSharingScreen(next);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   const watchUrl =
     typeof window !== "undefined" ? `${window.location.origin}/watch/${slug}` : `/watch/${slug}`;
@@ -65,6 +78,7 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
     roomRef.current?.disconnect();
     roomRef.current = null;
     setViewers(0);
+    setSharingScreen(false);
     setState("idle");
   }
 
@@ -113,9 +127,17 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
 
       <div className="mt-5 flex items-center gap-3">
         {live ? (
-          <Button variant="outline" onClick={stop}>
-            <VideoOff className="size-4" /> End broadcast
-          </Button>
+          <>
+            <Button
+              variant={sharingScreen ? "default" : "outline"}
+              onClick={toggleScreenShare}
+            >
+              <MonitorUp className="size-4" /> {sharingScreen ? "Stop sharing" : "Share screen"}
+            </Button>
+            <Button variant="outline" onClick={stop}>
+              <VideoOff className="size-4" /> End broadcast
+            </Button>
+          </>
         ) : (
           <Button onClick={start} disabled={state === "connecting"}>
             <Video className="size-4" /> Go on air
