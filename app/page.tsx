@@ -216,6 +216,14 @@ export default function Landing() {
       {/* Footer */}
       <footer className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-border py-8 text-sm text-muted-foreground sm:flex-row">
         <Logo />
+        <nav className="flex items-center gap-6">
+          <Link href="/impact" className="transition-colors hover:text-foreground">
+            Live proof
+          </Link>
+          <Link href="/sidecar" className="transition-colors hover:text-foreground">
+            Owncast sidecar
+          </Link>
+        </nav>
         <p>Streaming nanopayments · settled in USDC on Arc, powered by Circle.</p>
       </footer>
     </main>

@@ -18,24 +18,29 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Edge guard for the creator-only areas. Auth is real (Supabase) and the
+ * authoritative check still happens server-side in the studio layout + server
+ * actions; this just gives logged-out users a clean redirect at the edge
+ * instead of streaming an empty shell. We only check for the presence of a
+ * Supabase auth cookie (sb-<ref>-auth-token, possibly chunked) — cheap, no
+ * async call — and let the layout do the real validation.
+ */
 export function proxy(request: NextRequest) {
-  const session = request.cookies.get("session")?.value;
-  const { pathname } = request.nextUrl;
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => /^sb-.*-auth-token(\.\d+)?$/.test(c.name));
 
-  // Already signed in but hitting the login page -> go to the dashboard
-  if (pathname === "/login" && session === "authenticated") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // Logged-out user trying to access protected routes -> send to login
-  if (pathname.startsWith("/dashboard") && session !== "authenticated") {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!hasSession) {
+    return NextResponse.redirect(new URL("/signin", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // "/" is now the public landing page and intentionally left unguarded.
-  matcher: ["/login", "/dashboard/:path*"],
+  // "/" and /watch are public. Guard the creator studio and broadcast studio.
+  // Retired paths (/login, /dashboard, /creator, /go-live) are plain redirect
+  // stubs and don't need guarding.
+  matcher: ["/studio/:path*", "/broadcast/:path*"],
 };
