@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Film, Radio, Video, Wallet } from "lucide-react";
+import { Check, Copy, Film, Radio, UploadCloud, Video, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
+import { uploadToWalrus, WALRUS_MAX_BYTES } from "@/lib/walrus";
 import { getWalletInfo } from "@/app/creator/actions";
 
 /** The Go Live form (camera or video). Lives inside the Creator Studio layout. */
@@ -27,6 +28,10 @@ export function GoLiveForm() {
   const [created, setCreated] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [creatorWallet, setCreatorWallet] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [uploadedName, setUploadedName] = useState<string | null>(null);
 
   useEffect(() => {
     getWalletInfo().then((info) => {
@@ -46,6 +51,36 @@ export function GoLiveForm() {
       setHost(await connectArcWallet());
     } catch (e) {
       setWalletErr((e as Error).message);
+    }
+  }
+
+  async function onPickVideo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadErr(null);
+    if (!file.type.startsWith("video/")) {
+      setUploadErr("Please choose a video file.");
+      return;
+    }
+    if (file.size > WALRUS_MAX_BYTES) {
+      setUploadErr("Video must be 10 MB or smaller (Walrus testnet limit).");
+      return;
+    }
+    setUploading(true);
+    setUploadPct(0);
+    setForm((f) => ({ ...f, videoUrl: "" }));
+    try {
+      const { blobId } = await uploadToWalrus(file, setUploadPct);
+      // Serve through our content-type shim so the <video> tag plays it; the
+      // bytes still live on Walrus (blob id is in the URL).
+      const ct = encodeURIComponent(file.type || "video/mp4");
+      const playback = `${window.location.origin}/api/video/${blobId}?ct=${ct}`;
+      setForm((f) => ({ ...f, videoUrl: playback }));
+      setUploadedName(file.name);
+    } catch (err) {
+      setUploadErr((err as Error).message);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -187,9 +222,64 @@ export function GoLiveForm() {
           <input className={inputCls} value={form.location} onChange={set("location")} placeholder="Kano, Nigeria" />
         </Field>
         {mode === "video" && (
-          <Field label="Video URL" required hint="An .mp4 or HLS link viewers will watch. Upload support coming next.">
-            <input className={inputCls} value={form.videoUrl} onChange={set("videoUrl")} placeholder="https://…/clip.mp4" />
-          </Field>
+          <div>
+            <span className="mb-1.5 block text-sm font-medium">
+              Video<span className="text-emerald-500"> *</span>
+            </span>
+            {form.videoUrl ? (
+              <div className="glass flex items-center gap-2 rounded-lg border border-border/60 p-3 text-sm">
+                <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span className="truncate">
+                  {uploadedName ?? "Uploaded"} · stored on Walrus
+                </span>
+                <button
+                  type="button"
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, videoUrl: "" }));
+                    setUploadedName(null);
+                    setUploadPct(0);
+                  }}
+                >
+                  Replace
+                </button>
+              </div>
+            ) : (
+              <label
+                className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center transition-colors hover:border-emerald-500 ${
+                  uploading ? "pointer-events-none opacity-70" : ""
+                }`}
+              >
+                <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                {uploading ? (
+                  <>
+                    <span className="text-sm">Uploading to Walrus… {uploadPct}%</span>
+                    <span className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                      <span
+                        className="block h-full bg-emerald-500 transition-all"
+                        style={{ width: `${uploadPct}%` }}
+                      />
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-medium">Upload a video</span>
+                    <span className="text-xs text-muted-foreground">
+                      MP4 up to 10 MB · stored on Walrus (decentralized)
+                    </span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={onPickVideo}
+                  disabled={uploading}
+                />
+              </label>
+            )}
+            {uploadErr && <p className="mt-1.5 text-xs text-amber-500">{uploadErr}</p>}
+          </div>
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -208,8 +298,18 @@ export function GoLiveForm() {
 
         {error && <p className="text-sm text-amber-500">{error}</p>}
 
-        <Button type="submit" disabled={busy} className="w-full">
-          {busy ? "Creating…" : mode === "live" ? "Go live with my camera" : "Publish stream"}
+        <Button
+          type="submit"
+          disabled={busy || uploading || (mode === "video" && !form.videoUrl)}
+          className="w-full"
+        >
+          {busy
+            ? "Creating…"
+            : uploading
+              ? "Uploading…"
+              : mode === "live"
+                ? "Go live with my camera"
+                : "Publish stream"}
         </Button>
       </form>
     </div>
