@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Room, RoomEvent, Track } from "livekit-client";
+import { Room, RoomEvent, Track, VideoPresets } from "livekit-client";
 import { Check, Copy, Loader2, Radio, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,7 +35,15 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       const j = (await res.json()) as { token?: string; url?: string; error?: string };
       if (!res.ok || !j.token || !j.url) throw new Error(j.error ?? "Could not start the stream");
 
-      const room = new Room();
+      // Capture + publish at 720p so the viewer sees a sharp feed (the default
+      // is much lower). Simulcast keeps it smooth on weaker connections.
+      const room = new Room({
+        videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
+        publishDefaults: {
+          videoEncoding: VideoPresets.h720.encoding,
+          videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
+        },
+      });
       roomRef.current = room;
       const updateViewers = () => setViewers(room.remoteParticipants.size);
       room.on(RoomEvent.ParticipantConnected, updateViewers);

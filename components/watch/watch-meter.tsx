@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Play, Pause, Radio } from "lucide-react";
+import { Play, Pause, Radio, Maximize, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
 import type { Stream } from "@/lib/streams";
@@ -17,9 +17,23 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
   const [caption, setCaption] = useState<string | null>(null);
+  const [muted, setMuted] = useState(true);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+
+  const goFullscreen = useCallback(() => {
+    surfaceRef.current?.requestFullscreen?.().catch(() => {});
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setMuted((m) => {
+      const next = !m;
+      if (videoRef.current) videoRef.current.muted = next;
+      return next;
+    });
+  }, []);
   // For live streams, only charge while the host is actually broadcasting.
   const hostLiveRef = useRef(false);
   const setHostLive = useCallback((live: boolean) => {
@@ -75,7 +89,13 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     if (watchingRef.current) return;
     watchingRef.current = true;
     setStatus("connecting");
-    videoRef.current?.play().catch(() => {});
+    // Turn sound on now that the viewer has interacted (autoplay needs muted,
+    // but once they press Watch we can play audio for an uploaded video).
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {});
+    }
+    setMuted(false);
     loop();
   }, [loop]);
 
@@ -101,7 +121,10 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   return (
     <div className="glass drip-glow overflow-hidden rounded-2xl p-5 sm:p-6">
       {/* video surface */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+      <div
+        ref={surfaceRef}
+        className="relative aspect-video w-full overflow-hidden rounded-xl bg-black"
+      >
         {/* Live streams show the host's real camera (LiveKit); recorded streams
             autoplay the video file (Watch resumes + pays, Stop pauses it). */}
         {stream.isLive ? (
@@ -126,6 +149,28 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         <div className="absolute right-3 top-3 rounded-md bg-black/30 px-2 py-1 text-xs text-white/80 tabular">
           {mmss} watched
         </div>
+
+        {/* player controls (shown while watching) */}
+        {watching && (
+          <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5">
+            {!stream.isLive && (
+              <button
+                onClick={toggleMute}
+                aria-label={muted ? "Unmute" : "Mute"}
+                className="grid size-8 place-items-center rounded-md bg-black/45 text-white/90 backdrop-blur transition-colors hover:bg-black/65"
+              >
+                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
+            )}
+            <button
+              onClick={goFullscreen}
+              aria-label="Fullscreen"
+              className="grid size-8 place-items-center rounded-md bg-black/45 text-white/90 backdrop-blur transition-colors hover:bg-black/65"
+            >
+              <Maximize className="size-4" />
+            </button>
+          </div>
+        )}
 
         {watching && (
           <div className="pointer-events-none absolute inset-0">
