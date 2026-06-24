@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
 
 interface ChatMessage {
@@ -32,24 +32,21 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
   const listRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
 
-  useEffect(() => {
-    let alive = true;
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/chat/${slug}`, { cache: "no-store" });
-        const json = (await res.json()) as { messages: ChatMessage[] };
-        if (alive) setMessages(json.messages ?? []);
-      } catch {
-        /* ignore, retry next tick */
-      }
-    };
-    void poll();
-    const id = setInterval(poll, 2000);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/chat/${slug}`, { cache: "no-store" });
+      const json = (await res.json()) as { messages: ChatMessage[] };
+      setMessages(json.messages ?? []);
+    } catch {
+      /* ignore, retry next tick */
+    }
   }, [slug]);
+
+  useEffect(() => {
+    void refresh();
+    const id = setInterval(refresh, 2000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
   useEffect(() => {
     if (atBottomRef.current) {
@@ -69,6 +66,7 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: nameRef.current, text: t, host }),
       });
+      await refresh();
     } catch {
       setText(t); // restore on failure
     } finally {

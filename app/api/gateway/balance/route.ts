@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { createPublicClient, http, formatUnits, erc20Abi } from "viem";
 
 const GATEWAY_API = "https://gateway-api-testnet.circle.com/v1/balances";
@@ -44,6 +44,8 @@ async function getWalletUsdcBalance(address: `0x${string}`): Promise<string> {
 }
 
 export async function GET() {
+  // Live balance lookup must run per request, not during static prerender.
+  await connection();
   const address = process.env.SELLER_ADDRESS;
   if (!address) {
     return NextResponse.json(

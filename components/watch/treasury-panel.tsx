@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Split } from "lucide-react";
+import { naira } from "@/lib/currency";
 import type { Stream } from "@/lib/streams";
 
 interface Payee {
@@ -69,6 +70,9 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Total earned</p>
           <p className="text-gradient tabular font-mono text-lg font-semibold leading-none">
+            {naira(data.total)}
+          </p>
+          <p className="tabular text-[11px] text-muted-foreground">
             ${data.total.toFixed(4)}
           </p>
         </div>
@@ -104,7 +108,7 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
               </span>
             </span>
             <span className="tabular font-mono text-sm text-foreground/90">
-              ${p.amount.toFixed(4)}
+              {naira(p.amount)}
             </span>
           </li>
         ))}
@@ -117,7 +121,7 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
           <span className="font-medium">Autonomously paid AI Captions agent</span>
         </span>
         <span className="tabular font-mono text-sm">
-          ${data.agentPaid.toFixed(4)}
+          {naira(data.agentPaid)}
           <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
         </span>
       </div>

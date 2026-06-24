@@ -13,7 +13,7 @@ export default function BroadcastPage({
   params: Promise<{ slug: string }>;
 }) {
   return (
-    <main className="relative mx-auto flex min-h-screen max-w-3xl flex-col px-5">
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
       <header className="flex items-center justify-between py-6">
         <Link href="/">
           <Logo />
@@ -47,11 +47,15 @@ async function BroadcastContent({ params }: { params: Promise<{ slug: string }> 
   const stream = await resolveStream(slug);
   if (!stream) notFound();
   return (
-    <>
-      <Broadcaster slug={slug} title={stream.title} />
-      <div className="pb-10">
-        <LiveChat slug={slug} host />
+    <div className="grid flex-1 gap-4 pb-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="min-w-0">
+        <Broadcaster slug={slug} title={stream.title} />
       </div>
-    </>
+      <aside className="lg:sticky lg:top-5 lg:self-start">
+        <div className="lg:h-[calc(100vh-7.5rem)]">
+          <LiveChat slug={slug} host />
+        </div>
+      </aside>
+    </div>
   );
 }

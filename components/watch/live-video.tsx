@@ -22,6 +22,8 @@ export function LiveVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioWrap = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>("connecting");
+  const [screen, setScreen] = useState(false);
+  const tracksRef = useRef<Map<string, RemoteTrack>>(new Map());
   const cb = useRef(onLiveChange);
   cb.current = onLiveChange;
 
@@ -44,21 +46,41 @@ export function LiveVideo({
 
         room = new Room({ adaptiveStream: true, dynacast: true });
 
+        // Show the best available video track: prefer a screen share, else the
+        // camera. Only fall back to "waiting" when no video track remains, so
+        // stopping a screen share doesn't look like the host going offline.
+        const reattach = () => {
+          const el = videoRef.current;
+          if (!el) return;
+          const videos = [...tracksRef.current.values()].filter(
+            (t) => t.kind === Track.Kind.Video,
+          );
+          if (videos.length === 0) {
+            setState("waiting");
+            setScreen(false);
+            cb.current?.(false);
+            return;
+          }
+          const shared = videos.find((t) => t.source === Track.Source.ScreenShare);
+          const show = shared ?? videos[videos.length - 1];
+          show.attach(el);
+          setScreen(!!shared);
+          setState("live");
+          cb.current?.(true);
+        };
+
         room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
-          if (track.kind === Track.Kind.Video && videoRef.current) {
-            track.attach(videoRef.current);
-            setState("live");
-            cb.current?.(true);
-          } else if (track.kind === Track.Kind.Audio && audioWrap.current) {
+          if (track.sid) tracksRef.current.set(track.sid, track);
+          if (track.kind === Track.Kind.Audio && audioWrap.current) {
             audioWrap.current.appendChild(track.attach());
+          } else if (track.kind === Track.Kind.Video) {
+            reattach();
           }
         });
         room.on(RoomEvent.TrackUnsubscribed, (track) => {
+          if (track.sid) tracksRef.current.delete(track.sid);
           track.detach();
-          if (track.kind === Track.Kind.Video) {
-            setState("waiting");
-            cb.current?.(false);
-          }
+          if (track.kind === Track.Kind.Video) reattach();
         });
 
         await room.connect(j.url, j.token);
@@ -83,7 +105,7 @@ export function LiveVideo({
     <>
       <video
         ref={videoRef}
-        className="absolute inset-0 size-full object-cover"
+        className={`absolute inset-0 size-full ${screen ? "object-contain" : "object-cover"}`}
         autoPlay
         playsInline
       />
