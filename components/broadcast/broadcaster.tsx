@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Room, RoomEvent, Track, VideoPresets } from "livekit-client";
-import { Check, Copy, Loader2, MonitorUp, Radio, Video, VideoOff } from "lucide-react";
+import { Room, RoomEvent, Track, VideoPresets, type LocalVideoTrack } from "livekit-client";
+import { Check, Copy, Loader2, MonitorUp, Radio, SwitchCamera, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type State = "idle" | "connecting" | "live" | "error";
@@ -20,6 +20,24 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [sharingScreen, setSharingScreen] = useState(false);
+  const [facing, setFacing] = useState<"user" | "environment">("user");
+
+  /** Flip between front and back camera (mainly for phones). */
+  async function flipCamera() {
+    const room = roomRef.current;
+    if (!room) return;
+    const track = room.localParticipant.getTrackPublication(Track.Source.Camera)
+      ?.videoTrack as LocalVideoTrack | undefined;
+    if (!track) return;
+    const next = facing === "user" ? "environment" : "user";
+    try {
+      await track.restartTrack({ facingMode: next, resolution: VideoPresets.h720.resolution });
+      if (previewRef.current) track.attach(previewRef.current);
+      setFacing(next);
+    } catch {
+      setError("This device doesn't have another camera to switch to.");
+    }
+  }
 
   async function toggleScreenShare() {
     const room = roomRef.current;
@@ -125,9 +143,14 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
 
       {error && <p className="mt-3 text-sm text-amber-500">{error}</p>}
 
-      <div className="mt-5 flex items-center gap-3">
+      <div className="mt-5 flex flex-wrap items-center gap-3">
         {live ? (
           <>
+            {!sharingScreen && (
+              <Button variant="outline" onClick={flipCamera}>
+                <SwitchCamera className="size-4" /> Flip camera
+              </Button>
+            )}
             <Button
               variant={sharingScreen ? "default" : "outline"}
               onClick={toggleScreenShare}
