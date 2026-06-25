@@ -54,8 +54,10 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [needTopup, setNeedTopup] = useState(false);
   const payModeRef = useRef<"demo" | "own">("demo");
   const ownBudgetRef = useRef(0);
+  const lastAmountRef = useRef(0.5);
 
-  const useMyWallet = useCallback(async () => {
+  const useMyWallet = useCallback(async (amountUsd: number) => {
+    lastAmountRef.current = amountUsd;
     setOwnErr(null);
     setOwnBusy(true);
     try {
@@ -68,7 +70,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       const info = (await fetch(`/api/watch/${stream.slug}/own-pay`).then((r) => r.json())) as {
         payTo: string;
       };
-      const budget = Math.min(0.05, Math.max(0.005, bal - 0.001));
+      // Prepay the chosen amount, capped by what's in the wallet.
+      const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
       const { authorization, signature } = await signWatchAuthorization(addr, info.payTo, budget);
       const res = await fetch(`/api/watch/${stream.slug}/own-pay`, {
         method: "POST",
@@ -340,13 +343,27 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* payment source */}
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="space-y-2">
             <span className="text-sm text-muted-foreground">
-              Paying with the free demo wallet — no setup, settled in real USDC on Arc.
+              Paying with the free demo wallet. Prefer to pay from your own wallet? Pick a session:
             </span>
-            <Button size="sm" variant="outline" onClick={useMyWallet} disabled={ownBusy}>
-              <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {[0.25, 0.5, 1].map((amt) => (
+                <Button
+                  key={amt}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => useMyWallet(amt)}
+                  disabled={ownBusy}
+                >
+                  <Wallet className="size-4" /> {naira(amt)} · ~
+                  {Math.round(amt / stream.ratePerSecond / 60)} min
+                </Button>
+              ))}
+            </div>
+            {ownBusy && (
+              <p className="text-xs text-muted-foreground">Confirm the signature in your wallet…</p>
+            )}
           </div>
         ) : (
           <div>
@@ -364,8 +381,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               </p>
             )}
             {needTopup && (
-              <Button size="sm" className="mt-2" onClick={useMyWallet} disabled={ownBusy}>
-                {ownBusy ? "Confirm in wallet…" : "Top up & keep watching"}
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={() => useMyWallet(lastAmountRef.current)}
+                disabled={ownBusy}
+              >
+                {ownBusy ? "Confirm in wallet…" : `Top up ${naira(lastAmountRef.current)} & keep watching`}
               </Button>
             )}
           </div>
