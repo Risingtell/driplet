@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Database } from "lucide-react";
 import { resolveStream, creatorAddress } from "@/lib/streams-db";
+import { registryExplorerUrl } from "@/lib/stream-registry";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Stream } from "@/lib/streams";
@@ -54,6 +56,8 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
   if (!stream) notFound();
   const isOwner = await viewerOwnsStream(stream);
   const addr = creatorAddress(stream);
+  const onWalrus = /\/api\/video\/[A-Za-z0-9_-]+/.test(stream.videoUrl);
+  const registry = registryExplorerUrl();
 
   return (
     <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -72,6 +76,18 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
             )}{" "}
             · {stream.location}
           </p>
+          {registry && (
+            <a
+              href={registry}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              title="Stream metadata is stored on Arc; video files on Walrus"
+            >
+              <Database className="size-3.5 text-primary" />
+              Metadata on Arc{onWalrus ? " · video on Walrus" : ""}
+            </a>
+          )}
         </div>
         <WatchMeter stream={stream} isOwner={isOwner} />
         <TreasuryPanel stream={stream} />

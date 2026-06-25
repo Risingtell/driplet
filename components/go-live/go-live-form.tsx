@@ -26,6 +26,7 @@ export function GoLiveForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<string | null>(null);
+  const [onchainTx, setOnchainTx] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [creatorWallet, setCreatorWallet] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -98,12 +99,13 @@ export function GoLiveForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...form, isLive: mode === "live", hostAddress: host }),
       });
-      const json = (await res.json()) as { slug?: string; error?: string };
+      const json = (await res.json()) as { slug?: string; error?: string; onchainTx?: string };
       if (!res.ok || !json.slug) throw new Error(json.error ?? "Could not create stream");
       if (mode === "live") {
         router.push(`/broadcast/${json.slug}`);
         return;
       }
+      setOnchainTx(json.onchainTx ?? null);
       setCreated(json.slug);
     } catch (e) {
       setError((e as Error).message);
@@ -141,6 +143,20 @@ export function GoLiveForm() {
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
+        {onchainTx && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            <Check className="mr-1 inline h-3.5 w-3.5 text-primary" />
+            Metadata recorded on Arc ·{" "}
+            <a
+              href={`https://testnet.arcscan.app/tx/${onchainTx}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary hover:underline"
+            >
+              view transaction
+            </a>
+          </p>
+        )}
         <div className="mt-6 flex justify-center gap-3">
           <Link href={`/watch/${created}`}>
             <Button>Open your stream</Button>

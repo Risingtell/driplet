@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createStream } from "@/lib/streams-db";
 import { slugify, type Payee } from "@/lib/streams";
+import { registerStreamOnChain } from "@/lib/stream-registry";
+
+// Creating a stream now also records its metadata on Arc.
+export const maxDuration = 60;
 
 const RATE_PER_SECOND = 0.0003; // fixed denomination for v1
 const isAddress = (a: unknown): a is string =>
@@ -98,7 +102,18 @@ export async function POST(req: NextRequest) {
         ratePerSecond: RATE_PER_SECOND,
         split,
       });
-      return NextResponse.json({ ok: true, slug: stream.slug, watchUrl: `/watch/${stream.slug}` });
+      // Record the stream's metadata on Arc (files stay on Walrus). The blob id
+      // is in the video URL for uploaded videos; live camera streams have none.
+      const blobId = (videoUrl.match(/\/api\/video\/([A-Za-z0-9_-]+)/)?.[1]) ?? "";
+      const onchainTx = await registerStreamOnChain(stream.slug, blobId, creator, title).catch(
+        () => null,
+      );
+      return NextResponse.json({
+        ok: true,
+        slug: stream.slug,
+        watchUrl: `/watch/${stream.slug}`,
+        onchainTx,
+      });
     } catch (e) {
       if (attempt === 2) {
         return NextResponse.json({ error: (e as Error).message }, { status: 500 });
