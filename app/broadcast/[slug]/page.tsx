@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { resolveStream } from "@/lib/streams-db";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackButton } from "@/components/back-button";
 import { Broadcaster } from "@/components/broadcast/broadcaster";
 import { LiveChat } from "@/components/chat/live-chat";
 
@@ -15,9 +16,12 @@ export default function BroadcastPage({
   return (
     <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
       <header className="flex items-center justify-between py-6">
-        <Link href="/">
-          <Logo />
-        </Link>
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <Link href="/">
+            <Logo />
+          </Link>
+        </div>
         <div className="flex items-center gap-4">
           <nav className="hidden items-center gap-4 text-sm text-muted-foreground sm:flex">
             <Link href="/studio" className="transition-colors hover:text-foreground">

@@ -15,7 +15,7 @@ type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
 // Kept short so the autonomous agent-to-agent payment is visible in a demo.
 const AGENT_PAY_EVERY = 20;
 
-export function WatchMeter({ stream }: { stream: Stream }) {
+export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwner?: boolean }) {
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
@@ -161,7 +161,6 @@ export function WatchMeter({ stream }: { stream: Stream }) {
   const start = useCallback(() => {
     if (watchingRef.current) return;
     watchingRef.current = true;
-    setStatus("connecting");
     // Turn sound on now that the viewer has interacted (autoplay needs muted,
     // but once they press Watch we can play audio for an uploaded video).
     if (videoRef.current) {
@@ -169,8 +168,14 @@ export function WatchMeter({ stream }: { stream: Stream }) {
       videoRef.current.play().catch(() => {});
     }
     setMuted(false);
+    // Owners previewing their own stream are not charged — just play it.
+    if (isOwner) {
+      setStatus("streaming");
+      return;
+    }
+    setStatus("connecting");
     loop();
-  }, [loop]);
+  }, [loop, isOwner]);
 
   const stop = useCallback(() => {
     watchingRef.current = false;
@@ -275,28 +280,38 @@ export function WatchMeter({ stream }: { stream: Stream }) {
       </div>
 
       {/* meter */}
-      <div className="mt-5 flex items-end justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            You&apos;ve paid {stream.creator}
-          </p>
-          <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
-            {naira(paid)}
-          </p>
-          <p className="tabular mt-1 text-xs text-muted-foreground">
-            ≈ ${paid.toFixed(4)} USDC
-          </p>
+      {isOwner ? (
+        <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+          <span className="font-medium text-primary">Previewing your own stream</span>
+          <span className="text-muted-foreground">
+            {" "}
+            — you&apos;re not charged to watch your own content.
+          </span>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Rate</p>
-          <p className="tabular mt-1 font-mono text-sm text-foreground/80">
-            {naira(stream.ratePerSecond)}/sec
-          </p>
-          <p className="tabular text-xs text-muted-foreground">
-            ${stream.ratePerSecond.toFixed(4)}
-          </p>
+      ) : (
+        <div className="mt-5 flex items-end justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              You&apos;ve paid {stream.creator}
+            </p>
+            <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
+              {naira(paid)}
+            </p>
+            <p className="tabular mt-1 text-xs text-muted-foreground">
+              ≈ ${paid.toFixed(4)} USDC
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Rate</p>
+            <p className="tabular mt-1 font-mono text-sm text-foreground/80">
+              {naira(stream.ratePerSecond)}/sec
+            </p>
+            <p className="tabular text-xs text-muted-foreground">
+              ${stream.ratePerSecond.toFixed(4)}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-5 flex items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -309,7 +324,7 @@ export function WatchMeter({ stream }: { stream: Stream }) {
                   : "bg-amber-400"
             }`}
           />
-          {statusLabel[status]}
+          {isOwner ? "Previewing — not charging" : statusLabel[status]}
         </span>
         {watching ? (
           <Button variant="outline" size="sm" onClick={stop}>
@@ -317,13 +332,13 @@ export function WatchMeter({ stream }: { stream: Stream }) {
           </Button>
         ) : (
           <Button size="sm" onClick={start}>
-            <Play className="size-4" /> Watch
+            <Play className="size-4" /> {isOwner ? "Play preview" : "Watch"}
           </Button>
         )}
       </div>
 
       {/* payment source */}
-      <div className="mt-4 rounded-xl border border-border/60 p-3">
+      <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground">
