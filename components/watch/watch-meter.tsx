@@ -24,6 +24,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
   const [agentFlash, setAgentFlash] = useState(false);
+  const [agentMsg, setAgentMsg] = useState<string | null>(null);
   const [muted, setMuted] = useState(true);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
@@ -146,6 +147,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             .then((aj) => {
               if (aj?.ok) {
                 setAgentFlash(true);
+                if (aj.caption) setAgentMsg(aj.caption);
                 setTimeout(() => setAgentFlash(false), 2500);
               }
             })
@@ -264,7 +266,15 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 agentFlash ? "text-emerald-400" : "text-white/55"
               }`}
             />
-            <span>AI agent{agentFlash ? " · paid" : ""}</span>
+            <span>AI co-host{agentFlash ? " · paid" : ""}</span>
+          </div>
+        )}
+
+        {watching && agentMsg && (
+          <div className="absolute inset-x-3 bottom-12 flex justify-center">
+            <span className="max-w-[92%] rounded-lg bg-primary/90 px-3 py-1.5 text-center text-sm text-primary-foreground backdrop-blur">
+              <span className="font-semibold">AI co-host:</span> {agentMsg}
+            </span>
           </div>
         )}
 

@@ -118,7 +118,7 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
       <div className="mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3">
         <span className="flex items-center gap-2 text-sm">
           <span className="size-2 rounded-full bg-primary animate-live" />
-          <span className="font-medium">Autonomously paid AI Captions agent</span>
+          <span className="font-medium">Autonomously paid the AI co-host</span>
         </span>
         <span className="tabular font-mono text-sm">
           {naira(data.agentPaid)}

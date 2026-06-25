@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withGateway } from "@/lib/x402";
+import { generateCommentary } from "@/lib/agent-ai";
 
 /**
- * The live-captions AI agent. It sells its work per call via x402 — the stream
- * treasury pays it, agent-to-agent, out of what the stream earns. Payment goes
- * to the agent's own wallet (not the creator's).
+ * The stream's AI co-host agent. It sells its work per call via x402 — the
+ * stream treasury pays it, agent-to-agent, out of what the stream earns, into
+ * the agent's own wallet. The work is real: a free LLM generates a line of live
+ * commentary (set GROQ_API_KEY to enable; falls back to a canned line otherwise).
  */
-const CAPTIONS = [
-  "Welcome in — let's get started.",
-  "Today we're working through the layout grid.",
-  "See how consistent spacing creates rhythm.",
-  "Good question — let's zoom in on that.",
-  "Now we balance the colour contrast.",
-  "Nice work, everyone — wrapping this section.",
-];
-
 const AGENT = process.env.CAPTIONS_AGENT_ADDRESS as `0x${string}` | undefined;
 
 const handler = async (_req: NextRequest) => {
-  const caption = CAPTIONS[Math.floor(Date.now() / 6000) % CAPTIONS.length];
+  const caption = await generateCommentary();
   return NextResponse.json({ caption });
 };
 

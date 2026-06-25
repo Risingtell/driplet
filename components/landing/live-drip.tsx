@@ -10,7 +10,7 @@ const RATE_PER_SECOND = 0.0003; // USDC per second watched — Driplet's default
 const PAYEES = [
   { name: "Ada", role: "Creator", share: 0.7, color: "bg-primary" },
   { name: "Bode", role: "Co-host", share: 0.2, color: "bg-chart-2" },
-  { name: "AI agent", role: "Captions", share: 0.1, color: "bg-chart-3" },
+  { name: "AI co-host", role: "Commentary", share: 0.1, color: "bg-chart-3" },
 ];
 
 /**
