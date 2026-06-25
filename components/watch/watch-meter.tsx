@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Play, Pause, Radio, Maximize, Volume2, VolumeX, Bot } from "lucide-react";
+import { Play, Pause, Radio, Maximize, Volume2, VolumeX, Bot, Wallet, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
 import { naira } from "@/lib/currency";
+import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
+import { signWatchAuthorization, getUsdcBalance } from "@/lib/own-wallet";
 import type { Stream } from "@/lib/streams";
 
 type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
@@ -41,11 +43,78 @@ export function WatchMeter({ stream }: { stream: Stream }) {
     hostLiveRef.current = live;
   }, []);
 
+  // Own-wallet mode: the viewer prepays a session from their own wallet (one
+  // gasless signature, relayed on-chain) and the meter draws it down per second.
+  const [payMode, setPayMode] = useState<"demo" | "own">("demo");
+  const [ownAddress, setOwnAddress] = useState<string | null>(null);
+  const [ownBudget, setOwnBudget] = useState(0);
+  const [ownErr, setOwnErr] = useState<string | null>(null);
+  const [ownBusy, setOwnBusy] = useState(false);
+  const [lastTx, setLastTx] = useState<string | null>(null);
+  const [needTopup, setNeedTopup] = useState(false);
+  const payModeRef = useRef<"demo" | "own">("demo");
+  const ownBudgetRef = useRef(0);
+
+  const useMyWallet = useCallback(async () => {
+    setOwnErr(null);
+    setOwnBusy(true);
+    try {
+      const addr = await connectArcWallet();
+      const bal = await getUsdcBalance(addr);
+      if (bal < 0.01) {
+        setOwnErr("This wallet has no testnet USDC. Get some free at faucet.circle.com, then try again.");
+        return;
+      }
+      const info = (await fetch(`/api/watch/${stream.slug}/own-pay`).then((r) => r.json())) as {
+        payTo: string;
+      };
+      const budget = Math.min(0.05, Math.max(0.005, bal - 0.001));
+      const { authorization, signature } = await signWatchAuthorization(addr, info.payTo, budget);
+      const res = await fetch(`/api/watch/${stream.slug}/own-pay`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ authorization, signature }),
+      });
+      const j = (await res.json()) as { ok?: boolean; tx?: string; amount?: number; error?: string };
+      if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
+      setOwnAddress(addr);
+      ownBudgetRef.current = j.amount ?? budget;
+      setOwnBudget(ownBudgetRef.current);
+      setLastTx(j.tx ?? null);
+      setNeedTopup(false);
+      payModeRef.current = "own";
+      setPayMode("own");
+    } catch (e) {
+      const msg = (e as Error).message || "Could not pay from your wallet";
+      // A user rejecting the signature in their wallet isn't an error worth shouting about.
+      setOwnErr(/reject|denied|user/i.test(msg) ? "Signature cancelled." : msg);
+    } finally {
+      setOwnBusy(false);
+    }
+  }, [stream.slug]);
+
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
     // Don't charge a live stream until the host's camera is actually on air.
     if (stream.isLive && !hostLiveRef.current) {
       setStatus("waiting");
+      if (watchingRef.current) setTimeout(loop, 1000);
+      return;
+    }
+    // Own-wallet mode: draw down the prepaid session locally (the on-chain
+    // payment already happened when the viewer signed). No per-second server call.
+    if (payModeRef.current === "own") {
+      if (ownBudgetRef.current < stream.ratePerSecond) {
+        watchingRef.current = false;
+        setStatus("idle");
+        setNeedTopup(true);
+        return;
+      }
+      ownBudgetRef.current -= stream.ratePerSecond;
+      setOwnBudget(ownBudgetRef.current);
+      setPaid((p) => p + stream.ratePerSecond);
+      setSeconds((s) => s + 1);
+      setStatus("streaming");
       if (watchingRef.current) setTimeout(loop, 1000);
       return;
     }
@@ -177,18 +246,6 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         )}
 
         {watching && (
-          <div className="pointer-events-none absolute inset-0">
-            {[20, 42, 62, 82].map((left, i) => (
-              <span
-                key={left}
-                className="animate-drip absolute top-1/3 block h-6 w-1 rounded-full bg-gradient-to-b from-primary/0 via-primary to-primary/0"
-                style={{ left: `${left}%`, animationDelay: `${i * 0.55}s` }}
-              />
-            ))}
-          </div>
-        )}
-
-        {watching && (
           <div className="absolute left-3 top-11 inline-flex items-center gap-1.5 rounded-md bg-black/40 px-2 py-1 text-xs text-white/85 backdrop-blur">
             <Bot
               className={`size-3.5 transition-colors ${
@@ -265,10 +322,41 @@ export function WatchMeter({ stream }: { stream: Stream }) {
         )}
       </div>
 
-      <p className="mt-4 text-xs text-muted-foreground">
-        Every second is a real USDC nanopayment settled on Arc. Stop watching and
-        you stop paying — instantly.
-      </p>
+      {/* payment source */}
+      <div className="mt-4 rounded-xl border border-border/60 p-3">
+        {payMode === "demo" ? (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm text-muted-foreground">
+              Paying with the free demo wallet — no setup, settled in real USDC on Arc.
+            </span>
+            <Button size="sm" variant="outline" onClick={useMyWallet} disabled={ownBusy}>
+              <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
+            </Button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 font-medium text-primary">
+                <Check className="size-4" /> Paying from your wallet · {shortAddress(ownAddress ?? "")}
+              </span>
+              <span className="text-muted-foreground">
+                {naira(ownBudget)} left {needTopup && "· used up"}
+              </span>
+            </div>
+            {lastTx && (
+              <p className="tabular mt-1 font-mono text-xs text-muted-foreground">
+                prepaid on-chain · tx {lastTx.slice(0, 12)}…
+              </p>
+            )}
+            {needTopup && (
+              <Button size="sm" className="mt-2" onClick={useMyWallet} disabled={ownBusy}>
+                {ownBusy ? "Confirm in wallet…" : "Top up & keep watching"}
+              </Button>
+            )}
+          </div>
+        )}
+        {ownErr && <p className="mt-2 text-xs text-amber-500">{ownErr}</p>}
+      </div>
     </div>
   );
 }
