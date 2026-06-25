@@ -30,9 +30,9 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Driplet — get paid by the second",
+  title: "Driplet, get paid by the second",
   description:
-    "Driplet lets creators get paid by the second in USDC as people watch — no subscriptions, no bank, no chargebacks. Streaming nanopayments settled on Arc.",
+    "Driplet lets creators get paid by the second in USDC as people watch, no subscriptions, no bank, no chargebacks. Streaming nanopayments settled on Arc.",
 };
 
 const geistSans = Geist({

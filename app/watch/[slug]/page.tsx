@@ -20,7 +20,7 @@ export default function WatchPage({ params }: { params: Promise<{ slug: string }
       </Suspense>
 
       <p className="py-6 text-center text-xs text-muted-foreground">
-        Live testnet demo — payments settle in real USDC on Arc, shown in ₦ for convenience.
+        Live testnet demo, payments settle in real USDC on Arc, shown in ₦ for convenience.
       </p>
     </main>
   );

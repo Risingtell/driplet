@@ -67,7 +67,7 @@ export function ExploreList({ items }: { items: ExploreItem[] }) {
 
       {filtered.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
-          {items.length === 0 ? "No streams yet — be the first to go live." : "No matches."}
+          {items.length === 0 ? "No streams yet, be the first to go live." : "No matches."}
         </p>
       ) : (
         <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

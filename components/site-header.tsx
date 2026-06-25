@@ -21,8 +21,11 @@ export function SiteHeader() {
         <Link href="/#how" className="transition-colors hover:text-foreground">
           How it works
         </Link>
-        <Link href="/#use-cases" className="transition-colors hover:text-foreground">
+        <Link href="/use-cases" className="transition-colors hover:text-foreground">
           Use cases
+        </Link>
+        <Link href="/why" className="transition-colors hover:text-foreground">
+          Why
         </Link>
         <Link href="/explore" className="transition-colors hover:text-foreground">
           Explore

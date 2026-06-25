@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Coins, Hash, Plug, Webhook } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToTop } from "@/components/back-to-top";
 
 interface SidecarStats {
   settlementCount: number;
@@ -22,7 +23,7 @@ export default function SidecarPage() {
         const json = (await res.json()) as SidecarStats;
         if (alive) setStats(json);
       } catch {
-        /* ignore — retry on next tick */
+        /* ignore, retry on next tick */
       }
     };
     void tick();
@@ -60,7 +61,7 @@ export default function SidecarPage() {
           moment a viewer joins and again when they leave. Driplet&apos;s sidecar listens to those
           two events, measures exactly how long each viewer was present, and settles{" "}
           <span className="font-medium text-foreground">seconds&nbsp;×&nbsp;rate</span> in USDC to
-          the streamer — second by second, on Arc, with no change to Owncast itself.
+          the streamer, second by second, on Arc, with no change to Owncast itself.
         </p>
       </section>
 
@@ -93,7 +94,7 @@ export default function SidecarPage() {
           <code>POST https://trydriplet.vercel.app/api/sidecar/owncast?stream=&lt;your-slug&gt;</code>
         </pre>
         <p className="mt-3 text-sm text-muted-foreground">
-          That&apos;s the whole integration. No fork, no plugin, no upstream change — the operator
+          That&apos;s the whole integration. No fork, no plugin, no upstream change, the operator
           installs it at the deployment layer. The same settlement core also powers per-minute VOD
           (Jellyfin) and a PeerTube plugin: build once, distribute three ways.
         </p>
@@ -106,6 +107,7 @@ export default function SidecarPage() {
         </Link>
         .
       </p>
+      <BackToTop />
     </main>
   );
 }

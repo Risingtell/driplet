@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Radio, Split } from "lucide-react";
 import { naira } from "@/lib/currency";
 
-const RATE_PER_SECOND = 0.0003; // USDC per second watched — Driplet's default drip
+const RATE_PER_SECOND = 0.0003; // USDC per second watched, Driplet's default drip
 
 // The autonomous treasury split (matches the live product's default).
 const PAYEES = [
@@ -96,10 +96,10 @@ export function LiveDrip() {
         </div>
       </div>
 
-      {/* autonomous split — a core of Driplet */}
+      {/* autonomous split, a core of Driplet */}
       <div className="mt-5 rounded-xl border border-border/60 p-3">
         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-          <Split className="size-3.5 text-primary" /> Auto-split in real time — no human in the loop
+          <Split className="size-3.5 text-primary" /> Auto-split in real time, no human in the loop
         </div>
         <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-muted">
           {PAYEES.map((p) => (
@@ -123,7 +123,7 @@ export function LiveDrip() {
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Every second auto-splits to the creator, co-host, and the AI agent — settled in USDC,
+        Every second auto-splits to the creator, co-host, and the AI co-host, settled in USDC,
         gas-free.
       </p>
     </div>

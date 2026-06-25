@@ -1,4 +1,4 @@
-# Driplet — Lepton Agents Hackathon submission
+# Driplet, Lepton Agents Hackathon submission
 
 Paste-ready answers for the submission form.
 Before submitting, refresh the numbers from the live feed at
@@ -10,7 +10,7 @@ https://trydriplet.vercel.app/impact (or /api/impact).
 - Live app: https://trydriplet.vercel.app
 - Try it yourself: open https://trydriplet.vercel.app/watch/ada-live and press Watch. You'll see real USDC settle on Arc every second you watch.
 - Live proof feed: https://trydriplet.vercel.app/impact (every settlement, with its Circle Gateway id, updating in real time)
-- Owncast sidecar: https://trydriplet.vercel.app/sidecar (per-second pay for any Owncast stream — see "Open source / sidecar" below)
+- Owncast sidecar: https://trydriplet.vercel.app/sidecar (per-second pay for any Owncast stream, see "Open source / sidecar" below)
 - Demo video: https://youtu.be/kNDozV116bU
 - Source code: https://github.com/Risingtell/driplet
 - Creator studio: sign in at https://trydriplet.vercel.app/signin (email magic link auto-creates a Circle wallet on Arc; then go live with a camera or an uploaded video)
@@ -24,7 +24,7 @@ Pay creators by the second. You watch a stream and your wallet sends a fraction 
 ## Project Description (form: "what it does, how it works, what tech you used")
 Driplet lets people pay creators by the second. You open a stream and, for every second you watch, your wallet sends a fraction of a cent in USDC to the creator on Arc. Stop watching and the payments stop. No bank account, no subscription, no minimum payout.
 
-How it works: when you press Watch, the page sends one payment per second. Instead of a raw on-chain transaction each time (Arc's base fee would make sub-cent payments pointless), the drips are batched and settled through Circle Gateway using signed EIP-3009 authorizations, which keeps them gas-free and lets amounts as small as $0.0003 actually clear. Each stream has its own treasury that runs without a human: as income arrives it splits in real time between the creator, a co-host, and a captions agent the stream runs, paying each into their own wallet on Arc. The agent is paid per call out of the stream's own earnings — money flows in and back out on its own, agent to agent, with no human in the loop.
+How it works: when you press Watch, the page sends one payment per second. Instead of a raw on-chain transaction each time (Arc's base fee would make sub-cent payments pointless), the drips are batched and settled through Circle Gateway using signed EIP-3009 authorizations, which keeps them gas-free and lets amounts as small as $0.0003 actually clear. Each stream has its own treasury that runs without a human: as income arrives it splits in real time between the creator, a co-host, and a captions agent the stream runs, paying each into their own wallet on Arc. The agent is paid per call out of the stream's own earnings, money flows in and back out on its own, agent to agent, with no human in the loop.
 
 Tech: Next.js (App Router) and TypeScript front and back, deployed on Vercel; Supabase (Postgres) for streams and the payment log; payments over x402 settled through Circle Gateway on Arc, built on Circle's @circle-fin/x402-batching client; viem for wallet and chain work; a wallet-connect that auto-adds the Arc network.
 
@@ -36,7 +36,7 @@ Driplet turns watch time into income, one second at a time. A viewer opens a str
 ## The problem I'm solving
 A lot of people have an audience but no real way to get paid for it online. The mainstream platforms all want a bank account and a sizable following, and they simply can't process payments worth a fraction of a cent because the fee would be larger than the payment itself. That leaves a whole layer of creators, especially anyone without easy access to banking, out of the picture. People have promised micropayments for years, but the rails were never really there. Arc and Circle's nanopayments are the first time they actually are, and Driplet is what I built on top of them.
 
-I build for the people right around me first: creators in Kano whose audience thinks in Naira, not dollars. So Driplet shows every amount in Naira even though it settles in USDC, because the person watching shouldn't have to care what x402 or Arc or USDC is — they should just see that their favourite creator earned ₦80 while they watched. The point was never the rails; it's that someone who never had a way to get paid for their audience finally does.
+I build for the people right around me first: creators in Kano whose audience thinks in Naira, not dollars. So Driplet shows every amount in Naira even though it settles in USDC, because the person watching shouldn't have to care what x402 or Arc or USDC is, they should just see that their favourite creator earned ₦80 while they watched. The point was never the rails; it's that someone who never had a way to get paid for their audience finally does.
 
 ## How it uses Arc and the Circle Agent Stack
 Every per-second payment is a real USDC settlement on Arc testnet, and you can verify each one on the live feed. I don't send a raw transaction per second, since Arc's base fee would make that pointless. Instead the drips are batched and settled through Circle Gateway using signed EIP-3009 authorizations, which keeps them gas-free and lets sub-cent amounts actually work. The payments themselves run over x402, both for the viewer's per-second charge and for the AI agent's paid calls. The whole thing is built on Circle's @circle-fin/x402-batching Gateway client.
@@ -53,7 +53,7 @@ Driplet is already being used by real people. I shared it with creator communiti
 - zero failed payments
 - you can watch it land in real time at https://trydriplet.vercel.app/impact
 
-One honest note: most viewer payments come from one shared demo wallet, because letting anyone try it with no setup is what made it spread — so that bulk of on-chain data can't tell those viewers apart, and I track unique visitors separately through Vercel's analytics. Viewers can now also pay from their own wallets (one gasless signature, no Gateway deposit), and those settle from their own distinct addresses on-chain. I kept the no-friction path as the default on purpose.
+One honest note: most viewer payments come from one shared demo wallet, because letting anyone try it with no setup is what made it spread, so that bulk of on-chain data can't tell those viewers apart, and I track unique visitors separately through Vercel's analytics. Viewers can now also pay from their own wallets (one gasless signature, no Gateway deposit), and those settle from their own distinct addresses on-chain. I kept the no-friction path as the default on purpose.
 
 ## What's next
 I'm going to keep building this after the hackathon. A lot of the original roadmap already shipped during the event: real live video and screen sharing, creator accounts with auto-created wallets, live chat, decentralized video storage, own-wallet viewer payments, saveable creator profiles, and the Owncast sidecar. What's still ahead: an editable revenue split so creators set their own terms, real AI in the service agent (live transcription/captioning), the same sidecar pattern for other servers like Jellyfin and PeerTube, and a move to mainnet. The goal is a payment rail for the creators the current platforms overlook, and that's worth far more than two weeks of work to me.
@@ -75,10 +75,10 @@ I'm keeping the whole project open source. The Circle and Arc samples I started 
 
 - A metered per-second payment loop. Instead of one x402 call, the viewer pays a continuous stream of sub-cent nanopayments, batched through Circle Gateway so they stay gas-free. It's a reusable pattern for anything pay-as-you-go: media, APIs, compute time.
 - An autonomous treasury that splits revenue in real time. As income arrives it pays shares out to several wallets, each to its own address on Arc, with nobody pressing a button. That multi-payee settlement flow is the part the samples don't cover.
-- An agent as an on-chain payee. The treasury pays the captions agent it runs per call out of its own earnings, into the agent's own wallet — a closed earn-and-spend loop with no human in it. (The agent's captions are a placeholder today; the reusable part is the autonomous agent-to-agent payment.)
+- An agent as an on-chain payee. The treasury pays the captions agent it runs per call out of its own earnings, into the agent's own wallet, a closed earn-and-spend loop with no human in it. (The agent's captions are a placeholder today; the reusable part is the autonomous agent-to-agent payment.)
 - A hardened server-side Gateway client. I wrapped the GatewayClient so it lazily connects, auto-deposits, waits until the deposit is actually spendable, shares one in-flight deposit across concurrent callers, and retries transient timeouts. This fixes a race the sample hits on its first payment.
 - A permissionless Owncast sidecar. A webhook subscriber that adds per-second settlement to an existing Owncast server without modifying it, built and proven against a real Owncast instance settling real USDC on Arc. The settlement core under it is shared with the watch flow, so the same shape generalises to other open-source video servers.
-- Gasless own-wallet payments. A viewer signs a single EIP-3009 authorization (no gas, no Gateway deposit) and the treasury relays it on-chain, so anyone can pay from their own wallet with one signature — a clean pattern for "let a user pay you from their wallet without making them transact."
+- Gasless own-wallet payments. A viewer signs a single EIP-3009 authorization (no gas, no Gateway deposit) and the treasury relays it on-chain, so anyone can pay from their own wallet with one signature, a clean pattern for "let a user pay you from their wallet without making them transact."
 
 It's all in the repo and meant to be lifted out. Anyone who wants pay-per-second or auto-splitting payments on Arc can start from these instead of from scratch.
 

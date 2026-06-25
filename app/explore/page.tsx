@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { listStreams, creatorAddress } from "@/lib/streams-db";
 import { SiteHeader } from "@/components/site-header";
+import { BackToTop } from "@/components/back-to-top";
 import { ExploreList, type ExploreItem } from "@/components/explore/explore-list";
 
 export default function ExplorePage() {
@@ -20,6 +21,7 @@ export default function ExplorePage() {
           </Suspense>
         </div>
       </section>
+      <BackToTop />
     </main>
   );
 }

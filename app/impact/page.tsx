@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToTop } from "@/components/back-to-top";
 
 interface FeedItem {
   id: string;
@@ -72,7 +73,7 @@ export default function ImpactPage() {
         setData(json);
         setError(null);
       } catch {
-        if (alive) setError("Could not reach the live feed — retrying…");
+        if (alive) setError("Could not reach the live feed, retrying…");
       }
     };
     void tick();
@@ -120,7 +121,7 @@ export default function ImpactPage() {
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
           Every number below is a real USDC settlement on Arc via Circle Gateway. This page
-          updates live — watch per-second payments and autonomous agent payouts land as they
+          updates live, watch per-second payments and autonomous agent payouts land as they
           settle. Don&apos;t take our word for a counter; watch it move.
         </p>
       </section>
@@ -196,9 +197,10 @@ export default function ImpactPage() {
           <Link href="/watch/ada-live" className="text-emerald-500 hover:underline">
             live stream
           </Link>{" "}
-          and watch — every second you watch settles a real payment here.
+          and watch, every second you watch settles a real payment here.
         </p>
       </section>
+      <BackToTop />
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { Clapperboard, Play, Radio } from "lucide-react";
 import { listStreams, creatorAddress } from "@/lib/streams-db";
 import type { Stream } from "@/lib/streams";
 import { SiteHeader } from "@/components/site-header";
+import { BackToTop } from "@/components/back-to-top";
 import { SaveCreatorButton } from "@/components/save-creator-button";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,7 @@ export default function CreatorProfilePage({
       <Suspense fallback={<div className="py-10 text-sm text-muted-foreground">Loading…</div>}>
         <ProfileContent params={params} />
       </Suspense>
+      <BackToTop />
     </main>
   );
 }

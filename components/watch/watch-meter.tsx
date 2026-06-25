@@ -140,7 +140,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         tickCountRef.current += 1;
         // Periodically, the treasury autonomously (a) pays the AI captions agent
         // and (b) splits the interval's income out to each human payee's own
-        // wallet on Arc — money flows out, not just in.
+        // wallet on Arc, money flows out, not just in.
         if (tickCountRef.current % AGENT_PAY_EVERY === 0) {
           fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
             .then((res) => res.json())
@@ -177,7 +177,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       videoRef.current.play().catch(() => {});
     }
     setMuted(false);
-    // Owners previewing their own stream are not charged — just play it.
+    // Owners previewing their own stream are not charged, just play it.
     if (isOwner) {
       setStatus("streaming");
       return;
@@ -202,7 +202,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     connecting: "Connecting your stream…",
     streaming: "Paying the creator, live",
     retrying: "Reconnecting…",
-    waiting: "Waiting for the host — not charging yet",
+    waiting: "Waiting for the host, not charging yet",
   };
 
   return (
@@ -299,10 +299,10 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* meter */}
       {isOwner ? (
         <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
-          <span className="font-medium text-primary">Previewing your own stream</span>
+          <span className="font-medium text-primary">Previewing your own stream.</span>
           <span className="text-muted-foreground">
             {" "}
-            — you&apos;re not charged to watch your own content.
+            You&apos;re not charged to watch your own content.
           </span>
         </div>
       ) : (
@@ -341,7 +341,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   : "bg-amber-400"
             }`}
           />
-          {isOwner ? "Previewing — not charging" : statusLabel[status]}
+          {isOwner ? "Previewing, not charging" : statusLabel[status]}
         </span>
         {watching ? (
           <Button variant="outline" size="sm" onClick={stop}>
@@ -359,7 +359,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         {payMode === "demo" ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground">
-              Paying with the free demo wallet — no setup. Prefer to pay from your own wallet?
+              Paying with the free demo wallet, no setup. Prefer to pay from your own wallet?
             </span>
             <Button size="sm" variant="outline" onClick={() => useMyWallet(SESSION_USD)} disabled={ownBusy}>
               <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}

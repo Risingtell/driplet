@@ -128,7 +128,7 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
 
       <p className="mt-4 text-xs text-muted-foreground">
         The stream holds its own balance, splits each payment across its people,
-        and pays the AI agent it runs — agent-to-agent, no human in the loop.
+        and pays the AI co-host it runs, agent-to-agent, no human in the loop.
       </p>
     </div>
   );

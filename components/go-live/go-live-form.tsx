@@ -88,7 +88,7 @@ export function GoLiveForm() {
     e.preventDefault();
     setError(null);
     if (!host) {
-      setError("Connect your wallet first — that's where you get paid.");
+      setError("Connect your wallet first, that's where you get paid.");
       return;
     }
     setBusy(true);
@@ -286,7 +286,7 @@ export function GoLiveForm() {
           <Field label="Co-host name">
             <input className={inputCls} value={form.cohostName} onChange={set("cohostName")} placeholder="Bode (optional)" />
           </Field>
-          <Field label="Co-host wallet" hint="Optional — they get 20%.">
+          <Field label="Co-host wallet" hint="Optional, they get 20%.">
             <input className={inputCls} value={form.cohostAddress} onChange={set("cohostAddress")} placeholder="0x… (optional)" />
           </Field>
         </div>
