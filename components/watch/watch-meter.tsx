@@ -15,6 +15,10 @@ type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
 // Kept short so the autonomous agent-to-agent payment is visible in a demo.
 const AGENT_PAY_EVERY = 20;
 
+// Default own-wallet session: one signature prepays this much (capped by the
+// viewer's balance), enough to watch for hours so it never runs out mid-demo.
+const SESSION_USD = 5;
+
 export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwner?: boolean }) {
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -54,7 +58,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [needTopup, setNeedTopup] = useState(false);
   const payModeRef = useRef<"demo" | "own">("demo");
   const ownBudgetRef = useRef(0);
-  const lastAmountRef = useRef(0.5);
+  const lastAmountRef = useRef(SESSION_USD);
 
   const useMyWallet = useCallback(async (amountUsd: number) => {
     lastAmountRef.current = amountUsd;
@@ -343,27 +347,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* payment source */}
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
-          <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground">
-              Paying with the free demo wallet. Prefer to pay from your own wallet? Pick a session:
+              Paying with the free demo wallet — no setup. Prefer to pay from your own wallet?
             </span>
-            <div className="flex flex-wrap gap-2">
-              {[0.25, 0.5, 1].map((amt) => (
-                <Button
-                  key={amt}
-                  size="sm"
-                  variant="outline"
-                  onClick={() => useMyWallet(amt)}
-                  disabled={ownBusy}
-                >
-                  <Wallet className="size-4" /> {naira(amt)} · ~
-                  {Math.round(amt / stream.ratePerSecond / 60)} min
-                </Button>
-              ))}
-            </div>
-            {ownBusy && (
-              <p className="text-xs text-muted-foreground">Confirm the signature in your wallet…</p>
-            )}
+            <Button size="sm" variant="outline" onClick={() => useMyWallet(SESSION_USD)} disabled={ownBusy}>
+              <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
+            </Button>
           </div>
         ) : (
           <div>

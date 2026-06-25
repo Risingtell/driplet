@@ -55,8 +55,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     return NextResponse.json({ error: "authorization must pay this stream" }, { status: 400 });
   }
   const amount = Number(auth.value) / 1e6;
-  if (!(amount > 0) || amount > 5) {
-    return NextResponse.json({ error: "amount must be between 0 and $5" }, { status: 400 });
+  if (!(amount > 0) || amount > 10) {
+    return NextResponse.json({ error: "amount must be between 0 and $10" }, { status: 400 });
   }
 
   let tx: `0x${string}`;

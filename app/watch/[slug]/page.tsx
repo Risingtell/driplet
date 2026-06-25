@@ -1,13 +1,10 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveStream } from "@/lib/streams-db";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Stream } from "@/lib/streams";
-import { Logo } from "@/components/brand/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { BackButton } from "@/components/back-button";
+import { SiteHeader } from "@/components/site-header";
 import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
 import { LiveChat } from "@/components/chat/live-chat";
@@ -15,20 +12,7 @@ import { LiveChat } from "@/components/chat/live-chat";
 export default function WatchPage({ params }: { params: Promise<{ slug: string }> }) {
   return (
     <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
-      <header className="flex items-center justify-between py-5">
-        <div className="flex items-center gap-4">
-          <BackButton />
-          <Link href="/">
-            <Logo />
-          </Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-muted-foreground sm:inline">
-            No wallet needed — just press play
-          </span>
-          <ThemeToggle />
-        </div>
-      </header>
+      <SiteHeader />
 
       <Suspense fallback={<WatchSkeleton />}>
         <WatchContent params={params} />
