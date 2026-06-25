@@ -39,6 +39,23 @@ function rowToStream(r: StreamRow): Stream {
 
 const STREAM_COLS = "slug, title, creator, location, rate_per_second, video_url, is_live, split";
 
+/** List recent streams (newest first) for discovery + creator profiles. */
+export async function listStreams(limit = 100): Promise<Stream[]> {
+  const { data, error } = await supabase
+    .from("streams")
+    .select(STREAM_COLS)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return (data as StreamRow[]).map(rowToStream);
+}
+
+/** The creator's payout address for a stream, if any (their stable identity). */
+export function creatorAddress(stream: Stream): string | null {
+  const a = stream.split.find((p) => p.role === "Creator")?.address;
+  return a && /^0x[0-9a-fA-F]{40}$/.test(a) ? a : null;
+}
+
 /** Resolve a stream by slug: database first, then the in-code demo catalog. */
 export async function resolveStream(slug: string): Promise<Stream | null> {
   const { data, error } = await supabase

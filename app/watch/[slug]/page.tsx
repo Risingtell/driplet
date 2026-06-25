@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resolveStream } from "@/lib/streams-db";
+import { resolveStream, creatorAddress } from "@/lib/streams-db";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Stream } from "@/lib/streams";
@@ -52,6 +53,7 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
   const stream = await resolveStream(slug);
   if (!stream) notFound();
   const isOwner = await viewerOwnsStream(stream);
+  const addr = creatorAddress(stream);
 
   return (
     <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -60,7 +62,15 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{stream.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            with {stream.creator} · {stream.location}
+            with{" "}
+            {addr ? (
+              <Link href={`/c/${addr}`} className="text-foreground hover:text-primary">
+                {stream.creator}
+              </Link>
+            ) : (
+              stream.creator
+            )}{" "}
+            · {stream.location}
           </p>
         </div>
         <WatchMeter stream={stream} isOwner={isOwner} />

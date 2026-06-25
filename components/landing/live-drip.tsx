@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Radio } from "lucide-react";
+import { Radio, Split } from "lucide-react";
+import { naira } from "@/lib/currency";
 
 const RATE_PER_SECOND = 0.0003; // USDC per second watched — Driplet's default drip
+
+// The autonomous treasury split (matches the live product's default).
+const PAYEES = [
+  { name: "Ada", role: "Creator", share: 0.7, color: "bg-primary" },
+  { name: "Bode", role: "Co-host", share: 0.2, color: "bg-chart-2" },
+  { name: "AI agent", role: "Captions", share: 0.1, color: "bg-chart-3" },
+];
 
 /**
  * A self-running illustration of the core experience: as the seconds tick by,
@@ -73,22 +81,50 @@ export function LiveDrip() {
       <div className="flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            Paid to creator so far
+            Streamed so far
           </p>
           <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
-            ${paid.toFixed(4)}
+            {naira(paid)}
           </p>
+          <p className="tabular mt-1 text-xs text-muted-foreground">≈ ${paid.toFixed(4)} USDC</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Rate</p>
           <p className="tabular mt-1 font-mono text-sm text-foreground/80">
-            ${RATE_PER_SECOND.toFixed(4)}/sec
+            {naira(RATE_PER_SECOND)}/sec
           </p>
         </div>
       </div>
 
+      {/* autonomous split — a core of Driplet */}
+      <div className="mt-5 rounded-xl border border-border/60 p-3">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          <Split className="size-3.5 text-primary" /> Auto-split in real time — no human in the loop
+        </div>
+        <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-muted">
+          {PAYEES.map((p) => (
+            <div key={p.name} className={`${p.color} h-full`} style={{ width: `${p.share * 100}%` }} />
+          ))}
+        </div>
+        <ul className="mt-3 space-y-1.5">
+          {PAYEES.map((p) => (
+            <li key={p.name} className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <span className={`size-2 rounded-full ${p.color}`} />
+                <span className="font-medium">{p.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {p.role} · {Math.round(p.share * 100)}%
+                </span>
+              </span>
+              <span className="tabular font-mono text-foreground/90">{naira(paid * p.share)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <p className="mt-4 text-xs text-muted-foreground">
-        Stop watching and it stops — every second settled in USDC, gas-free.
+        Every second auto-splits to the creator, co-host, and the AI agent — settled in USDC,
+        gas-free.
       </p>
     </div>
   );

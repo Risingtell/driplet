@@ -24,8 +24,8 @@ export function SiteHeader() {
         <Link href="/#use-cases" className="transition-colors hover:text-foreground">
           Use cases
         </Link>
-        <Link href="/watch/ada-live" className="transition-colors hover:text-foreground">
-          Watch demo
+        <Link href="/explore" className="transition-colors hover:text-foreground">
+          Explore
         </Link>
       </nav>
       <div className="flex items-center gap-2">
