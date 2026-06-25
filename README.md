@@ -21,6 +21,7 @@ A payment worth a fraction of a cent was impossible when the fee cost more than 
 - **Owncast sidecar.** A drop-in webhook subscriber that adds per-second pay to any self-hosted Owncast stream without changing a line of Owncast. Proven end to end against a real Owncast server. This is the "Owncast per-second streaming webhook sidecar" from Canteen's request-for-payments-founders list.
 - **Pay from your own wallet.** Viewers can optionally pay from their own wallet with a single gasless EIP-3009 signature (no gas, no Gateway deposit); the treasury relays it on-chain. The shared demo wallet stays the default so anyone can try it with zero setup.
 - **Live video, screen share, and chat.** Broadcast a camera (LiveKit) or post a recorded video, share your screen, flip front/back camera, and chat live. Video uploads are stored on Walrus (decentralized storage).
+- **Decentralized storage end to end.** Each stream's metadata and its Walrus blob pointer are recorded on-chain on Arc (a `StreamRegistry` contract); the video files live on Walrus. Metadata on Arc, blobs on Walrus, readable back at `/api/streams/[slug]/onchain`.
 - **Creator profiles and discovery.** Public profiles you can save (a browser bookmark, no account) and an Explore page to search streams and creators.
 - **Creator studio.** Email sign-in auto-creates a Circle wallet on Arc; go live, see earnings, and withdraw USDC.
 
@@ -45,6 +46,7 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 4. **A hardened server-side Gateway client** (lazy connect, auto-deposit, wait until spendable, shared in-flight deposit, retry on transient timeouts).
 5. **A permissionless Owncast sidecar** built on the same shared settlement core.
 6. **Gasless own-wallet payments** via relayed EIP-3009 (pay from a wallet with one signature, no on-chain transaction by the user).
+7. **On-chain metadata with off-chain files** (a `StreamRegistry` on Arc plus Walrus blobs), a clean split for apps that want records on-chain and large files off-chain.
 
 ## Traction
 
@@ -87,6 +89,7 @@ Open `/watch/ada-live`, press play, and watch the meter and the treasury split m
 | `/api/watch/[slug]/charge` | x402 per-second charge |
 | `/api/watch/[slug]/own-pay` | Relay a viewer's gasless own-wallet payment |
 | `/api/agents/captions` | The real AI co-host, selling its work per call |
+| `/api/streams/[slug]/onchain` | Read a stream's metadata back from the Arc registry |
 | `/api/sidecar/owncast` | Owncast webhook receiver that settles per second |
 
 ## Acknowledgements
