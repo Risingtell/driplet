@@ -47,7 +47,7 @@ export function SignInForm() {
         type="email"
         required
         placeholder="you@example.com"
-        className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
       />
       {error && <p className="mt-2 text-sm text-amber-500">{error}</p>}
       <Button type="submit" disabled={pending} className="mt-4 w-full">

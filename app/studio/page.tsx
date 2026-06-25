@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Radio, Wallet, Clapperboard, Droplet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { naira } from "@/lib/currency";
 import { getWalletInfo, getCreatorStreams } from "@/app/creator/actions";
 
 export default async function OverviewPage() {
@@ -9,10 +10,10 @@ export default async function OverviewPage() {
   const totalStreamed = streams.reduce((s, x) => s + x.streamed, 0);
 
   const stats = [
-    { label: "Wallet balance", value: `$${(info.balance ?? 0).toFixed(4)}`, icon: Wallet },
-    { label: "Total streamed", value: `$${totalStreamed.toFixed(4)}`, icon: Droplet },
-    { label: "Drips", value: totalDrips.toLocaleString(), icon: Droplet },
-    { label: "Streams", value: String(streams.length), icon: Clapperboard },
+    { label: "Wallet balance", value: naira(info.balance ?? 0), sub: `$${(info.balance ?? 0).toFixed(4)}`, icon: Wallet },
+    { label: "Total streamed", value: naira(totalStreamed), sub: `$${totalStreamed.toFixed(4)}`, icon: Droplet },
+    { label: "Drips", value: totalDrips.toLocaleString(), sub: undefined as string | undefined, icon: Droplet },
+    { label: "Streams", value: String(streams.length), sub: undefined as string | undefined, icon: Clapperboard },
   ];
 
   return (
@@ -29,6 +30,7 @@ export default async function OverviewPage() {
             <div className="text-gradient mt-2 font-mono text-xl font-semibold tabular">
               {s.value}
             </div>
+            {s.sub && <div className="tabular text-[11px] text-muted-foreground">{s.sub}</div>}
             <div className="mt-0.5 text-xs text-muted-foreground">{s.label}</div>
           </div>
         ))}

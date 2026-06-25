@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, Loader2, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { naira } from "@/lib/currency";
 import { getWalletInfo, withdraw } from "@/app/creator/actions";
 
 export function WalletPanel({ address, balance }: { address: string; balance: number }) {
@@ -40,9 +41,14 @@ export function WalletPanel({ address, balance }: { address: string; balance: nu
           <Wallet className="size-4" /> Balance on Arc
         </div>
         <div className="mt-2 flex items-end gap-3">
-          <span className="text-gradient font-mono text-4xl font-semibold tabular">
-            ${bal.toFixed(4)}
-          </span>
+          <div>
+            <span className="text-gradient font-mono text-4xl font-semibold tabular">
+              {naira(bal)}
+            </span>
+            <span className="tabular ml-2 text-sm text-muted-foreground">
+              ${bal.toFixed(4)} USDC
+            </span>
+          </div>
           <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing}>
             <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
           </Button>
@@ -75,14 +81,14 @@ export function WalletPanel({ address, balance }: { address: string; balance: nu
         <input
           name="to"
           placeholder="Destination address (0x…)"
-          className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
         <input
           name="amount"
           type="number"
           step="0.0001"
           placeholder="Amount (USDC)"
-          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
         {msg && (
           <p className={`mt-2 text-sm ${msg.kind === "ok" ? "text-emerald-500" : "text-amber-500"}`}>

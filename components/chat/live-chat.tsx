@@ -112,7 +112,7 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
           onChange={(e) => setText(e.target.value)}
           placeholder="Send a message…"
           maxLength={300}
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-emerald-500"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
         />
         <button
           type="submit"

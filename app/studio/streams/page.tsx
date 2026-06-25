@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Radio, ExternalLink, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { naira } from "@/lib/currency";
 import { getCreatorStreams } from "@/app/creator/actions";
 
 export default async function StreamsPage() {
@@ -40,7 +41,7 @@ export default async function StreamsPage() {
                   )}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  {s.drips.toLocaleString()} drips · ${s.streamed.toFixed(4)} streamed
+                  {s.drips.toLocaleString()} drips · {naira(s.streamed)} streamed
                 </div>
               </div>
               <Link href={`/watch/${s.slug}`} target="_blank">
