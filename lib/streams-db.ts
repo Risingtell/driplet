@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import { getStream, type Payee, type Stream } from "@/lib/streams";
+import { getStream, streams as seededStreams, type Payee, type Stream } from "@/lib/streams";
 
 /**
  * Database-backed streams. Creators "go live" by inserting a row here; the rest
@@ -39,15 +39,19 @@ function rowToStream(r: StreamRow): Stream {
 
 const STREAM_COLS = "slug, title, creator, location, rate_per_second, video_url, is_live, split";
 
-/** List recent streams (newest first) for discovery + creator profiles. */
+/** List recent streams (newest first) for discovery + creator profiles.
+ *  Includes the in-code demo streams (e.g. ada-live) so the flagship demo is
+ *  discoverable too. */
 export async function listStreams(limit = 100): Promise<Stream[]> {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("streams")
     .select(STREAM_COLS)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error || !data) return [];
-  return (data as StreamRow[]).map(rowToStream);
+  const db = (data ?? []).map((r) => rowToStream(r as StreamRow));
+  const slugs = new Set(db.map((s) => s.slug));
+  const seeded = seededStreams.filter((s) => !slugs.has(s.slug));
+  return [...db, ...seeded];
 }
 
 /** The creator's payout address for a stream, if any (their stable identity). */

@@ -28,7 +28,13 @@ export function SiteHeader() {
           Explore
         </Link>
       </nav>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/explore"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground md:hidden"
+        >
+          Explore
+        </Link>
         <ThemeToggle />
         <Button asChild size="sm">
           <Link href="/studio/go-live">
