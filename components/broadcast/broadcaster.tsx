@@ -2,7 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track, VideoPresets, type LocalVideoTrack } from "livekit-client";
-import { Check, Copy, Loader2, MonitorUp, Radio, SwitchCamera, Video, VideoOff } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Loader2,
+  Mic,
+  MicOff,
+  MonitorUp,
+  Radio,
+  SwitchCamera,
+  Video,
+  VideoOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type State = "idle" | "connecting" | "live" | "error";
@@ -21,6 +32,19 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
   const [copied, setCopied] = useState(false);
   const [sharingScreen, setSharingScreen] = useState(false);
   const [facing, setFacing] = useState<"user" | "environment">("user");
+  const [micOn, setMicOn] = useState(true);
+
+  /** Mute or unmute the host's own microphone. */
+  async function toggleMic() {
+    const room = roomRef.current;
+    if (!room) return;
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!micOn);
+      setMicOn(!micOn);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   /** Flip between front and back camera (mainly for phones). */
   async function flipCamera() {
@@ -97,6 +121,7 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
     roomRef.current = null;
     setViewers(0);
     setSharingScreen(false);
+    setMicOn(true);
     setState("idle");
   }
 
@@ -146,6 +171,10 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         {live ? (
           <>
+            <Button variant={micOn ? "outline" : "default"} onClick={toggleMic}>
+              {micOn ? <Mic className="size-4" /> : <MicOff className="size-4" />}
+              {micOn ? "Mute" : "Unmute"}
+            </Button>
             {!sharingScreen && (
               <Button variant="outline" onClick={flipCamera}>
                 <SwitchCamera className="size-4" /> Flip camera

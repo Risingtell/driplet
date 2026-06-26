@@ -14,18 +14,30 @@ type State = "connecting" | "waiting" | "live" | "error";
 export function LiveVideo({
   slug,
   onLiveChange,
+  muted = false,
 }: {
   slug: string;
   /** Fires true once the host's video is playing, false while waiting/ended. */
   onLiveChange?: (live: boolean) => void;
+  /** Mute the host's incoming audio (viewer-controlled). */
+  muted?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioWrap = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>("connecting");
   const [screen, setScreen] = useState(false);
   const tracksRef = useRef<Map<string, RemoteTrack>>(new Map());
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
   const cb = useRef(onLiveChange);
   cb.current = onLiveChange;
+
+  // Apply mute to any attached audio elements when the viewer toggles it.
+  useEffect(() => {
+    audioWrap.current?.querySelectorAll("audio").forEach((a) => {
+      a.muted = muted;
+    });
+  }, [muted]);
 
   useEffect(() => {
     let room: Room | null = null;
@@ -72,7 +84,9 @@ export function LiveVideo({
         room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
           if (track.sid) tracksRef.current.set(track.sid, track);
           if (track.kind === Track.Kind.Audio && audioWrap.current) {
-            audioWrap.current.appendChild(track.attach());
+            const el = track.attach() as HTMLMediaElement;
+            el.muted = mutedRef.current;
+            audioWrap.current.appendChild(el);
           } else if (track.kind === Track.Kind.Video) {
             reattach();
           }

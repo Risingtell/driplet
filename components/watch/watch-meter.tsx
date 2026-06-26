@@ -215,7 +215,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         {/* Live streams show the host's real camera (LiveKit); recorded streams
             autoplay the video file (Watch resumes + pays, Stop pauses it). */}
         {stream.isLive ? (
-          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} />
+          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} muted={muted} />
         ) : (
           <video
             ref={videoRef}
@@ -240,15 +240,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         {/* player controls (shown while watching) */}
         {watching && (
           <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5">
-            {!stream.isLive && (
-              <button
-                onClick={toggleMute}
-                aria-label={muted ? "Unmute" : "Mute"}
-                className="grid size-8 place-items-center rounded-md bg-black/45 text-white/90 backdrop-blur transition-colors hover:bg-black/65"
-              >
-                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-              </button>
-            )}
+            <button
+              onClick={toggleMute}
+              aria-label={muted ? "Unmute" : "Mute"}
+              className="grid size-8 place-items-center rounded-md bg-black/45 text-white/90 backdrop-blur transition-colors hover:bg-black/65"
+            >
+              {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+            </button>
             <button
               onClick={goFullscreen}
               aria-label="Fullscreen"
