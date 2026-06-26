@@ -68,7 +68,15 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
     if (!room) return;
     try {
       const next = !sharingScreen;
-      await room.localParticipant.setScreenShareEnabled(next);
+      const pub = await room.localParticipant.setScreenShareEnabled(next);
+      // Show the host what they're actually broadcasting: while sharing, point the
+      // preview at the screen track; when they stop, flip it back to the camera.
+      if (previewRef.current) {
+        const track = next
+          ? pub?.videoTrack
+          : room.localParticipant.getTrackPublication(Track.Source.Camera)?.videoTrack;
+        track?.attach(previewRef.current);
+      }
       setSharingScreen(next);
     } catch (e) {
       setError((e as Error).message);
