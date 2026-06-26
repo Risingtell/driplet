@@ -355,13 +355,26 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* payment source */}
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm text-muted-foreground">
-              Paying with the free demo wallet, no setup. Prefer to pay from your own wallet?
-            </span>
-            <Button size="sm" variant="outline" onClick={() => useMyWallet(SESSION_USD)} disabled={ownBusy}>
-              <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
-            </Button>
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm text-muted-foreground">
+                Paying with the free demo wallet, no setup. Prefer to pay from your own wallet?
+              </span>
+              <Button size="sm" variant="outline" onClick={() => useMyWallet(SESSION_USD)} disabled={ownBusy}>
+                <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Need testnet USDC first?{" "}
+              <a
+                href="https://faucet.circle.com"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Get it free at faucet.circle.com →
+              </a>
+            </p>
           </div>
         ) : (
           <div>

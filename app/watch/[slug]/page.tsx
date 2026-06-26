@@ -10,6 +10,7 @@ import type { Stream } from "@/lib/streams";
 import { SiteHeader } from "@/components/site-header";
 import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
+import { ViewerCount } from "@/components/watch/viewer-count";
 import { LiveChat } from "@/components/chat/live-chat";
 
 export default function WatchPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -76,18 +77,21 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
             )}{" "}
             · {stream.location}
           </p>
-          {registry && (
-            <a
-              href={registry}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              title="Stream metadata is stored on Arc; video files on Walrus"
-            >
-              <Database className="size-3.5 text-primary" />
-              Metadata on Arc{onWalrus ? " · video on Walrus" : ""}
-            </a>
-          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <ViewerCount slug={stream.slug} />
+            {registry && (
+              <a
+                href={registry}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                title="Stream metadata is stored on Arc; video files on Walrus"
+              >
+                <Database className="size-3.5 text-primary" />
+                Metadata on Arc{onWalrus ? " · video on Walrus" : ""}
+              </a>
+            )}
+          </div>
         </div>
         <WatchMeter stream={stream} isOwner={isOwner} />
         <TreasuryPanel stream={stream} />
