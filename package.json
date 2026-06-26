@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "^10.6.0",
+    "@circle-fin/modular-wallets-core": "^1.0.13",
     "@circle-fin/x402-batching": "^2.0.4",
     "@langchain/core": "^1.1.32",
     "@langchain/openai": "^1.2.13",

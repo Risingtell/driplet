@@ -1,7 +1,19 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { Play, Pause, Radio, Maximize, Volume2, VolumeX, Bot, Wallet, Check } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Play,
+  Pause,
+  Radio,
+  Maximize,
+  Volume2,
+  VolumeX,
+  Bot,
+  Wallet,
+  Check,
+  Fingerprint,
+  Copy,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
 import { naira } from "@/lib/currency";
@@ -60,6 +72,98 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const payModeRef = useRef<"demo" | "own">("demo");
   const ownBudgetRef = useRef(0);
   const lastAmountRef = useRef(SESSION_USD);
+  // Which wallet funded the current "own" session, so Top up uses the same one.
+  const paySourceRef = useRef<"metamask" | "passkey">("metamask");
+
+  // Passkey (Circle Modular Wallet) onboarding: a gasless smart account created
+  // with Face ID / Touch ID, no extension or seed phrase.
+  const [pkSupported, setPkSupported] = useState(false);
+  const [pkBusy, setPkBusy] = useState(false);
+  const [pkAddr, setPkAddr] = useState<string | null>(null);
+  const [pkNeedsFunds, setPkNeedsFunds] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setPkSupported(
+      !!process.env.NEXT_PUBLIC_CIRCLE_CLIENT_KEY &&
+        typeof window !== "undefined" &&
+        !!window.PublicKeyCredential,
+    );
+  }, []);
+
+  const usePasskey = useCallback(
+    async (amountUsd: number) => {
+      lastAmountRef.current = amountUsd;
+      setOwnErr(null);
+      setPkBusy(true);
+      try {
+        const { signInWithPasskey, currentSession } = await import("@/lib/passkey");
+        let session = currentSession();
+        if (!session) {
+          const stored = localStorage.getItem("driplet_passkey_user");
+          const username = stored ?? `driplet-${Math.random().toString(16).slice(2, 8)}`;
+          try {
+            session = await signInWithPasskey(username, stored ? "login" : "register");
+          } catch (e) {
+            // A stored credential that won't log in (e.g. cleared) → register fresh.
+            if (stored) session = await signInWithPasskey(username, "register");
+            else throw e;
+          }
+          localStorage.setItem("driplet_passkey_user", username);
+        }
+        setPkAddr(session.address);
+
+        const bal = await session.balance();
+        if (bal < 0.01) {
+          // Brand-new wallet with no testnet USDC: show the address to fund.
+          setPkNeedsFunds(true);
+          return;
+        }
+        setPkNeedsFunds(false);
+
+        const info = (await fetch(`/api/watch/${stream.slug}/passkey-pay`).then((r) => r.json())) as {
+          payTo: `0x${string}`;
+        };
+        const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
+        const tx = await session.pay(info.payTo, budget);
+        const res = await fetch(`/api/watch/${stream.slug}/passkey-pay`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tx, payer: session.address }),
+        });
+        const j = (await res.json()) as { ok?: boolean; tx?: string; amount?: number; error?: string };
+        if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
+
+        setOwnAddress(session.address);
+        ownBudgetRef.current = j.amount ?? budget;
+        setOwnBudget(ownBudgetRef.current);
+        setLastTx(j.tx ?? tx);
+        setNeedTopup(false);
+        paySourceRef.current = "passkey";
+        payModeRef.current = "own";
+        setPayMode("own");
+      } catch (e) {
+        const msg = (e as Error).message || "Could not set up your passkey wallet";
+        setOwnErr(
+          /reject|denied|cancel|NotAllowed|abort/i.test(msg) ? "Sign-in cancelled." : msg,
+        );
+      } finally {
+        setPkBusy(false);
+      }
+    },
+    [stream.slug],
+  );
+
+  const copyPkAddr = useCallback(() => {
+    if (!pkAddr) return;
+    navigator.clipboard?.writeText(pkAddr).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      },
+      () => {},
+    );
+  }, [pkAddr]);
 
   const useMyWallet = useCallback(async (amountUsd: number) => {
     lastAmountRef.current = amountUsd;
@@ -90,6 +194,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setOwnBudget(ownBudgetRef.current);
       setLastTx(j.tx ?? null);
       setNeedTopup(false);
+      paySourceRef.current = "metamask";
       payModeRef.current = "own";
       setPayMode("own");
     } catch (e) {
@@ -358,14 +463,64 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm text-muted-foreground">
-                Paying with the free demo wallet, no setup. Prefer to pay from your own wallet?
+                Paying with the free demo wallet, no setup. Prefer to pay yourself?
               </span>
-              <Button size="sm" variant="outline" onClick={() => useMyWallet(SESSION_USD)} disabled={ownBusy}>
-                <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Pay from my wallet"}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {pkSupported && (
+                  <Button size="sm" onClick={() => usePasskey(SESSION_USD)} disabled={pkBusy || ownBusy}>
+                    <Fingerprint className="size-4" /> {pkBusy ? "Setting up…" : "Sign in with Face ID"}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => useMyWallet(SESSION_USD)}
+                  disabled={ownBusy || pkBusy}
+                >
+                  <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
+                </Button>
+              </div>
             </div>
+            {pkSupported && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Face ID creates a free wallet on Arc, no app, no seed phrase, gas is on us.
+              </p>
+            )}
+            {pkNeedsFunds && pkAddr && (
+              <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                <p className="font-medium text-foreground">Your wallet is ready. Add a little testnet USDC to start.</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="tabular flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">
+                    {pkAddr}
+                  </code>
+                  <Button size="sm" variant="outline" onClick={copyPkAddr}>
+                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Send free testnet USDC to this address at{" "}
+                  <a
+                    href="https://faucet.circle.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    faucet.circle.com →
+                  </a>{" "}
+                  (pick Arc Testnet), then continue.
+                </p>
+                <Button
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => usePasskey(lastAmountRef.current)}
+                  disabled={pkBusy}
+                >
+                  {pkBusy ? "Checking…" : "I've funded it, continue"}
+                </Button>
+              </div>
+            )}
             <p className="mt-2 text-xs text-muted-foreground">
-              Need testnet USDC first?{" "}
+              Using your own wallet? Need testnet USDC?{" "}
               <a
                 href="https://faucet.circle.com"
                 target="_blank"
@@ -395,10 +550,16 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               <Button
                 size="sm"
                 className="mt-2"
-                onClick={() => useMyWallet(lastAmountRef.current)}
-                disabled={ownBusy}
+                onClick={() =>
+                  paySourceRef.current === "passkey"
+                    ? usePasskey(lastAmountRef.current)
+                    : useMyWallet(lastAmountRef.current)
+                }
+                disabled={ownBusy || pkBusy}
               >
-                {ownBusy ? "Confirm in wallet…" : `Top up ${naira(lastAmountRef.current)} & keep watching`}
+                {ownBusy || pkBusy
+                  ? "Confirm…"
+                  : `Top up ${naira(lastAmountRef.current)} & keep watching`}
               </Button>
             )}
           </div>
