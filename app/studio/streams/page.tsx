@@ -2,10 +2,15 @@ import Link from "next/link";
 import { Radio, ExternalLink, Clapperboard, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { naira } from "@/lib/currency";
+import { isHostBroadcasting } from "@/lib/livekit";
 import { getCreatorStreams, getWalletInfo } from "@/app/creator/actions";
 
 export default async function StreamsPage() {
   const [streams, info] = await Promise.all([getCreatorStreams(), getWalletInfo()]);
+  // A live-type stream is only "LIVE" if the creator is actually broadcasting now.
+  const broadcasting = await Promise.all(
+    streams.map((s) => (s.isLive ? isHostBroadcasting(s.slug) : Promise.resolve(false))),
+  );
 
   return (
     <div className="max-w-2xl">
@@ -41,7 +46,7 @@ export default async function StreamsPage() {
         </div>
       ) : (
         <ul className="mt-6 space-y-3">
-          {streams.map((s) => (
+          {streams.map((s, i) => (
             <li
               key={s.slug}
               className="glass flex items-center justify-between rounded-xl border border-border/60 p-4"
@@ -49,11 +54,15 @@ export default async function StreamsPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-medium">{s.title}</span>
-                  {s.isLive && (
-                    <span className="inline-flex items-center gap-1 rounded bg-destructive/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {broadcasting[i] ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded bg-destructive/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                       <span className="size-1 rounded-full bg-white animate-live" /> LIVE
                     </span>
-                  )}
+                  ) : s.isLive ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      Offline
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {s.drips.toLocaleString()} drips · ${s.streamed.toFixed(4)} streamed · ≈{" "}
