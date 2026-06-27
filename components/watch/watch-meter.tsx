@@ -22,7 +22,7 @@ import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
 import { signWatchAuthorization, getUsdcBalance } from "@/lib/own-wallet";
 import type { Stream } from "@/lib/streams";
 
-type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting";
+type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting" | "preview";
 
 // How often (in paid seconds) the stream treasury pays the AI captions agent.
 // Kept short so the autonomous agent-to-agent payment is visible in a demo.
@@ -31,6 +31,11 @@ const AGENT_PAY_EVERY = 20;
 // Default own-wallet session: one signature prepays this much (capped by the
 // viewer's balance), enough to watch for hours so it never runs out mid-demo.
 const SESSION_USD = 5;
+
+// Free preview: seconds a viewer can watch on the demo wallet before being asked
+// to connect their own wallet. 0 = unlimited free demo (the default, keeps reach
+// frictionless). Flip on later by setting NEXT_PUBLIC_FREE_PREVIEW_SECONDS=60.
+const FREE_PREVIEW_SECONDS = Number(process.env.NEXT_PUBLIC_FREE_PREVIEW_SECONDS ?? 0);
 
 export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwner?: boolean }) {
   const [status, setStatus] = useState<Status>("idle");
@@ -43,6 +48,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const tickCountRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  // Free-preview gating (only used when FREE_PREVIEW_SECONDS > 0).
+  const demoSecondsRef = useRef(0);
+  const [previewEnded, setPreviewEnded] = useState(false);
 
   const goFullscreen = useCallback(() => {
     const surface = surfaceRef.current as
@@ -168,6 +176,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         paySourceRef.current = "passkey";
         payModeRef.current = "own";
         setPayMode("own");
+        // If they hit the free-preview wall, resume right where they paused.
+        setPreviewEnded(false);
+        videoRef.current?.play().catch(() => {});
       } catch (e) {
         const msg = (e as Error).message || "Could not set up your passkey wallet";
         let friendly = msg;
@@ -225,6 +236,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       paySourceRef.current = "metamask";
       payModeRef.current = "own";
       setPayMode("own");
+      // If they hit the free-preview wall, resume right where they paused.
+      setPreviewEnded(false);
+      videoRef.current?.play().catch(() => {});
     } catch (e) {
       const msg = (e as Error).message || "Could not pay from your wallet";
       // A user rejecting the signature in their wallet isn't an error worth shouting about.
@@ -259,6 +273,16 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       if (watchingRef.current) setTimeout(loop, 1000);
       return;
     }
+    // Free-preview cap: after the allotted free seconds on the demo wallet, pause
+    // and ask the viewer to connect their own wallet. The loop keeps spinning so
+    // it resumes automatically the moment they switch to "own" mode.
+    if (FREE_PREVIEW_SECONDS > 0 && demoSecondsRef.current >= FREE_PREVIEW_SECONDS) {
+      setPreviewEnded(true);
+      setStatus("preview");
+      videoRef.current?.pause();
+      if (watchingRef.current) setTimeout(loop, 1000);
+      return;
+    }
     try {
       const r = await fetch("/api/watch/tick", {
         method: "POST",
@@ -269,6 +293,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       if (j.ok) {
         setPaid((p) => p + parseFloat(j.amount));
         setSeconds((s) => s + 1);
+        demoSecondsRef.current += 1;
         setStatus("streaming");
         tickCountRef.current += 1;
         // Periodically, the treasury autonomously (a) pays the AI captions agent
@@ -340,6 +365,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     streaming: "Paying the creator, live",
     retrying: "Reconnecting…",
     waiting: "Waiting for the host, not charging yet",
+    preview: "Free preview ended — connect to keep watching",
   };
 
   return (
@@ -432,7 +458,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           {stream.creator} · {stream.location}
         </div>
 
-        {!watching && (
+        {!watching && !previewEnded && (
           <button
             onClick={start}
             aria-label="Play"
@@ -442,6 +468,35 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               <Play className="size-7 translate-x-0.5 fill-current" />
             </span>
           </button>
+        )}
+
+        {/* Free-preview wall: shown once the free seconds are used up. */}
+        {previewEnded && !isOwner && (
+          <div className="absolute inset-0 z-30 grid place-items-center bg-black/75 p-4 text-center backdrop-blur-sm">
+            <div className="w-full max-w-xs">
+              <p className="text-sm font-semibold text-white">Your free preview ended</p>
+              <p className="mt-1 text-xs text-white/70">
+                Keep watching {stream.creator} from your own wallet — it takes seconds and the gas
+                is on us.
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                {pkSupported && (
+                  <Button onClick={() => usePasskey(SESSION_USD)} disabled={pkBusy || ownBusy}>
+                    <Fingerprint className="size-4" />{" "}
+                    {pkBusy ? "Setting up…" : "Continue with Face ID"}
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => useMyWallet(SESSION_USD)}
+                  disabled={ownBusy || pkBusy}
+                >
+                  <Wallet className="size-4" />{" "}
+                  {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -507,16 +562,34 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm text-muted-foreground">
-                Paying with the free demo wallet, no setup. Prefer to pay yourself?
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {pkSupported && (
-                  <Button size="sm" onClick={() => usePasskey(SESSION_USD)} disabled={pkBusy || ownBusy}>
-                    <Fingerprint className="size-4" /> {pkBusy ? "Setting up…" : "Sign in with Face ID"}
-                  </Button>
-                )}
+            {pkSupported ? (
+              <>
+                <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Set one up with Face ID in seconds — no app, no seed phrase, and the gas is on
+                  us. You&apos;re on the free demo wallet until you do.
+                </p>
+                <Button
+                  className="mt-3 w-full"
+                  onClick={() => usePasskey(SESSION_USD)}
+                  disabled={pkBusy || ownBusy}
+                >
+                  <Fingerprint className="size-4" />{" "}
+                  {pkBusy ? "Setting up…" : "Continue with Face ID"}
+                </Button>
+                <button
+                  onClick={() => useMyWallet(SESSION_USD)}
+                  disabled={ownBusy || pkBusy}
+                  className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
+                >
+                  {ownBusy ? "Confirm in wallet…" : "or connect an existing wallet"}
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Paying with the free demo wallet, no setup. Prefer to pay yourself?
+                </span>
                 <Button
                   size="sm"
                   variant="outline"
@@ -526,11 +599,6 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
                 </Button>
               </div>
-            </div>
-            {pkSupported && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Face ID creates a free wallet on Arc, no app, no seed phrase, gas is on us.
-              </p>
             )}
             {pkNeedsFunds && pkAddr && (
               <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
