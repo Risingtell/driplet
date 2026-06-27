@@ -95,7 +95,7 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
           <p className="py-8 text-center text-xs text-muted-foreground">Say hi to the stream 👋</p>
         ) : (
           messages.map((m) => (
-            <div key={m.id} className="text-sm">
+            <div key={m.id} className="break-words text-sm">
               <span className={`font-medium ${m.host ? "text-primary" : "text-foreground/80"}`}>
                 {m.name}
                 {m.host && " (host)"}

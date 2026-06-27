@@ -67,14 +67,12 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
             </p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <p className="text-xs text-muted-foreground">Total earned</p>
           <p className="text-gradient tabular font-mono text-lg font-semibold leading-none">
-            {naira(data.total)}
-          </p>
-          <p className="tabular text-[11px] text-muted-foreground">
             ${data.total.toFixed(4)}
           </p>
+          <p className="tabular text-[11px] text-muted-foreground">≈ {naira(data.total)}</p>
         </div>
       </div>
 
@@ -92,13 +90,13 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
       {/* payees */}
       <ul className="mt-4 space-y-3">
         {data.payees.map((p, i) => (
-          <li key={p.name} className="flex items-center justify-between">
-            <span className="flex items-center gap-2.5">
+          <li key={p.name} className="flex items-center justify-between gap-3">
+            <span className="flex min-w-0 items-center gap-2.5">
               <span
-                className={`size-2.5 rounded-full ${roleColor[i % roleColor.length]}`}
+                className={`size-2.5 shrink-0 rounded-full ${roleColor[i % roleColor.length]}`}
               />
-              <span className="text-sm font-medium">{p.name}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 text-sm font-medium">{p.name}</span>
+              <span className="truncate text-xs text-muted-foreground">
                 {p.role} · {Math.round(p.share * 100)}%
                 {p.address ? (
                   <span className="ml-1 font-mono">
@@ -107,21 +105,21 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
                 ) : null}
               </span>
             </span>
-            <span className="tabular font-mono text-sm text-foreground/90">
-              {naira(p.amount)}
+            <span className="tabular shrink-0 font-mono text-sm text-foreground/90">
+              ${p.amount.toFixed(4)}
             </span>
           </li>
         ))}
       </ul>
 
       {/* autonomous agent outflow */}
-      <div className="mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3">
-        <span className="flex items-center gap-2 text-sm">
-          <span className="size-2 rounded-full bg-primary animate-live" />
-          <span className="font-medium">Autonomously paid the AI co-host</span>
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+        <span className="flex min-w-0 items-center gap-2 text-sm">
+          <span className="size-2 shrink-0 rounded-full bg-primary animate-live" />
+          <span className="truncate font-medium">Autonomously paid the AI co-host</span>
         </span>
-        <span className="tabular font-mono text-sm">
-          {naira(data.agentPaid)}
+        <span className="tabular shrink-0 font-mono text-sm">
+          ${data.agentPaid.toFixed(4)}
           <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
         </span>
       </div>

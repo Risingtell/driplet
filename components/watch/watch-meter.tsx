@@ -112,6 +112,15 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [pkAddr, setPkAddr] = useState<string | null>(null);
   const [pkNeedsFunds, setPkNeedsFunds] = useState(false);
   const [copied, setCopied] = useState(false);
+  const fundRef = useRef<HTMLDivElement>(null);
+
+  // When the wallet is created but unfunded, bring the funding step into view so
+  // it isn't missed below the fold (a tester kept re-tapping Face ID otherwise).
+  useEffect(() => {
+    if (pkNeedsFunds && pkAddr) {
+      fundRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [pkNeedsFunds, pkAddr]);
 
   useEffect(() => {
     const supported =
@@ -510,25 +519,25 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           </span>
         </div>
       ) : (
-        <div className="mt-5 flex items-end justify-between">
-          <div>
+        <div className="mt-5 flex items-end justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
               You&apos;ve paid {stream.creator}
             </p>
             <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
-              {naira(paid)}
+              ${paid.toFixed(4)}
             </p>
             <p className="tabular mt-1 text-xs text-muted-foreground">
-              ≈ ${paid.toFixed(4)} USDC
+              USDC on Arc · ≈ {naira(paid)}
             </p>
           </div>
-          <div className="text-right">
+          <div className="shrink-0 text-right">
             <p className="text-xs text-muted-foreground">Rate</p>
             <p className="tabular mt-1 font-mono text-sm text-foreground/80">
-              {naira(stream.ratePerSecond)}/sec
+              ${stream.ratePerSecond.toFixed(4)}/sec
             </p>
             <p className="tabular text-xs text-muted-foreground">
-              ${stream.ratePerSecond.toFixed(4)}
+              ≈ {naira(stream.ratePerSecond)}
             </p>
           </div>
         </div>
@@ -561,90 +570,94 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* payment source */}
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
-          <div>
-            {pkSupported ? (
-              <>
-                <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Set one up with Face ID in seconds — no app, no seed phrase, and the gas is on
-                  us. You&apos;re on the free demo wallet until you do.
-                </p>
-                <Button
-                  className="mt-3 w-full"
-                  onClick={() => usePasskey(SESSION_USD)}
-                  disabled={pkBusy || ownBusy}
-                >
-                  <Fingerprint className="size-4" />{" "}
-                  {pkBusy ? "Setting up…" : "Continue with Face ID"}
-                </Button>
-                <button
-                  onClick={() => useMyWallet(SESSION_USD)}
-                  disabled={ownBusy || pkBusy}
-                  className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
-                >
-                  {ownBusy ? "Confirm in wallet…" : "or connect an existing wallet"}
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Paying with the free demo wallet, no setup. Prefer to pay yourself?
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => useMyWallet(SESSION_USD)}
-                  disabled={ownBusy || pkBusy}
-                >
-                  <Wallet className="size-4" /> {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
+          pkNeedsFunds && pkAddr ? (
+            <div ref={fundRef} className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+              <p className="flex items-center gap-1.5 font-medium text-foreground">
+                <Check className="size-4 text-primary" /> Wallet created with Face ID
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                One more step — add a little free testnet USDC to this address, then come back and
+                continue.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <code className="tabular min-w-0 flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">
+                  {pkAddr}
+                </code>
+                <Button size="sm" variant="outline" className="shrink-0" onClick={copyPkAddr}>
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 </Button>
               </div>
-            )}
-            {pkNeedsFunds && pkAddr && (
-              <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-                <p className="font-medium text-foreground">Your wallet is ready. Add a little testnet USDC to start.</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <code className="tabular flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">
-                    {pkAddr}
-                  </code>
-                  <Button size="sm" variant="outline" onClick={copyPkAddr}>
-                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              <Button asChild className="mt-2 w-full" onClick={copyPkAddr}>
+                <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">
+                  {copied ? "Address copied — paste it on the faucet" : "Copy address & open faucet.circle.com"}
+                </a>
+              </Button>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Pick Arc Testnet, paste your address, request USDC, then continue.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-2 w-full"
+                onClick={() => usePasskey(lastAmountRef.current)}
+                disabled={pkBusy}
+              >
+                {pkBusy ? "Checking…" : "I've funded it — continue"}
+              </Button>
+            </div>
+          ) : (
+            <div>
+              {pkSupported ? (
+                <>
+                  <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Set one up with Face ID in seconds — no app, no seed phrase, and the gas is on
+                    us. You&apos;re on the free demo wallet until you do.
+                  </p>
+                  <Button
+                    className="mt-3 w-full"
+                    onClick={() => usePasskey(SESSION_USD)}
+                    disabled={pkBusy || ownBusy}
+                  >
+                    <Fingerprint className="size-4" />{" "}
+                    {pkBusy ? "Setting up…" : "Continue with Face ID"}
+                  </Button>
+                  <button
+                    onClick={() => useMyWallet(SESSION_USD)}
+                    disabled={ownBusy || pkBusy}
+                    className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
+                  >
+                    {ownBusy ? "Confirm in wallet…" : "or connect an existing wallet"}
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Paying with the free demo wallet, no setup. Prefer to pay yourself?
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => useMyWallet(SESSION_USD)}
+                    disabled={ownBusy || pkBusy}
+                  >
+                    <Wallet className="size-4" />{" "}
+                    {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Send free testnet USDC to this address at{" "}
-                  <a
-                    href="https://faucet.circle.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium text-primary underline-offset-2 hover:underline"
-                  >
-                    faucet.circle.com →
-                  </a>{" "}
-                  (pick Arc Testnet), then continue.
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => usePasskey(lastAmountRef.current)}
-                  disabled={pkBusy}
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Using your own wallet? Need testnet USDC?{" "}
+                <a
+                  href="https://faucet.circle.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-primary underline-offset-2 hover:underline"
                 >
-                  {pkBusy ? "Checking…" : "I've funded it, continue"}
-                </Button>
-              </div>
-            )}
-            <p className="mt-2 text-xs text-muted-foreground">
-              Using your own wallet? Need testnet USDC?{" "}
-              <a
-                href="https://faucet.circle.com"
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-primary underline-offset-2 hover:underline"
-              >
-                Get it free at faucet.circle.com →
-              </a>
-            </p>
-          </div>
+                  Get it free at faucet.circle.com →
+                </a>
+              </p>
+            </div>
+          )
         ) : (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">

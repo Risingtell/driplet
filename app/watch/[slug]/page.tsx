@@ -98,7 +98,7 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
       </div>
 
       {/* side column: chat (sticky + full height on desktop) */}
-      <aside className="lg:sticky lg:top-5 lg:self-start">
+      <aside className="min-w-0 lg:sticky lg:top-5 lg:self-start">
         <div className="lg:h-[calc(100vh-7.5rem)]">
           <LiveChat slug={stream.slug} />
         </div>
