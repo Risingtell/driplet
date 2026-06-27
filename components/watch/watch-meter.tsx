@@ -13,6 +13,7 @@ import {
   Check,
   Fingerprint,
   Copy,
+  Clapperboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
@@ -73,9 +74,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     });
   }, []);
   // For live streams, only charge while the host is actually broadcasting.
+  // The ref drives the charging loop; the state drives the LIVE/Offline badge.
   const hostLiveRef = useRef(false);
+  const [hostLive, setHostLiveState] = useState(false);
   const setHostLive = useCallback((live: boolean) => {
     hostLiveRef.current = live;
+    setHostLiveState(live);
   }, []);
 
   // Own-wallet mode: the viewer prepays a session from their own wallet (one
@@ -166,9 +170,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         setPayMode("own");
       } catch (e) {
         const msg = (e as Error).message || "Could not set up your passkey wallet";
-        setOwnErr(
-          /reject|denied|cancel|NotAllowed|abort/i.test(msg) ? "Sign-in cancelled." : msg,
-        );
+        let friendly = msg;
+        if (/reject|denied|cancel|NotAllowed|abort/i.test(msg)) friendly = "Sign-in cancelled.";
+        else if (/entity config|not found in the system/i.test(msg))
+          friendly = "Face ID sign-in isn't available right now. Use your own wallet instead.";
+        setOwnErr(friendly);
       } finally {
         setPkBusy(false);
       }
@@ -274,8 +280,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             .then((aj) => {
               if (aj?.ok) {
                 setAgentFlash(true);
-                if (aj.caption) setAgentMsg(aj.caption);
                 setTimeout(() => setAgentFlash(false), 2500);
+                if (aj.caption) {
+                  setAgentMsg(aj.caption);
+                  // Auto-dismiss so the caption doesn't sit over the video.
+                  setTimeout(() => setAgentMsg(null), 6000);
+                }
               }
             })
             .catch(() => {});
@@ -356,10 +366,24 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/40" />
 
-        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-destructive/90 px-2 py-1 text-xs font-semibold text-white">
-          <span className="size-1.5 rounded-full bg-white animate-live" />
-          LIVE
-        </div>
+        {stream.isLive ? (
+          hostLive ? (
+            <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-destructive/90 px-2 py-1 text-xs font-semibold text-white">
+              <span className="size-1.5 rounded-full bg-white animate-live" />
+              LIVE
+            </div>
+          ) : (
+            <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2 py-1 text-xs font-medium text-white/80 backdrop-blur">
+              <span className="size-1.5 rounded-full bg-white/40" />
+              Offline
+            </div>
+          )
+        ) : (
+          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2 py-1 text-xs font-medium text-white/80 backdrop-blur">
+            <Clapperboard className="size-3" />
+            Recorded
+          </div>
+        )}
         <div className="absolute right-3 top-3 rounded-md bg-black/30 px-2 py-1 text-xs text-white/80 tabular">
           {mmss} watched
         </div>
@@ -396,9 +420,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         )}
 
         {watching && agentMsg && (
-          <div className="absolute inset-x-3 bottom-12 flex justify-center">
-            <span className="max-w-[92%] rounded-lg bg-primary/90 px-3 py-1.5 text-center text-sm text-primary-foreground backdrop-blur">
-              <span className="font-semibold">AI co-host:</span> {agentMsg}
+          <div className="pointer-events-none absolute inset-x-0 bottom-10 flex justify-center px-3">
+            <span className="line-clamp-2 max-w-[80%] rounded-md bg-black/55 px-2.5 py-1 text-center text-xs text-white/90 backdrop-blur-sm">
+              <span className="font-semibold text-primary">AI co-host</span> {agentMsg}
             </span>
           </div>
         )}

@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { listStreams, creatorAddress } from "@/lib/streams-db";
+import { isHostBroadcasting } from "@/lib/livekit";
 import { SiteHeader } from "@/components/site-header";
 import { BackToTop } from "@/components/back-to-top";
 import { ExploreList, type ExploreItem } from "@/components/explore/explore-list";
@@ -27,14 +29,21 @@ export default function ExplorePage() {
 }
 
 async function ExploreContent() {
+  // Live status must reflect the moment of the request, never build time.
+  await connection();
   const streams = await listStreams();
-  const items: ExploreItem[] = streams.map((s) => ({
-    slug: s.slug,
-    title: s.title,
-    creator: s.creator,
-    location: s.location,
-    isLive: s.isLive,
-    address: creatorAddress(s),
-  }));
+  const items: ExploreItem[] = await Promise.all(
+    streams.map(async (s) => ({
+      slug: s.slug,
+      title: s.title,
+      creator: s.creator,
+      location: s.location,
+      isLive: s.isLive,
+      // "broadcasting" = a host is on air right now (only meaningful for live
+      // streams). A live-type stream whose creator is offline shows as Offline.
+      broadcasting: s.isLive ? await isHostBroadcasting(s.slug) : false,
+      address: creatorAddress(s),
+    })),
+  );
   return <ExploreList items={items} />;
 }

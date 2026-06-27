@@ -48,7 +48,7 @@ export default function Landing() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button asChild variant="ghost" size="sm">
-            <Link href="/signin">Sign in</Link>
+            <Link href="/explore">Explore</Link>
           </Button>
           <Button asChild size="sm">
             <Link href="/studio/go-live">Go live</Link>
@@ -81,7 +81,7 @@ export default function Landing() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/watch/ada-live">Watch the live demo</Link>
+              <Link href="/watch/ada-live">Watch a demo stream</Link>
             </Button>
           </div>
 

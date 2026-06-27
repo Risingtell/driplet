@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Radio, Clapperboard, Wallet } from "lucide-react";
+import { LayoutDashboard, Radio, Clapperboard, Wallet, Compass } from "lucide-react";
 
 const tabs = [
   { href: "/studio", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/studio/go-live", label: "Go Live", icon: Radio, exact: false },
   { href: "/studio/streams", label: "My Streams", icon: Clapperboard, exact: false },
   { href: "/studio/wallet", label: "Wallet", icon: Wallet, exact: false },
+  // Creators are viewers too — let them browse and watch other creators.
+  { href: "/explore", label: "Explore", icon: Compass, exact: false },
 ];
 
 export function StudioSidebar() {

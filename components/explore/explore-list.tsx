@@ -12,6 +12,7 @@ export interface ExploreItem {
   creator: string;
   location: string;
   isLive: boolean;
+  broadcasting: boolean;
   address: string | null;
 }
 
@@ -75,9 +76,13 @@ export function ExploreList({ items }: { items: ExploreItem[] }) {
             <li key={i.slug} className="glass flex flex-col rounded-xl border border-border/60 p-4">
               <div className="flex items-start justify-between gap-2">
                 <span className="font-medium">{i.title}</span>
-                {i.isLive ? (
+                {i.broadcasting ? (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded bg-destructive/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                     <span className="size-1 rounded-full bg-white animate-live" /> LIVE
+                  </span>
+                ) : i.isLive ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    <span className="size-1 rounded-full bg-muted-foreground/50" /> Offline
                   </span>
                 ) : (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -97,7 +102,8 @@ export function ExploreList({ items }: { items: ExploreItem[] }) {
               </div>
               <Link href={`/watch/${i.slug}`} className="mt-3">
                 <Button size="sm" variant="outline" className="w-full">
-                  <Play className="size-3.5" /> {i.isLive ? "Watch live" : "Re-watch"}
+                  <Play className="size-3.5" />{" "}
+                  {i.broadcasting ? "Watch live" : i.isLive ? "Open" : "Re-watch"}
                 </Button>
               </Link>
             </li>
