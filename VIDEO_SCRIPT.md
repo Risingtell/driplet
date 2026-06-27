@@ -1,78 +1,64 @@
-# Driplet — Demo Video: simple step-by-step
+# Driplet — Demo Video Script (~2.5 min)
 
-You record ONE browser window. Aim for ~2.5–3 minutes. Lines after 🎤 are what you
-SAY; lines after 🖱️ are what you CLICK/DO. The Lepton judges said they weigh
-**traction and intent-to-keep-building over a clever demo** — so the script shows
-the product working, then spends real time on the traction and the vision.
+Keep it real. Phone-shot + screen recording, a real stream, real numbers. Talk like
+you're explaining it to a friend, not pitching. No music needed, your voice is enough.
+Lines after 🎤 are what you SAY; lines after 🖱️ are what you DO.
 
----
-
-## PART 1 — Get ready (before recording)
-
-1. Open Chrome. Have two tabs ready:
-   - Tab A: **https://trydriplet.vercel.app/watch/ada-live**
-   - Tab B: **https://trydriplet.vercel.app/dashboard** (log in first: `admin@example.com` / `123456`)
-2. **Warm it up:** on Tab A, let the watch meter run for ~30 seconds once, *before*
-   recording, so the wallet is funded and the first real payment is quick. Then refresh.
-3. Start screen recording (press **Win + G** → Record, or use Loom).
+The Lepton judges said they weigh **traction and intent-to-keep-building over a clever
+demo** — so show the product working, then spend real time on the proof and the vision.
 
 ---
 
-## PART 2 — Record
-
-### Hook & problem (~25s) — start on the Driplet landing page
-🖱️ Open **https://trydriplet.vercel.app/**
-> 🎤 "Millions of creators can't get paid online. Patreon, Stripe and YouTube
-> need a bank account and a big audience, and they can't handle tiny payments.
-> So a creator in Kano streaming to fifty people earns nothing.
-> Driplet fixes that — viewers pay per second, in real USDC, as low as a
-> hundredth of a cent, with no bank and no subscription."
-
-### What it is (~20s)
-> 🎤 "Driplet runs on Arc, Circle's USDC blockchain, using Circle's nanopayments.
-> You watch, your wallet streams money by the second. You stop watching, you stop
-> paying. And every payment settles on-chain for real."
-
-### Live demo — pay per second (~45s)
-🖱️ Switch to Tab A (**/watch/ada-live**). Point at the watch meter as it ticks.
-> 🎤 "Here's a live stream. Watch the meter — every second, a real sub-cent USDC
-> payment settles on Arc to the creator. No subscription, no minimum. This is
-> happening on testnet right now, one payment per second."
-
-🖱️ Scroll to the **Treasury panel** under the player.
-> 🎤 "And here's the agent part. Each stream has its own autonomous treasury that
-> splits the money in real time — 70% to the creator Ada, 20% to her co-host, and
-> 10% to an AI captions agent. That AI agent is a paid participant: the stream pays
-> it, by the second, out of its own earnings. Money flows in AND out, automatically."
-
-### Creator dashboard (~25s)
-🖱️ Switch to Tab B (**/dashboard**).
-> 🎤 "The creator sees every drip land in real time, their total earnings, and can
-> withdraw their USDC straight from Circle's Gateway. No invoices, no payout delays."
-
-### Traction — the important part (~35s)
-🖱️ Back to Tab A; point at the Treasury totals (count / agent payments).
-> 🎤 "This isn't a mockup. I shared Driplet into real WhatsApp creator communities
-> in Kano, and people used it. So far: over six thousand four hundred real
-> per-second payments, three hundred and twenty-one autonomous payments to the AI
-> agent, around two dollars streamed end to end — and zero failed payments.
-> These are unbanked creators, a market Patreon and YouTube simply don't serve."
-
-### Vision / we'll keep building (~20s)
-> 🎤 "Driplet is the payment rail these creators have never had. We're not stopping
-> after the hackathon — next is a real Owncast streaming plugin and onboarding more
-> Kano creators with their own wallets. Per-second money, for everyone. That's Driplet."
-
-🖱️ Stop the recording.
+## Before you record
+- Open **https://trydriplet.vercel.app/watch/ada-live** on your phone.
+- Let the meter run ~30 seconds once before recording so the first payment is quick, then refresh.
+- Screen-record your phone (and film your face for the intro/outro if you can).
+- Under 3 minutes. Tight cuts.
 
 ---
 
-## PART 3 — Done
-- Video saves to **C:\Users\HP\Videos\Captures** (Game Bar) or your Loom library.
-- Upload to YouTube as **Unlisted** (or share the Loom link) and send me the URL —
-  I'll drop it straight into the submission form copy.
+## [0:00–0:18] The problem (your face, or a Kano shot)
+> 🎤 "I'm in Kano, Nigeria. Around me there are people who teach, perform, and create
+> every day, and they're good. But they can't get paid by their own audience. No
+> Patreon, no Stripe, half of them have no bank. So I built Driplet."
 
-### Tips
-- If a payment ever stalls on camera, just keep talking — say "settling on Arc now"
-  and it catches up. The warm-up in Part 1 prevents most stalls.
-- No need to rush. Judges care about the explanation and the traction, not speed.
+## [0:18–0:45] What it does (watch page)
+🖱️ Open /watch/ada-live, press play, let the meter tick. Point at the USDC amount going up, ₦ underneath.
+> 🎤 "Driplet is pay-per-second streaming. You open a stream, you press play, and from
+> that second the creator starts earning. That's real USDC settling on Arc, every
+> single second. Stop watching, you stop paying. No subscription, no middleman."
+
+## [0:45–1:18] Pay with your face (the wow moment)
+🖱️ Tap "Continue with Face ID". Do the Face ID prompt on camera. Show the wallet getting
+created, the faucet step, then "Paying from your wallet."
+> 🎤 "Now here's the part I'm proud of. Most crypto apps lose normal people at 'connect
+> your wallet.' We don't. No app, no seed phrase. Your face makes the wallet, the gas is
+> on us, and now you're paying the creator directly from your own wallet."
+
+## [1:18–1:48] The autonomous part (treasury panel)
+🖱️ Scroll to the Stream treasury panel. Show the live split bar and the "Autonomously
+paid the AI co-host" line ticking up.
+> 🎤 "Every payment is split in real time. The creator, the co-host, and the stream's own
+> AI co-host all get their share automatically. The stream even pays its own AI agent,
+> agent to agent, on-chain. That's the part that runs by itself."
+
+## [1:48–2:18] Proof it's real (impact page)
+🖱️ Open /impact. Scroll the live settlement feed with the Gateway IDs. Show your real totals.
+> 🎤 "And this isn't a mockup. Real people in my community have been using it. Thousands
+> of real payments, zero failed, every one verifiable on-chain. Metadata stored on Arc,
+> the video on Walrus. It's all live right now."
+
+## [2:18–2:40] Close (your face)
+> 🎤 "I'm not going to abandon this after the hackathon. The people who need it are
+> already here, in front of me. I'm going to keep building Driplet so anyone the banks
+> ignore can finally get paid for their work. Thanks for watching."
+
+🖱️ End on the URL: **trydriplet.vercel.app**
+
+---
+
+## Recording tips
+- Record the Face ID part on your **actual phone** — more convincing than a mockup.
+- Show the **numbers moving**. The ticking meter and the treasury split are the story.
+- One honest line beats ten buzzwords. You have the real thing, so just show it.
+- Upload to YouTube as **Unlisted** and send the link for the submission form.
