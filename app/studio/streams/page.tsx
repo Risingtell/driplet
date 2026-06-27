@@ -56,7 +56,8 @@ export default async function StreamsPage() {
                   )}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  {s.drips.toLocaleString()} drips · {naira(s.streamed)} streamed
+                  {s.drips.toLocaleString()} drips · ${s.streamed.toFixed(4)} streamed · ≈{" "}
+                  {naira(s.streamed)}
                 </div>
               </div>
               <Link href={`/watch/${s.slug}`} target="_blank">

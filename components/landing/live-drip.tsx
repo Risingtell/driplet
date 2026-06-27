@@ -78,21 +78,22 @@ export function LiveDrip() {
       </div>
 
       {/* streaming counter */}
-      <div className="flex items-end justify-between">
-        <div>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Streamed so far
           </p>
           <p className="text-gradient tabular mt-1 font-mono text-4xl font-semibold leading-none">
-            {naira(paid)}
+            ${paid.toFixed(4)}
           </p>
-          <p className="tabular mt-1 text-xs text-muted-foreground">≈ ${paid.toFixed(4)} USDC</p>
+          <p className="tabular mt-1 text-xs text-muted-foreground">USDC on Arc · ≈ {naira(paid)}</p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <p className="text-xs text-muted-foreground">Rate</p>
           <p className="tabular mt-1 font-mono text-sm text-foreground/80">
-            {naira(RATE_PER_SECOND)}/sec
+            ${RATE_PER_SECOND.toFixed(4)}/sec
           </p>
+          <p className="tabular text-xs text-muted-foreground">≈ {naira(RATE_PER_SECOND)}</p>
         </div>
       </div>
 
@@ -116,7 +117,9 @@ export function LiveDrip() {
                   {p.role} · {Math.round(p.share * 100)}%
                 </span>
               </span>
-              <span className="tabular font-mono text-foreground/90">{naira(paid * p.share)}</span>
+              <span className="tabular shrink-0 font-mono text-foreground/90">
+                ${(paid * p.share).toFixed(4)}
+              </span>
             </li>
           ))}
         </ul>

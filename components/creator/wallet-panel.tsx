@@ -43,10 +43,10 @@ export function WalletPanel({ address, balance }: { address: string; balance: nu
         <div className="mt-2 flex items-end gap-3">
           <div>
             <span className="text-gradient font-mono text-4xl font-semibold tabular">
-              {naira(bal)}
+              ${bal.toFixed(4)}
             </span>
             <span className="tabular ml-2 text-sm text-muted-foreground">
-              ${bal.toFixed(4)} USDC
+              USDC · ≈ {naira(bal)}
             </span>
           </div>
           <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing}>

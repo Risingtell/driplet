@@ -10,8 +10,8 @@ export default async function OverviewPage() {
   const totalStreamed = streams.reduce((s, x) => s + x.streamed, 0);
 
   const stats = [
-    { label: "Wallet balance", value: naira(info.balance ?? 0), sub: `$${(info.balance ?? 0).toFixed(4)}`, icon: Wallet },
-    { label: "Total streamed", value: naira(totalStreamed), sub: `$${totalStreamed.toFixed(4)}`, icon: Droplet },
+    { label: "Wallet balance", value: `$${(info.balance ?? 0).toFixed(4)}`, sub: `≈ ${naira(info.balance ?? 0)}`, icon: Wallet },
+    { label: "Total streamed", value: `$${totalStreamed.toFixed(4)}`, sub: `≈ ${naira(totalStreamed)}`, icon: Droplet },
     { label: "Drips", value: totalDrips.toLocaleString(), sub: undefined as string | undefined, icon: Droplet },
     { label: "Streams", value: String(streams.length), sub: undefined as string | undefined, icon: Clapperboard },
   ];
