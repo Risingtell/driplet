@@ -82,8 +82,8 @@ export async function POST(req: NextRequest) {
     });
   }
   split.push({
-    name: "AI Captions",
-    role: "Live captions agent",
+    name: "AI co-host",
+    role: "Commentary",
     share: 0.1,
     ...(agentAddress ? { address: agentAddress } : {}),
   });

@@ -308,8 +308,8 @@ export function GoLiveForm() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Split: 70% you · 20% co-host · 10% AI captions agent (90/10 if no co-host). The agent
-          does real work and is paid into its own wallet too.
+          Split: 70% you · 20% co-host · 10% AI co-host (90/10 if no co-host). The AI co-host does
+          real work and is paid into its own wallet too.
         </p>
 
         {error && <p className="text-sm text-amber-500">{error}</p>}

@@ -37,7 +37,10 @@ export async function settleStreamSeconds(
   const settled: PayeeSettlement[] = [];
 
   for (const payee of stream.split) {
-    if (payee.role === "Live captions agent") continue; // paid via /agent-pay
+    // The AI co-host is paid separately via /agent-pay, never through the human
+    // split. Match both the old ("Live captions agent") and new ("Commentary")
+    // role labels so existing DB streams keep settling correctly.
+    if (payee.role === "Live captions agent" || payee.role === "Commentary") continue;
     let address = payee.address;
     if (!isAddr(address) && payee.role === "Co-host") address = COHOST_FALLBACK;
     if (!isAddr(address)) continue;

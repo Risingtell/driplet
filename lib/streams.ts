@@ -38,7 +38,7 @@ export const streams: Stream[] = [
     split: [
       { name: "Ada", role: "Creator", share: 0.7 },
       { name: "Bode", role: "Co-host", share: 0.2 },
-      { name: "AI Captions", role: "Live captions agent", share: 0.1 },
+      { name: "AI co-host", role: "Commentary", share: 0.1 },
     ],
   },
 ];
