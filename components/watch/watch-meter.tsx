@@ -44,7 +44,25 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   const goFullscreen = useCallback(() => {
-    surfaceRef.current?.requestFullscreen?.().catch(() => {});
+    const surface = surfaceRef.current as
+      | (HTMLDivElement & { webkitRequestFullscreen?: () => void })
+      | null;
+    if (!surface) return;
+    // Desktop + Android Chrome: fullscreen the whole surface (video + overlays).
+    if (surface.requestFullscreen) {
+      surface.requestFullscreen().catch(() => {});
+      return;
+    }
+    if (surface.webkitRequestFullscreen) {
+      surface.webkitRequestFullscreen();
+      return;
+    }
+    // iPhone Safari has no element Fullscreen API — only the <video> can go
+    // fullscreen, via webkitEnterFullscreen. Works for recorded and live feeds.
+    const video = surface.querySelector("video") as
+      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void })
+      | null;
+    video?.webkitEnterFullscreen?.();
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -84,11 +102,15 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setPkSupported(
+    const supported =
       !!process.env.NEXT_PUBLIC_CIRCLE_CLIENT_KEY &&
-        typeof window !== "undefined" &&
-        !!window.PublicKeyCredential,
-    );
+      typeof window !== "undefined" &&
+      !!window.PublicKeyCredential;
+    setPkSupported(supported);
+    // Warm the passkey SDK chunk now so the Face ID ceremony fires immediately on
+    // tap. iOS Safari invalidates the user gesture if a network chunk load runs
+    // first, which silently blocks navigator.credentials.create (Face ID).
+    if (supported) void import("@/lib/passkey");
   }, []);
 
   const usePasskey = useCallback(
