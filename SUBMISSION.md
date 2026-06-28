@@ -47,13 +47,16 @@ I use two more parts of the Circle stack for wallets. Creators get a Circle deve
 The heart of Driplet is the stream treasury, and it runs without a human in the loop. It takes in the viewer's per-second payments, splits them live (70% to the creator, 20% to the co-host, 10% to the agent), and pays the AI co-host per call straight from the stream's own earnings, into the agent's own wallet. The agent is a real LLM that generates live commentary, so it does genuine work and gets paid for it on-chain. The split and the agent's pay are real on-chain settlements: the stream is an autonomous economic actor that earns and spends on its own, with nobody pressing a button.
 
 ## Traction
-Driplet is already being used by real people. I shared it with creator communities I'm part of, and they actually watched and paid. Everything below is live and on-chain on Arc testnet:
+Driplet is already being used by real people. I shared it with creator communities I'm part of, and they actually watched and paid. Everything in the first list is live and verifiable on-chain on Arc testnet (open /impact and check any settlement id):
 
-- over 22,500 real per-second payments (around 375 minutes watched and paid for)
+- over 22,500 real per-second payments (around 376 minutes watched and paid for)
 - the treasury paid its agent 1,000+ times, on its own, out of stream earnings
-- about $6.75 streamed end to end, split correctly across creator, co-host and agent
+- about $6.77 streamed end to end, split correctly across creator, co-host and agent
+- 13 distinct wallets that paid from their OWN wallet (own-pay or Face ID), not the shared demo wallet, each verifiable as a distinct payer on-chain
 - zero failed payments
-- you can watch it land in real time at https://trydriplet.vercel.app/impact
+- you can watch it land in real time at https://trydriplet.vercel.app/impact (the "distinct paying wallets" stat updates live)
+
+Reach (off-chain context, from Vercel Web Analytics, not verifiable on-chain like the above): ~79 unique visitors in the last 7 days, up 58%, 0% error rate, mostly from WhatsApp creator communities in Kano.
 
 One honest note: most viewer payments come from one shared demo wallet, because letting anyone try it with no setup is what made it spread, so that bulk of on-chain data can't tell those viewers apart, and I track unique visitors separately through Vercel's analytics. Viewers can now also pay from their own wallets two ways, both settling from their own distinct addresses on-chain: a one-signature gasless EIP-3009 payment from an existing wallet, or a brand-new wallet created right in the browser with Face ID (Circle Modular Wallets, gas sponsored), no app and no seed phrase. Real passkey payments are already on the proof feed (look for the /passkey/ entries with their own transaction hash). I kept the no-friction shared-wallet path as the default on purpose.
 
