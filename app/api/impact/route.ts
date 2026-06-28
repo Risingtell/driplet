@@ -10,6 +10,21 @@ const AGENT_ENDPOINT = "/agents/captions";
 const AGENT_PRICE = 0.005;
 const RATE_PER_SECOND = 0.0003;
 
+// Infrastructure wallets that aren't real users: the treasury, the shared demo
+// viewer wallet, the AI agent, and the co-host fallback. Excluded from the
+// "unique real wallets" count so it reflects actual distinct people who paid.
+const INFRA_WALLETS = new Set(
+  [
+    process.env.SELLER_ADDRESS,
+    process.env.BUYER_ADDRESS,
+    process.env.CAPTIONS_AGENT_ADDRESS,
+    process.env.COHOST_ADDRESS,
+  ]
+    .filter(Boolean)
+    .map((a) => (a as string).toLowerCase()),
+);
+const isWallet = (a: string) => /^0x[0-9a-f]{40}$/.test(a);
+
 /**
  * Public, real-time proof-of-impact feed. Aggregates every settled per-second
  * payment across all streams plus the autonomous agent payments, and returns
@@ -22,7 +37,7 @@ export async function GET() {
   // watch payment is the same fixed price across all streams, so total =
   // count x price. Counting by the /watch/ endpoint prefix includes every
   // creator-created stream automatically.
-  const [watch, agent, recent] = await Promise.all([
+  const [watch, agent, recent, wallets] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -39,6 +54,12 @@ export async function GET() {
       .not("endpoint", "like", "/agents/captions/%")
       .order("created_at", { ascending: false })
       .limit(12),
+    // Distinct wallets that paid from their OWN wallet (own-pay + Face ID),
+    // i.e. real people, not the shared demo wallet.
+    supabase
+      .from("payment_events")
+      .select("payer")
+      .or("endpoint.like./own/%,endpoint.like./passkey/%"),
   ]);
 
   const err = watch.error ?? agent.error ?? recent.error;
@@ -50,6 +71,13 @@ export async function GET() {
   const totalStreamed = watchCount * RATE_PER_SECOND;
   const agentCount = agent.count ?? 0;
   const agentPaid = agentCount * AGENT_PRICE;
+
+  // Unique real users = distinct paying wallets minus infrastructure wallets.
+  const uniqueWallets = new Set(
+    (wallets.data ?? [])
+      .map((r) => (r.payer ?? "").toLowerCase())
+      .filter((a) => isWallet(a) && !INFRA_WALLETS.has(a)),
+  ).size;
 
   const feed = (recent.data ?? []).map((r) => ({
     id: r.id as string,
@@ -68,6 +96,7 @@ export async function GET() {
       minutesStreamed: watchCount / 60,
       agentCount,
       agentPaid,
+      uniqueWallets,
       feed,
       updatedAt: new Date().toISOString(),
     },

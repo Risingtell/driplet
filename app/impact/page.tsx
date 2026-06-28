@@ -11,6 +11,7 @@ import {
   Coins,
   Radio,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -32,6 +33,7 @@ interface Impact {
   minutesStreamed: number;
   agentCount: number;
   agentPaid: number;
+  uniqueWallets: number;
   streamCount: number;
   feed: FeedItem[];
   updatedAt: string;
@@ -87,6 +89,7 @@ export default function ImpactPage() {
   const stats = [
     { icon: Coins, label: "Total streamed", value: data ? usd(data.totalStreamed) : "—" },
     { icon: Activity, label: "Per-second payments", value: data ? data.watchCount.toLocaleString() : "—" },
+    { icon: Users, label: "Distinct paying wallets", value: data ? data.uniqueWallets.toLocaleString() : "—" },
     { icon: Clock, label: "Minutes streamed", value: data ? Math.round(data.minutesStreamed).toLocaleString() : "—" },
     { icon: Bot, label: "Autonomous agent payments", value: data ? data.agentCount.toLocaleString() : "—" },
     { icon: CircleDollarSign, label: "Paid to AI agent", value: data ? usd(data.agentPaid) : "—" },
