@@ -15,11 +15,12 @@ const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
 const ARC_NETWORK = "eip155:5042002";
 const isAddr = (a?: string | null): a is `0x${string}` => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
 
-/** The address a viewer should pay for this stream: the creator if they have a
- *  payout address, otherwise the stream treasury. */
-function payToFor(split: { role: string; address?: string | null }[]): `0x${string}` {
-  const creator = split.find((p) => p.role === "Creator")?.address;
-  return isAddr(creator) ? creator : SELLER;
+// Viewers always pay the stream treasury, which then auto-splits in real time to
+// the creator, co-host, and AI co-host (via /api/streams/[slug]/settle). Paying
+// the creator directly would skip the split and the agent, so we route to the
+// treasury just like the per-second demo charge does.
+function payToFor(_split: { role: string; address?: string | null }[]): `0x${string}` {
+  return SELLER;
 }
 
 /** GET → tell the client where to pay and at what rate. */

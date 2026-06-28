@@ -27,7 +27,7 @@ export async function GET(
   // REST 1000-row page limit.
   const AGENT_PRICE = 0.005;
 
-  const [watch, agent] = await Promise.all([
+  const [watch, agent, own] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -36,6 +36,12 @@ export async function GET(
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", "/agents/captions"),
+    // Own-wallet + Face ID payments are lump sums (not the fixed per-second
+    // price), so sum their amounts rather than counting them.
+    supabase
+      .from("payment_events")
+      .select("amount_usdc")
+      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`]),
   ]);
 
   if (watch.error || agent.error) {
@@ -47,7 +53,8 @@ export async function GET(
 
   const count = watch.count ?? 0;
   const agentCount = agent.count ?? 0;
-  const total = count * stream.ratePerSecond;
+  const ownTotal = (own.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
+  const total = count * stream.ratePerSecond + ownTotal;
   const agentPaid = agentCount * AGENT_PRICE;
 
   const payees = stream.split.map((p) => ({

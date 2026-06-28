@@ -257,6 +257,31 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     }
   }, [stream.slug]);
 
+  // Every AGENT_PAY_EVERY seconds the stream treasury (a) pays its AI co-host and
+  // (b) splits that interval's income out to each human payee's own wallet on Arc.
+  // Runs in BOTH demo and own-wallet modes so the autonomous split always happens.
+  const runTreasuryCycle = useCallback(() => {
+    fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
+      .then((res) => res.json())
+      .then((aj) => {
+        if (aj?.ok) {
+          setAgentFlash(true);
+          setTimeout(() => setAgentFlash(false), 2500);
+          if (aj.caption) {
+            setAgentMsg(aj.caption);
+            // Auto-dismiss so the caption doesn't sit over the video.
+            setTimeout(() => setAgentMsg(null), 6000);
+          }
+        }
+      })
+      .catch(() => {});
+    fetch(`/api/streams/${stream.slug}/settle`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seconds: AGENT_PAY_EVERY }),
+    }).catch(() => {});
+  }, [stream.slug]);
+
   const loop = useCallback(async () => {
     if (!watchingRef.current) return;
     // Don't charge a live stream until the host's camera is actually on air.
@@ -278,6 +303,10 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setOwnBudget(ownBudgetRef.current);
       setPaid((p) => p + stream.ratePerSecond);
       setSeconds((s) => s + 1);
+      // Drive the same autonomous split + agent payment as the demo path, so
+      // paying from your own wallet still flows through the stream treasury.
+      tickCountRef.current += 1;
+      if (tickCountRef.current % AGENT_PAY_EVERY === 0) runTreasuryCycle();
       setStatus("streaming");
       if (watchingRef.current) setTimeout(loop, 1000);
       return;
@@ -305,30 +334,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         demoSecondsRef.current += 1;
         setStatus("streaming");
         tickCountRef.current += 1;
-        // Periodically, the treasury autonomously (a) pays the AI captions agent
-        // and (b) splits the interval's income out to each human payee's own
-        // wallet on Arc, money flows out, not just in.
-        if (tickCountRef.current % AGENT_PAY_EVERY === 0) {
-          fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
-            .then((res) => res.json())
-            .then((aj) => {
-              if (aj?.ok) {
-                setAgentFlash(true);
-                setTimeout(() => setAgentFlash(false), 2500);
-                if (aj.caption) {
-                  setAgentMsg(aj.caption);
-                  // Auto-dismiss so the caption doesn't sit over the video.
-                  setTimeout(() => setAgentMsg(null), 6000);
-                }
-              }
-            })
-            .catch(() => {});
-          fetch(`/api/streams/${stream.slug}/settle`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ seconds: AGENT_PAY_EVERY }),
-          }).catch(() => {});
-        }
+        if (tickCountRef.current % AGENT_PAY_EVERY === 0) runTreasuryCycle();
       } else {
         setStatus("retrying");
       }
@@ -336,7 +342,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setStatus("retrying");
     }
     if (watchingRef.current) setTimeout(loop, 1000);
-  }, [stream.slug]);
+  }, [stream.slug, runTreasuryCycle]);
 
   const start = useCallback(() => {
     if (watchingRef.current) return;

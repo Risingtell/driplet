@@ -27,9 +27,10 @@ const arc = {
 const isAddr = (a?: string | null): a is `0x${string}` => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
 const topicAddr = (t: string) => "0x" + t.slice(-40).toLowerCase();
 
-function payToFor(split: { role: string; address?: string | null }[]): `0x${string}` {
-  const creator = split.find((p) => p.role === "Creator")?.address;
-  return isAddr(creator) ? creator : SELLER;
+// Always pay the stream treasury, which auto-splits to the creator, co-host and
+// AI co-host. Paying the creator directly would skip the split and the agent.
+function payToFor(_split: { role: string; address?: string | null }[]): `0x${string}` {
+  return SELLER;
 }
 
 /** GET → where a passkey wallet should pay for this stream. */
