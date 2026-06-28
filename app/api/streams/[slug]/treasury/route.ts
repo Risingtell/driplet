@@ -63,5 +63,10 @@ export async function GET(
     address: p.address ?? null,
   }));
 
-  return NextResponse.json({ total, count, agentPaid, agentCount, payees });
+  // Live data polled every couple of seconds — never let the edge cache it, or
+  // the treasury panel freezes on a stale snapshot.
+  return NextResponse.json(
+    { total, count, agentPaid, agentCount, payees },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
