@@ -26,16 +26,16 @@ export async function GET(
   // price per call, so totals are count x price. This stays accurate past the
   // REST 1000-row page limit.
   const AGENT_PRICE = 0.005;
+  // Matches the watch loop's agent-pay cadence (one agent payment per N watched
+  // seconds). The treasury pays its agent once per interval, so this stream's
+  // agent payments are derived from its own watched seconds — NOT a global count.
+  const AGENT_PAY_EVERY = 20;
 
-  const [watch, agent, own] = await Promise.all([
+  const [watch, own] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", streamEndpoint(slug)),
-    supabase
-      .from("payment_events")
-      .select("id", { count: "exact", head: true })
-      .eq("endpoint", "/agents/captions"),
     // Own-wallet + Face ID payments are lump sums (not the fixed per-second
     // price), so sum their amounts rather than counting them.
     supabase
@@ -44,17 +44,15 @@ export async function GET(
       .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`]),
   ]);
 
-  if (watch.error || agent.error) {
-    return NextResponse.json(
-      { error: (watch.error ?? agent.error)!.message },
-      { status: 500 },
-    );
+  if (watch.error) {
+    return NextResponse.json({ error: watch.error.message }, { status: 500 });
   }
 
   const count = watch.count ?? 0;
-  const agentCount = agent.count ?? 0;
   const ownTotal = (own.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
   const total = count * stream.ratePerSecond + ownTotal;
+  // This stream's own autonomous agent payments (one per AGENT_PAY_EVERY seconds).
+  const agentCount = Math.floor(count / AGENT_PAY_EVERY);
   const agentPaid = agentCount * AGENT_PRICE;
 
   const payees = stream.split.map((p) => ({
