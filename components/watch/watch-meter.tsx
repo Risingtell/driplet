@@ -43,6 +43,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [paid, setPaid] = useState(0);
   const [agentFlash, setAgentFlash] = useState(false);
   const [agentMsg, setAgentMsg] = useState<string | null>(null);
+  // The AI co-host pauses itself when it would exceed its earned share.
+  const [agentSaving, setAgentSaving] = useState(false);
   const [muted, setMuted] = useState(true);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
@@ -264,7 +266,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     fetch(`/api/watch/${stream.slug}/agent-pay`, { method: "POST" })
       .then((res) => res.json())
       .then((aj) => {
-        if (aj?.ok) {
+        if (aj?.ok && !aj.paused) {
+          // The agent paid itself this cycle (it's within budget).
+          setAgentSaving(false);
           setAgentFlash(true);
           setTimeout(() => setAgentFlash(false), 2500);
           if (aj.caption) {
@@ -272,6 +276,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             // Auto-dismiss so the caption doesn't sit over the video.
             setTimeout(() => setAgentMsg(null), 6000);
           }
+        } else if (aj?.paused) {
+          // The agent paused itself to stay within its earned share.
+          setAgentSaving(true);
         }
       })
       .catch(() => {});
@@ -453,10 +460,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           <div className="absolute left-3 top-11 inline-flex items-center gap-1.5 rounded-md bg-black/40 px-2 py-1 text-xs text-white/85 backdrop-blur">
             <Bot
               className={`size-3.5 transition-colors ${
-                agentFlash ? "text-emerald-400" : "text-white/55"
+                agentFlash ? "text-emerald-400" : agentSaving ? "text-amber-300" : "text-white/55"
               }`}
             />
-            <span>AI co-host{agentFlash ? " · paid" : ""}</span>
+            <span>
+              AI co-host{agentFlash ? " · paid" : agentSaving ? " · saving budget" : ""}
+            </span>
           </div>
         )}
 

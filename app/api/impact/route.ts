@@ -34,6 +34,9 @@ export async function GET() {
     supabase
       .from("payment_events")
       .select("id, created_at, endpoint, amount_usdc, network, gateway_tx")
+      // Hide the per-stream agent markers (/agents/captions/<slug>) — they mirror
+      // the global agent payment already counted, so showing them would double up.
+      .not("endpoint", "like", "/agents/captions/%")
       .order("created_at", { ascending: false })
       .limit(12),
   ]);
