@@ -11,8 +11,10 @@ weigh **agency and traction equally**, and they're "not testing for the cleveres
 Steer: **lead with the creator's problem, not the crypto stack.**
 
 So this video: hook on the PROBLEM, prove it WORKS on Arc, show the AGENCY (an agent that
-makes its own money decisions), show the TRACTION (real wallets, verifiable on-chain), and
-close on KEEP BUILDING. One clear Arc/Circle line so they can tick that box. No buzzword salad.
+makes its own money decisions), show the TRACTION (real wallets, verifiable on-chain), show
+it's REUSABLE + OPEN SOURCE (the Owncast sidecar — which is literally #3 on the hosts'
+published wishlist, and the Arc OSS track), and close on KEEP BUILDING. One clear Arc/Circle
+line so they can tick that box. No buzzword salad.
 
 ---
 
@@ -22,7 +24,8 @@ close on KEEP BUILDING. One clear Arc/Circle line so they can tick that box. No 
 3. Pay with your face — why real people can actually use it (26s)
 4. The agent that runs itself — AGENCY (30s)
 5. Real people, verifiable — TRACTION (27s)
-6. I'm not stopping — keep building (20s)
+6. Not locked to my app — sidecar + open source (13s)
+7. I'm not stopping — keep building (20s)
 
 ---
 
@@ -63,11 +66,18 @@ payments. Zero failed. Thirteen different people have paid from their own wallet
 distinct address you can verify right here. Real creators in my WhatsApp communities used it.
 Metadata on Arc, video on Walrus. Every settlement on this feed is real and on-chain."
 
-## 6 · I'm not stopping — [2:05–2:25] *(your face)* — hits: keep building + problem
+## 6 · Not locked to my app — [2:05–2:18] *(flash `/sidecar`)* — hits: Arc OSS track + you shipped their wishlist
+**DO:** Open `/sidecar` (or show it in a tab). Point at the live sidecar stats.
+**SAY:** "And this isn't locked to Driplet. The same per-second engine drops into an existing
+streaming server like Owncast, without changing a line of its code. I proved it with a real
+Owncast server settling real USDC on Arc. It's all open source, so any creator platform can
+turn this on."
+
+## 7 · I'm not stopping — [2:18–2:38] *(your face)* — hits: keep building + problem
 **SAY:** "I'm not abandoning this after the hackathon. The people who need it are already in
-front of me. Next is one-tap sign-in for creators too, and a plugin so any streamer can turn
-this on. I'll keep building Driplet until anyone the banks ignore can finally get paid for
-their work. That's the whole point. Thanks for watching."
+front of me. Next is one-tap sign-in for creators too. I'll keep building Driplet until
+anyone the banks ignore can finally get paid for their work. That's the whole point. Thanks
+for watching."
 **DO:** End on **trydriplet.vercel.app**.
 
 ---
@@ -81,6 +91,9 @@ their work. That's the whole point. Thanks for watching."
   agent" moment. On ada-live (lots of income) it pays freely instead, which is also fine.
 - **Scene 5 (traction):** let the `/impact` feed scroll for 2–3 seconds in silence so they
   see new rows land live. Point at "distinct paying wallets" — that's your most trusted number.
+- **Scene 6 (sidecar):** `/sidecar` is live with real stats. This is the "you built exactly
+  what we asked for" moment — the hosts wishlisted an Owncast per-second webhook sidecar and
+  you shipped it, proven against a real server. Don't rush it; it's a standout, not a footnote.
 - **Warm up first:** watch ada-live ~30–60s and refresh before recording, so the first
   per-second payment is instant.
 - One honest line beats ten buzzwords. You have the real thing. Just show it.
