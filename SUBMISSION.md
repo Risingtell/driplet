@@ -11,7 +11,7 @@ https://trydriplet.vercel.app/impact (or /api/impact).
 - Try it yourself: open https://trydriplet.vercel.app/watch/ada-live and press Watch. You'll see real USDC settle on Arc every second you watch.
 - Live proof feed: https://trydriplet.vercel.app/impact (every settlement, with its Circle Gateway id, updating in real time)
 - Owncast sidecar: https://trydriplet.vercel.app/sidecar (per-second pay for any Owncast stream, see "Open source / sidecar" below)
-- Demo video: TODO — recording a fresh one (the old kNDozV116bU predates Face ID, own-wallet pay, the sidecar and the redesign). Paste the new YouTube/Loom link here before submitting.
+- Demo video: https://youtu.be/zFZSRxp6NtY
 - Source code: https://github.com/Risingtell/driplet
 - Creator studio: sign in at https://trydriplet.vercel.app/signin (email magic link auto-creates a Circle wallet on Arc; then go live with a camera or an uploaded video)
 
