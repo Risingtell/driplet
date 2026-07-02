@@ -680,7 +680,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 <Check className="size-4" /> Paying from your wallet · {shortAddress(ownAddress ?? "")}
               </span>
               <span className="text-muted-foreground">
-                {naira(ownBudget)} left {needTopup && "· used up"}
+                ${ownBudget.toFixed(4)} left (≈ {naira(ownBudget)}) {needTopup && "· used up"}
               </span>
             </div>
             {lastTx && (
@@ -701,7 +701,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               >
                 {ownBusy || pkBusy
                   ? "Confirm…"
-                  : `Top up ${naira(lastAmountRef.current)} & keep watching`}
+                  : `Top up $${lastAmountRef.current} (≈ ${naira(lastAmountRef.current)}) & keep watching`}
               </Button>
             )}
           </div>

@@ -45,9 +45,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Optional shared secret so a public URL can't be abused to drain the treasury.
-  const secret = process.env.OWNCAST_SIDECAR_SECRET;
-  if (secret && url.searchParams.get("key") !== secret) {
+  // Shared secret so a public URL can't be abused to drain the treasury.
+  // Trimmed because CLI-added env values can carry a trailing newline.
+  const secret = (process.env.OWNCAST_SIDECAR_SECRET ?? "").trim();
+  if (secret && url.searchParams.get("key")?.trim() !== secret) {
     return NextResponse.json({ error: "Bad or missing key." }, { status: 401 });
   }
 

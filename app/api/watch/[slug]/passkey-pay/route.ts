@@ -59,6 +59,26 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     return NextResponse.json({ error: "tx and payer required" }, { status: 400 });
   }
 
+  // Each on-chain transfer can be recorded once. The tx itself doesn't name a
+  // stream, so without this check the same hash could be replayed across slugs
+  // to inflate the payment feed.
+  const { data: existing } = await supabase
+    .from("payment_events")
+    .select("amount_usdc")
+    .eq("gateway_tx", tx)
+    .like("endpoint", "/passkey/%")
+    .limit(1);
+  if (existing && existing.length > 0) {
+    // Idempotent: a client retry still succeeds, but the payment is only
+    // counted once.
+    return NextResponse.json({
+      ok: true,
+      tx,
+      amount: Number(existing[0].amount_usdc ?? 0),
+      alreadyRecorded: true,
+    });
+  }
+
   const expected = payToFor(stream.split);
   const pub = createPublicClient({ chain: arc, transport: http() });
 
