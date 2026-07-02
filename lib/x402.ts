@@ -195,6 +195,22 @@ export function withGateway(
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error);
+      // Circle Gateway's edge occasionally answers with an HTML error page
+      // (or the connection drops), which the SDK surfaces as a JSON parse
+      // failure. That's a transient upstream blip, not a payment bug: the
+      // caller retries with a fresh authorization on the next tick.
+      const transient =
+        message.includes("not valid JSON") ||
+        message.includes("<!DOCTYPE") ||
+        message.includes("fetch failed") ||
+        message.toLowerCase().includes("timeout");
+      if (transient) {
+        console.warn(`[x402] Gateway transient error for ${endpoint}: ${message}`);
+        return NextResponse.json(
+          { error: "Payment network briefly unavailable", retryable: true },
+          { status: 502 },
+        );
+      }
       console.error("[x402] Payment processing error:", message);
       return NextResponse.json(
         { error: "Payment processing error", message },
