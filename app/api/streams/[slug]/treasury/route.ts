@@ -32,12 +32,12 @@ export async function GET(
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", streamEndpoint(slug)),
-    // Own-wallet + Face ID payments are lump sums (not the fixed per-second
-    // price), so sum their amounts rather than counting them.
+    // Own-wallet + Face ID + AI-patron payments are lump sums (not the fixed
+    // per-second price), so sum their amounts rather than counting them.
     supabase
       .from("payment_events")
       .select("amount_usdc")
-      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`]),
+      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`, `/patron/${slug}`]),
     // This stream's OWN agent payments (budget-aware; recorded per-stream by
     // /agent-pay) — not the platform-wide agent count.
     supabase

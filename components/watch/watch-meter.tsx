@@ -45,6 +45,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [agentMsg, setAgentMsg] = useState<string | null>(null);
   // The AI co-host pauses itself when it would exceed its earned share.
   const [agentSaving, setAgentSaving] = useState(false);
+  const [agentReason, setAgentReason] = useState<string | null>(null);
   const [muted, setMuted] = useState(true);
   const watchingRef = useRef(false);
   const tickCountRef = useRef(0);
@@ -280,6 +281,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           // The agent paused itself to stay within its earned share.
           setAgentSaving(true);
         }
+        // The agent's economic decision, verbatim — visible agency.
+        if (aj?.reasoning) setAgentReason(aj.reasoning);
       })
       .catch(() => {});
     fetch(`/api/streams/${stream.slug}/settle`, {
@@ -457,15 +460,20 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         )}
 
         {watching && (
-          <div className="absolute left-3 top-11 inline-flex items-center gap-1.5 rounded-md bg-black/40 px-2 py-1 text-xs text-white/85 backdrop-blur">
-            <Bot
-              className={`size-3.5 transition-colors ${
-                agentFlash ? "text-emerald-400" : agentSaving ? "text-amber-300" : "text-white/55"
-              }`}
-            />
-            <span>
+          <div className="absolute left-3 top-11 max-w-[78%] rounded-md bg-black/40 px-2 py-1 text-xs text-white/85 backdrop-blur">
+            <span className="inline-flex items-center gap-1.5">
+              <Bot
+                className={`size-3.5 transition-colors ${
+                  agentFlash ? "text-emerald-400" : agentSaving ? "text-amber-300" : "text-white/55"
+                }`}
+              />
               AI co-host{agentFlash ? " · paid" : agentSaving ? " · saving budget" : ""}
             </span>
+            {agentReason && (
+              <span className="mt-0.5 line-clamp-2 block text-[10px] leading-tight text-white/60">
+                {agentReason}
+              </span>
+            )}
           </div>
         )}
 

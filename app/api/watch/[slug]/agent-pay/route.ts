@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     supabase
       .from("payment_events")
       .select("amount_usdc")
-      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`]),
+      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`, `/patron/${slug}`]),
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -56,13 +56,22 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   // commentary; after that the agent is strictly capped at its earned share.
   const budget = Math.max(AGENT_PRICE, income * AGENT_BUDGET_SHARE);
 
+  // The decision, spelled out — shown live in the UI so the agent's economic
+  // reasoning is visible, not buried in server logic.
+  const ledger = `Stream income $${income.toFixed(4)} → my ${AGENT_BUDGET_SHARE * 100}% share cap $${budget.toFixed(4)} → spent $${agentSpent.toFixed(4)}`;
+
   if (income <= 0 || agentSpent + AGENT_PRICE > budget) {
     return NextResponse.json({
       ok: true,
       paused: true,
       reason: "saving budget",
+      income: Number(income.toFixed(6)),
       budget: Number(budget.toFixed(6)),
       spent: Number(agentSpent.toFixed(6)),
+      reasoning:
+        income <= 0
+          ? "Stream has no income yet → nothing to pay myself from. Waiting until it earns."
+          : `${ledger} → the next $${AGENT_PRICE} would exceed my share. Pausing so the creator is paid first.`,
     });
   }
 
@@ -87,7 +96,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
       gateway_tx: null,
       raw: { perStreamAgent: true },
     });
-    return NextResponse.json({ ok: true, paused: false, amount: res.formattedAmount, caption });
+    return NextResponse.json({
+      ok: true,
+      paused: false,
+      amount: res.formattedAmount,
+      caption,
+      income: Number(income.toFixed(6)),
+      budget: Number(budget.toFixed(6)),
+      spent: Number((agentSpent + AGENT_PRICE).toFixed(6)),
+      reasoning: `${ledger} → $${AGENT_PRICE} is within budget. Paying myself for this commentary.`,
+    });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 502 });
   }

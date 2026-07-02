@@ -20,11 +20,28 @@ import { BackToTop } from "@/components/back-to-top";
 interface FeedItem {
   id: string;
   at: string;
-  kind: "stream" | "agent";
+  kind: "stream" | "agent" | "patron";
   endpoint: string;
   amount: string;
   network: string;
   settlement: string | null;
+}
+
+interface PatronDecision {
+  at: string;
+  action: string;
+  slug: string | null;
+  rationale: string;
+  paidUsd: number;
+  tx: string | null;
+}
+
+interface Patron {
+  address: string | null;
+  balance: number;
+  totalPaid: number;
+  paymentCount: number;
+  decisions: PatronDecision[];
 }
 
 interface Impact {
@@ -52,9 +69,31 @@ function ago(iso: string): string {
 
 export default function ImpactPage() {
   const [data, setData] = useState<Impact | null>(null);
+  const [patron, setPatron] = useState<Patron | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set());
   const [fresh, setFresh] = useState<Set<string>>(new Set());
+
+  // The patron reads its wallet balance from Arc on every call, so poll it
+  // more gently than the settlement feed.
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/agents/patron", { cache: "no-store" });
+        const json = (await res.json()) as Patron;
+        if (alive && json?.address !== undefined) setPatron(json);
+      } catch {
+        // panel simply stays hidden
+      }
+    };
+    void tick();
+    const id = setInterval(tick, 10_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -139,6 +178,71 @@ export default function ImpactPage() {
         ))}
       </section>
 
+      {patron?.address && (
+        <section className="mt-10">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <Bot className="h-5 w-5 text-cyan-500" /> The AI patron
+            </h2>
+            <span className="font-mono text-xs text-muted-foreground">
+              {patron.address.slice(0, 6)}…{patron.address.slice(-4)} · holds {usd(patron.balance)} ·
+              paid {usd(patron.totalPaid)} over {patron.paymentCount} payments
+            </span>
+          </div>
+          <div className="glass overflow-hidden rounded-2xl border border-border/60">
+            <div className="divide-y divide-border/50">
+              {patron.decisions.map((d, i) => (
+                <div key={`${d.at}-${i}`} className="flex items-start gap-3 px-4 py-3 text-sm">
+                  <span
+                    className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                      d.action === "watch"
+                        ? "bg-cyan-500/10 text-cyan-500"
+                        : d.action === "stop"
+                          ? "bg-amber-500/10 text-amber-500"
+                          : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {d.action === "watch" ? `paid ${usd(d.paidUsd)}` : d.action}
+                  </span>
+                  <span className="min-w-0 flex-1 text-muted-foreground">
+                    {d.rationale}
+                    {d.slug && (
+                      <Link href={`/watch/${d.slug}`} className="ml-1 text-cyan-500 hover:underline">
+                        → {d.slug}
+                      </Link>
+                    )}
+                  </span>
+                  {d.tx && (
+                    <a
+                      href={`https://testnet.arcscan.app/tx/${d.tx}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 font-mono text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {d.tx.slice(0, 10)}…
+                    </a>
+                  )}
+                  <span className="shrink-0 text-xs text-muted-foreground">{ago(d.at)}</span>
+                </div>
+              ))}
+              {patron.decisions.length === 0 && (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  No decisions yet — the patron hasn&apos;t run a cycle.
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            An autonomous viewer agent with its own USDC wallet on Arc. Each cycle it looks at
+            what&apos;s streaming (host on air, viewers present, chat moving, price) and decides with
+            an LLM whether any stream deserves its money right now. When it pays, it signs a gasless
+            EIP-3009 payment from its own wallet into the stream&apos;s treasury, which splits it like
+            any viewer&apos;s money — so an agent spends on one side while the AI co-host earns on the
+            other. Every decision above, including refusals to pay, is recorded verbatim.
+          </p>
+        </section>
+      )}
+
       <section className="mt-10 mb-16">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -166,12 +270,18 @@ export default function ImpactPage() {
                   className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                     item.kind === "agent"
                       ? "bg-violet-500/10 text-violet-500"
-                      : "bg-emerald-500/10 text-emerald-500"
+                      : item.kind === "patron"
+                        ? "bg-cyan-500/10 text-cyan-500"
+                        : "bg-emerald-500/10 text-emerald-500"
                   }`}
                 >
                   {item.kind === "agent" ? (
                     <>
                       <Bot className="h-3 w-3" /> agent
+                    </>
+                  ) : item.kind === "patron" ? (
+                    <>
+                      <Bot className="h-3 w-3" /> patron
                     </>
                   ) : (
                     <>

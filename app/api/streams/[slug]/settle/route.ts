@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
       supabase
         .from("payment_events")
         .select("amount_usdc")
-        .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`]),
+        .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`, `/patron/${slug}`]),
       supabase
         .from("payment_events")
         .select("amount_usdc")

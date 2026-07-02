@@ -113,15 +113,30 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
       </ul>
 
       {/* autonomous agent outflow */}
-      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-        <span className="flex min-w-0 items-center gap-2 text-sm">
-          <span className="size-2 shrink-0 rounded-full bg-primary animate-live" />
-          <span className="truncate font-medium">Autonomously paid the AI co-host</span>
-        </span>
-        <span className="tabular shrink-0 font-mono text-sm">
-          ${data.agentPaid.toFixed(4)}
-          <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
-        </span>
+      <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2 text-sm">
+            <span className="size-2 shrink-0 rounded-full bg-primary animate-live" />
+            <span className="truncate font-medium">Autonomously paid the AI co-host</span>
+          </span>
+          <span className="tabular shrink-0 font-mono text-sm">
+            ${data.agentPaid.toFixed(4)}
+            <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
+          </span>
+        </div>
+        {/* the agent's live budget ledger — its spending decision, in numbers */}
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground/80">Agent budget ledger:</span> income $
+          {data.total.toFixed(4)} → agent share cap (10%) $
+          {Math.max(0.005, data.total * 0.1).toFixed(4)} → spent ${data.agentPaid.toFixed(4)} →{" "}
+          {data.agentPaid + 0.005 <= Math.max(0.005, data.total * 0.1) ? (
+            <span className="text-emerald-500">next $0.005 is within budget, the agent will pay itself</span>
+          ) : (
+            <span className="text-amber-500">
+              share spent, the agent is pausing itself so the creator is paid first
+            </span>
+          )}
+        </p>
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">

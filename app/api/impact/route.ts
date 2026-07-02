@@ -51,7 +51,10 @@ export async function GET() {
       .select("id, created_at, endpoint, amount_usdc, network, gateway_tx")
       // Hide the per-stream agent markers (/agents/captions/<slug>) — they mirror
       // the global agent payment already counted, so showing them would double up.
+      // Patron DECISION markers (amount 0) live in their own /impact panel; the
+      // patron's actual /patron/<slug> payments stay in the feed.
       .not("endpoint", "like", "/agents/captions/%")
+      .not("endpoint", "like", "/agents/patron/%")
       .order("created_at", { ascending: false })
       .limit(12),
     // Distinct wallets that paid from their OWN wallet (own-pay + Face ID),
@@ -82,7 +85,12 @@ export async function GET() {
   const feed = (recent.data ?? []).map((r) => ({
     id: r.id as string,
     at: r.created_at as string,
-    kind: r.endpoint === AGENT_ENDPOINT ? "agent" : "stream",
+    kind:
+      r.endpoint === AGENT_ENDPOINT
+        ? "agent"
+        : (r.endpoint as string).startsWith("/patron/")
+          ? "patron"
+          : "stream",
     endpoint: r.endpoint as string,
     amount: r.amount_usdc as string,
     network: r.network as string,
