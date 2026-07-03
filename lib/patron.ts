@@ -268,11 +268,12 @@ export async function runPatronCycle(): Promise<PatronCycleResult> {
   // Self-throttle off the last recorded decision.
   const last = await supabase
     .from("payment_events")
-    .select("created_at")
+    .select("created_at, raw")
     .eq("endpoint", DECISION_ENDPOINT)
     .order("created_at", { ascending: false })
     .limit(1);
   const lastAt = last.data?.[0]?.created_at ? new Date(last.data[0].created_at).getTime() : 0;
+  const lastAction = ((last.data?.[0]?.raw ?? {}) as { action?: string }).action;
   if (Date.now() - lastAt < MIN_CYCLE_GAP_MS) {
     return { ok: true, throttled: true };
   }
@@ -286,6 +287,11 @@ export async function runPatronCycle(): Promise<PatronCycleResult> {
     paidUsd: number,
     tx: string | null,
   ) => {
+    // A quiet night is one fact, not hundreds of rows: consecutive skips are
+    // recorded at most every 10 minutes. Watches and stops always record.
+    if (action === "skip" && lastAction === "skip" && Date.now() - lastAt < 10 * 60_000) {
+      return;
+    }
     await supabase.from("payment_events").insert({
       endpoint: DECISION_ENDPOINT,
       payer: address,
