@@ -1,50 +1,91 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 
+const product = [
+  { href: "/explore", label: "Watch live" },
+  { href: "/studio/go-live", label: "Go live" },
+  { href: "/impact", label: "Live proof" },
+  { href: "/roadmap", label: "Roadmap" },
+];
+
+const learn = [
+  { href: "/use-cases", label: "Use cases" },
+  { href: "/why", label: "Why Driplet" },
+  { href: "/sidecar", label: "Owncast sidecar" },
+];
+
 export function LandingFooter() {
   return (
-    <footer className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-border py-8 text-sm text-muted-foreground sm:flex-row">
-      <Logo />
-      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-        <Link href="/explore" className="transition-colors hover:text-foreground">
-          Watch live
-        </Link>
-        <Link href="/use-cases" className="transition-colors hover:text-foreground">
-          Use cases
-        </Link>
-        <Link href="/why" className="transition-colors hover:text-foreground">
-          Why Driplet
-        </Link>
-        <Link href="/impact" className="transition-colors hover:text-foreground">
-          Live proof
-        </Link>
-        <Link href="/sidecar" className="transition-colors hover:text-foreground">
-          Owncast sidecar
-        </Link>
-        <Link href="/roadmap" className="transition-colors hover:text-foreground">
-          Roadmap
-        </Link>
-      </nav>
-      <div className="flex flex-col items-center gap-1 sm:items-end">
-        <p>
-          Contact us:{" "}
-          <a
-            href="https://x.com/agentdriplet"
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-foreground/80 transition-colors hover:text-foreground"
-          >
-            @agentdriplet
-          </a>{" "}
-          ·{" "}
-          <a
-            href="mailto:agentdriplet@gmail.com"
-            className="font-medium text-foreground/80 transition-colors hover:text-foreground"
-          >
-            agentdriplet@gmail.com
-          </a>
-        </p>
-        <p>Streaming nanopayments, settled in USDC on Arc, powered by Circle.</p>
+    <footer className="mt-auto border-t border-border pb-8 pt-10 text-sm">
+      <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+        <div className="max-w-xs">
+          <Logo />
+          <p className="mt-3 leading-relaxed text-muted-foreground">
+            Get paid by the second. Streaming nanopayments for creators, settled in USDC on Arc,
+            powered by Circle.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Product
+            </h3>
+            <ul className="mt-3 space-y-2">
+              {product.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="transition-colors hover:text-primary">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Learn
+            </h3>
+            <ul className="mt-3 space-y-2">
+              {learn.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="transition-colors hover:text-primary">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Contact
+            </h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <a
+                  href="https://x.com/agentdriplet"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="transition-colors hover:text-primary"
+                >
+                  X · @agentdriplet
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:agentdriplet@gmail.com"
+                  className="transition-colors hover:text-primary"
+                >
+                  agentdriplet@gmail.com
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
+        <p>© 2026 Driplet</p>
+        <p>Built on Arc · Powered by Circle</p>
       </div>
     </footer>
   );

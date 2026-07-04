@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
  */
 export function SiteHeader() {
   return (
-    <header className="flex items-center justify-between py-5">
+    <header className="flex items-center justify-between gap-4 py-5">
       <Link href="/" aria-label="Driplet home">
         <Logo />
       </Link>
-      <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+      <nav className="hidden items-center gap-6 text-sm font-medium text-foreground/70 md:flex">
         <Link href="/" className="transition-colors hover:text-foreground">
           Home
         </Link>
@@ -27,11 +27,8 @@ export function SiteHeader() {
         <Link href="/why" className="transition-colors hover:text-foreground">
           Why
         </Link>
-        <Link href="/explore" className="transition-colors hover:text-foreground">
-          Watch live
-        </Link>
       </nav>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2.5">
         <ThemeToggle />
         <Button
           asChild

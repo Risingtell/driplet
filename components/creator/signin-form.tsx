@@ -64,17 +64,17 @@ export function SignInForm() {
         <h1 className="text-center text-xl font-semibold">Check your email</h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
           Open the sign-in link in the email <strong>on this device</strong>. If your email shows a
-          6-digit code, you can type it here instead (works from any device).
+          one-time code, you can type it here instead (works from any device).
         </p>
         <form action={verify} className="mt-5">
           <input type="hidden" name="email" value={email} />
-          <label className="block text-sm font-medium">6-digit code (if your email shows one)</label>
+          <label className="block text-sm font-medium">Code from the email</label>
           <input
             name="token"
             inputMode="numeric"
             autoComplete="one-time-code"
             required
-            placeholder="123456"
+            placeholder="12345678"
             className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-center font-mono text-lg tracking-[0.3em] outline-none focus:border-primary"
           />
           {error && <p className="mt-2 text-sm text-amber-500">{error}</p>}
@@ -114,7 +114,7 @@ export function SignInForm() {
       {linkFailed && !error && (
         <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-500">
           That sign-in link didn&apos;t work. Links only open in the browser that requested them,
-          so enter your email again and type the 6-digit code from the email instead.
+          so enter your email again and type the code from the email instead.
         </p>
       )}
       {GOOGLE_ENABLED && (

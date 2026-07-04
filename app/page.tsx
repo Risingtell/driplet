@@ -29,9 +29,9 @@ export default function Landing() {
   return (
     <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5">
       {/* Header */}
-      <header className="flex items-center justify-between py-6">
+      <header className="flex items-center justify-between gap-4 py-5">
         <Logo />
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-foreground/70 md:flex">
           <a href="#how" className="transition-colors hover:text-foreground">
             How it works
           </a>
@@ -41,11 +41,8 @@ export default function Landing() {
           <Link href="/why" className="transition-colors hover:text-foreground">
             Why Driplet
           </Link>
-          <Link href="/explore" className="transition-colors hover:text-foreground">
-            Watch live
-          </Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
           <ThemeToggle />
           <Button
             asChild
