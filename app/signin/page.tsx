@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getUserSafe } from "@/lib/supabase/server";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SignInForm } from "@/components/creator/signin-form";
@@ -23,10 +23,7 @@ export default function SignInPage() {
 }
 
 async function SignInGate() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUserSafe();
   if (user) redirect("/studio");
   return <SignInForm />;
 }

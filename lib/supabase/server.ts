@@ -50,3 +50,21 @@ export async function createClient() {
     },
   );
 }
+
+/**
+ * getUser that treats a stale/invalid session as "signed out" instead of an
+ * error. A browser holding an expired refresh-token cookie (cleared session,
+ * old deploy) otherwise surfaces AuthApiError noise on every server render
+ * until the user signs in again.
+ */
+export async function getUserSafe() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  } catch {
+    return null;
+  }
+}

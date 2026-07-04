@@ -137,7 +137,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     if (supported) void import("@/lib/passkey");
   }, []);
 
-  const usePasskey = useCallback(
+  const connectPasskey = useCallback(
     async (amountUsd: number) => {
       lastAmountRef.current = amountUsd;
       setOwnErr(null);
@@ -217,7 +217,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     );
   }, [pkAddr]);
 
-  const useMyWallet = useCallback(async (amountUsd: number) => {
+  const connectOwnWallet = useCallback(async (amountUsd: number) => {
     lastAmountRef.current = amountUsd;
     setOwnErr(null);
     setOwnBusy(true);
@@ -514,14 +514,14 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               </p>
               <div className="mt-3 flex flex-col gap-2">
                 {pkSupported && (
-                  <Button onClick={() => usePasskey(SESSION_USD)} disabled={pkBusy || ownBusy}>
+                  <Button onClick={() => connectPasskey(SESSION_USD)} disabled={pkBusy || ownBusy}>
                     <Fingerprint className="size-4" />{" "}
                     {pkBusy ? "Setting up…" : "Continue with Face ID"}
                   </Button>
                 )}
                 <Button
                   variant="outline"
-                  onClick={() => useMyWallet(SESSION_USD)}
+                  onClick={() => connectOwnWallet(SESSION_USD)}
                   disabled={ownBusy || pkBusy}
                 >
                   <Wallet className="size-4" />{" "}
@@ -622,7 +622,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               <Button
                 variant="outline"
                 className="mt-2 w-full"
-                onClick={() => usePasskey(lastAmountRef.current)}
+                onClick={() => connectPasskey(lastAmountRef.current)}
                 disabled={pkBusy}
               >
                 {pkBusy ? "Checking…" : "I've funded it — continue"}
@@ -639,14 +639,14 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   </p>
                   <Button
                     className="mt-3 w-full"
-                    onClick={() => usePasskey(SESSION_USD)}
+                    onClick={() => connectPasskey(SESSION_USD)}
                     disabled={pkBusy || ownBusy}
                   >
                     <Fingerprint className="size-4" />{" "}
                     {pkBusy ? "Setting up…" : "Continue with Face ID"}
                   </Button>
                   <button
-                    onClick={() => useMyWallet(SESSION_USD)}
+                    onClick={() => connectOwnWallet(SESSION_USD)}
                     disabled={ownBusy || pkBusy}
                     className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
                   >
@@ -661,7 +661,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => useMyWallet(SESSION_USD)}
+                    onClick={() => connectOwnWallet(SESSION_USD)}
                     disabled={ownBusy || pkBusy}
                   >
                     <Wallet className="size-4" />{" "}
@@ -703,8 +703,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 className="mt-2"
                 onClick={() =>
                   paySourceRef.current === "passkey"
-                    ? usePasskey(lastAmountRef.current)
-                    : useMyWallet(lastAmountRef.current)
+                    ? connectPasskey(lastAmountRef.current)
+                    : connectOwnWallet(lastAmountRef.current)
                 }
                 disabled={ownBusy || pkBusy}
               >

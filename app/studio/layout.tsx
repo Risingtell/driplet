@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getUserSafe } from "@/lib/supabase/server";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
 }
 
 async function StudioShell({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUserSafe();
   if (!user) redirect("/signin");
 
   // Make sure the creator's Circle wallet exists (covers a failed callback).

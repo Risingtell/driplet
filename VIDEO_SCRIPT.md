@@ -1,100 +1,62 @@
-# Driplet — Demo Video Script (~2:30) — built to the judging rubric
+# Driplet — Demo Script (HEART framework, hard cap 3:00, aim 2:45)
 
-Read the **SAY** lines aloud, do the **DO** lines on screen. Short sentences on purpose.
-Phone-shot + screen record. Your voice, no music. Hard cap 3:00, aim for 2:30.
+**H**ands-on · **E**xplanation · **A**daptable · **R**eal data · **T**ested.
+Read the **SAY** lines aloud, do the **DO** lines on screen. Short sentences. Your voice, no music.
 
-## What the judges actually weigh (so every scene earns its place)
-From the Lepton FAQ, in their words: they want **(1) real payments flowing on Arc with
-the Circle Agent Stack, (2) real agency — autonomous agents doing real work, (3) real
-traction — people already using it on a real problem, (4) intent to keep building.** They
-weigh **agency and traction equally**, and they're "not testing for the cleverest demo."
-Steer: **lead with the creator's problem, not the crypto stack.**
+## Before you record (the T in HEART)
 
-So this video: hook on the PROBLEM, prove it WORKS on Arc, show the AGENCY (an agent that
-makes its own money decisions), show the TRACTION (real wallets, verifiable on-chain), show
-it's REUSABLE + OPEN SOURCE (the Owncast sidecar — which is literally #3 on the hosts'
-published wishlist, and the Arc OSS track), and close on KEEP BUILDING. One clear Arc/Circle
-line so they can tick that box. No buzzword salad.
+- Open these tabs in order: `trydriplet.vercel.app` → `/watch/ada-live` → a real creator stream with treasury activity (e.g. one with Face ID prepays) → `/impact` → `/roadmap`.
+- Do one Face ID payment 10 minutes before recording so your passkey session is warm (no surprise prompts mid-take).
+- Have a phone nearby already signed in, in case you want the Face ID close-up shot.
+- Record the whole flow once as a backup take before the real one. Keep the backup.
+- If anything hesitates on camera, keep talking and let it land; real settlement takes a beat and that is fine to say out loud.
 
 ---
 
-## SHOT LIST
-1. The problem — your face (18s)
-2. It works — pay per second on Arc (24s)
-3. Pay with your face — why real people can actually use it (26s)
-4. The agent that runs itself — AGENCY (30s)
-5. Real people, verifiable — TRACTION (27s)
-6. Not locked to my app — sidecar + open source (13s)
-7. I'm not stopping — keep building (20s)
+## 1. THE HOOK + PROBLEM — your face on camera (0:00–0:30)
+
+**SAY:** I run a small tech shop in Kano, Nigeria. All around me are creators with real audiences and no way to get paid: platforms want bank accounts, minimum payouts, and a payment can't be smaller than the fee it costs. So I built Driplet. You watch a stream, and your wallet pays the creator a fraction of a cent for every second you watch. Stop watching, stop paying. This is live, on Arc, with real people using it. Let me show you.
 
 ---
 
-## 1 · The problem — [0:00–0:18] *(your face)* — hits: real problem
-**SAY:** "I'm in Kano, Nigeria. The people around me create every day, and they can't get
-paid by their own audience. No Patreon. No Stripe. Most don't have a bank. Micropayments
-were always promised and never real. So I built the thing that finally makes them real. It's
-called Driplet."
+## 2. LIVE DEMO (0:30–2:15)
 
-## 2 · It works — [0:18–0:42] *(watch page)* — hits: real payments on Arc + Circle
-**DO:** Press Watch on `/watch/ada-live`. Point at the USDC number climbing, ₦ underneath.
-**SAY:** "You press play, and from that second the creator earns. Real USDC, settling on
-Arc every single second through Circle's nanopayments. Stop watching, the money stops. No
-subscription, no minimum, no middleman. This is live on testnet right now."
+### 2a. Pay per second — the core (0:30–0:55)
 
-## 3 · Pay with your face — [0:42–1:08] *(the wow + why traction is real)* — hits: accessibility = real users
-**DO:** Tap **Continue with Face ID**. Do the Face ID prompt on camera. Show it pay from your wallet.
-**SAY:** "Here's why real people actually use this. Most crypto apps lose them at 'connect
-your wallet.' We don't. Your face creates the wallet. Circle sponsors the gas. No app, no
-seed phrase. Now you're paying the creator straight from your own wallet, in seconds. That's
-the difference between a demo and something my community can really use."
+**DO:** Open `/watch/ada-live`. Press play. Point at the meter ticking and the treasury panel updating.
 
-## 4 · The agent that runs itself — [1:08–1:38] *(treasury panel)* — hits: AGENCY (weighted)
-**DO:** Scroll to **Stream treasury**. Point at the live split bar, then the **AI co-host**
-line and its status (paid / saving budget).
-**SAY:** "Now the part that makes this an agent project. Every payment splits in real time,
-to the creator, the co-host, and the stream's own AI co-host. And that AI co-host is a real
-agent with its own wallet. It does real work, live commentary, and it pays itself, on-chain,
-agent to agent. But it only pays itself while the stream can afford it. When the budget runs
-low it pauses, so the creator is always paid first. Nobody is pressing a button. The stream
-manages its own money."
+**SAY:** Every second I watch sends a real USDC payment, three-hundredths of a cent, settled through Circle Gateway on Arc. No gas, no subscription. Watch the meter. Each tick is a real on-chain settlement, and the stream's treasury splits it live: creator, co-host, and the AI co-host the stream itself employs.
 
-## 5 · Real people, verifiable — [1:38–2:05] *(/impact)* — hits: TRACTION (weighted)
-**DO:** Open `/impact`. Scroll the live feed with the Gateway settlement IDs. Point at the
-totals, then the **distinct paying wallets** stat.
-**SAY:** "And this is real. Not my numbers, the chain's. Over twenty-two thousand real
-payments. Zero failed. Thirteen different people have paid from their own wallets, each one a
-distinct address you can verify right here. Real creators in my WhatsApp communities used it.
-Metadata on Arc, video on Walrus. Every settlement on this feed is real and on-chain."
+### 2b. Face ID — a normal person pays from their own wallet (0:55–1:20)
 
-## 6 · Not locked to my app — [2:05–2:18] *(flash `/sidecar`)* — hits: Arc OSS track + you shipped their wishlist
-**DO:** Open `/sidecar` (or show it in a tab). Point at the live sidecar stats.
-**SAY:** "And this isn't locked to Driplet. The same per-second engine drops into an existing
-streaming server like Owncast, without changing a line of its code. I proved it with a real
-Owncast server settling real USDC on Arc. It's all open source, so any creator platform can
-turn this on."
+**DO:** On the watch page, tap **Continue with Face ID** (session already warm). Show the payment land and the "Paying from your wallet" card.
 
-## 7 · I'm not stopping — [2:18–2:38] *(your face)* — hits: keep building + problem
-**SAY:** "I'm not abandoning this after the hackathon. The people who need it are already in
-front of me. Next is one-tap sign-in for creators too. I'll keep building Driplet until
-anyone the banks ignore can finally get paid for their work. That's the whole point. Thanks
-for watching."
-**DO:** End on **trydriplet.vercel.app**.
+**SAY:** No extension, no seed phrase. A passkey makes a gasless smart-account wallet right in the browser, Circle Modular Wallets, gas sponsored. My testers in Kano paid from their own wallets this way; seventeen distinct wallets so far, each one verifiable on-chain.
+
+### 2c. The treasury thinks — visible agency (1:20–1:45)
+
+**DO:** Scroll to the Stream treasury panel. Point at "paid out" under the creator row, then read the agent budget ledger line aloud.
+
+**SAY:** Prepays stream out per second actually watched; you can see paid-out climbing in real time. And look at the AI co-host's ledger: it checks its own budget every cycle, income, share cap, spent, and it pauses itself when paying itself would eat the creator's share. The agent reasons about money, on screen.
+
+### 2d. The AI patron — agents on both sides (1:45–2:15)
+
+**DO:** Open `/impact`. Point at the AI patron panel: its wallet, its decisions, a refusal, a payment with its tx link. Then sweep over the live totals.
+
+**SAY:** This is the other side: an autonomous viewer. The AI patron has its own funded wallet and decides, with an LLM, which streams deserve its money. When nothing is worth paying for, it refuses and says why. When it pays, that is its own USDC, on-chain. So an agent spends, treasuries split, an agent earns; a closed agent economy. And everything on this page is a real settlement you can check: twenty-three thousand payments, zero failures.
 
 ---
 
-## To make each beat land
-- **Scene 3 (Face ID):** pre-fund a Face-ID wallet on the recording phone BEFORE you record,
-  so the tap logs in and pays instantly, no faucet wait on camera. Do a 10-sec dry-run first.
-- **Scene 4 (agency):** want to SHOW the agent pausing? Create a brand-new stream and watch
-  it: the AI co-host comments once, then the indicator reads "saving budget" while it waits
-  for the stream to earn more. That on-screen pause is the single strongest "it's a real
-  agent" moment. On ada-live (lots of income) it pays freely instead, which is also fine.
-- **Scene 5 (traction):** let the `/impact` feed scroll for 2–3 seconds in silence so they
-  see new rows land live. Point at "distinct paying wallets" — that's your most trusted number.
-- **Scene 6 (sidecar):** `/sidecar` is live with real stats. This is the "you built exactly
-  what we asked for" moment — the hosts wishlisted an Owncast per-second webhook sidecar and
-  you shipped it, proven against a real server. Don't rush it; it's a standout, not a footnote.
-- **Warm up first:** watch ada-live ~30–60s and refresh before recording, so the first
-  per-second payment is instant.
-- One honest line beats ten buzzwords. You have the real thing. Just show it.
-- Upload to YouTube **Unlisted**, send me the link, I'll put it in `SUBMISSION.md`, then resubmit.
+## 3. IMPACT + VISION (2:15–2:45)
+
+**DO:** Flash `/sidecar` briefly, then `/roadmap`. End on your face or the landing page.
+
+**SAY:** It's open source and it's not locked to my app: a drop-in sidecar adds per-second pay to any Owncast server running today, no fork, no proxy. Next: creators set their own splits, passkey login for creators, the sidecar family for Jellyfin and PeerTube, then mainnet, and the same per-second engine pointed at storage on Arc. The creators around me finally have a way to get paid for attention. That's worth more than two weeks of work to me. Driplet: get paid by the second.
+
+---
+
+## Field notes
+
+- **Adaptable:** if a judge asks "what else can this meter?" the answer is anything continuous: APIs, compute, storage; the settlement core is already reused by the Owncast sidecar and the roadmap storage protocol.
+- If the live take stumbles, cut to the backup recording of that scene; never restart the whole video.
+- Upload unlisted (not private). Test the link in an incognito window before submitting.

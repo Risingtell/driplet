@@ -263,7 +263,7 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
               }}
               className="underline underline-offset-2"
             >
-              {copied ? "Link copied — paste it in Safari" : "Copy this page link"}
+              {copied ? "Link copied, paste it in Safari" : "Copy this page link"}
             </button>
           </span>
         </div>
