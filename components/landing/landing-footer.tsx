@@ -21,6 +21,9 @@ export function LandingFooter() {
         <Link href="/sidecar" className="transition-colors hover:text-foreground">
           Owncast sidecar
         </Link>
+        <Link href="/roadmap" className="transition-colors hover:text-foreground">
+          Roadmap
+        </Link>
       </nav>
       <p>Streaming nanopayments, settled in USDC on Arc, powered by Circle.</p>
     </footer>
