@@ -176,17 +176,26 @@ export async function getCreatorStreams(): Promise<CreatorStream[]> {
 
   const out: CreatorStream[] = [];
   for (const r of mine) {
+    // Per-second watch payments (fixed price → count x rate)…
     const { count } = await admin
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", `/watch/${r.slug}`);
     const drips = count ?? 0;
+    // …plus lump payments from viewers' own wallets: MetaMask own-pay, Face ID
+    // (passkey), and the AI patron. These were being ignored, so a creator who
+    // earned only via Face ID saw $0. Sum their amounts.
+    const { data: lumps } = await admin
+      .from("payment_events")
+      .select("amount_usdc")
+      .in("endpoint", [`/own/${r.slug}`, `/passkey/${r.slug}`, `/patron/${r.slug}`]);
+    const lumpTotal = (lumps ?? []).reduce((s, x) => s + Number(x.amount_usdc ?? 0), 0);
     out.push({
       slug: r.slug,
       title: r.title,
       isLive: !!r.is_live,
       drips,
-      streamed: drips * Number(r.rate_per_second),
+      streamed: drips * Number(r.rate_per_second) + lumpTotal,
     });
   }
   return out;

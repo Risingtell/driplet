@@ -10,9 +10,9 @@ export default async function OverviewPage() {
   const totalStreamed = streams.reduce((s, x) => s + x.streamed, 0);
 
   const stats = [
-    { label: "Wallet balance", value: `$${(info.balance ?? 0).toFixed(4)}`, sub: `≈ ${naira(info.balance ?? 0)}`, icon: Wallet },
-    { label: "Total streamed", value: `$${totalStreamed.toFixed(4)}`, sub: `≈ ${naira(totalStreamed)}`, icon: Droplet },
-    { label: "Drips", value: totalDrips.toLocaleString(), sub: undefined as string | undefined, icon: Droplet },
+    { label: "Total earned", value: `$${totalStreamed.toFixed(4)}`, sub: `≈ ${naira(totalStreamed)}`, icon: Droplet },
+    { label: "Wallet balance (withdrawable)", value: `$${(info.balance ?? 0).toFixed(4)}`, sub: `≈ ${naira(info.balance ?? 0)}`, icon: Wallet },
+    { label: "Per-second payments", value: totalDrips.toLocaleString(), sub: undefined as string | undefined, icon: Droplet },
     { label: "Streams", value: String(streams.length), sub: undefined as string | undefined, icon: Clapperboard },
   ];
 
@@ -20,7 +20,9 @@ export default async function OverviewPage() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Your earnings and streams at a glance.
+        Your earnings and streams at a glance. &quot;Total earned&quot; is everything viewers have
+        paid you; &quot;wallet balance&quot; is what has settled to your wallet and is ready to
+        withdraw.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

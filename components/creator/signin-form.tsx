@@ -63,12 +63,12 @@ export function SignInForm() {
         </div>
         <h1 className="text-center text-xl font-semibold">Check your email</h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Type the 6-digit code from the email below. (The sign-in link in the email works too,
-          but only in the browser you used to request it.)
+          Open the sign-in link in the email <strong>on this device</strong>. If your email shows a
+          6-digit code, you can type it here instead (works from any device).
         </p>
         <form action={verify} className="mt-5">
           <input type="hidden" name="email" value={email} />
-          <label className="block text-sm font-medium">6-digit code</label>
+          <label className="block text-sm font-medium">6-digit code (if your email shows one)</label>
           <input
             name="token"
             inputMode="numeric"
