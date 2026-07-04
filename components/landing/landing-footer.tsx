@@ -7,7 +7,7 @@ export function LandingFooter() {
       <Logo />
       <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
         <Link href="/explore" className="transition-colors hover:text-foreground">
-          Explore
+          Watch live
         </Link>
         <Link href="/use-cases" className="transition-colors hover:text-foreground">
           Use cases
@@ -24,16 +24,28 @@ export function LandingFooter() {
         <Link href="/roadmap" className="transition-colors hover:text-foreground">
           Roadmap
         </Link>
-        <a
-          href="https://x.com/agentdriplet"
-          target="_blank"
-          rel="noreferrer"
-          className="transition-colors hover:text-foreground"
-        >
-          @agentdriplet
-        </a>
       </nav>
-      <p>Streaming nanopayments, settled in USDC on Arc, powered by Circle.</p>
+      <div className="flex flex-col items-center gap-1 sm:items-end">
+        <p>
+          Contact us:{" "}
+          <a
+            href="https://x.com/agentdriplet"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-foreground/80 transition-colors hover:text-foreground"
+          >
+            @agentdriplet
+          </a>{" "}
+          ·{" "}
+          <a
+            href="mailto:agentdriplet@gmail.com"
+            className="font-medium text-foreground/80 transition-colors hover:text-foreground"
+          >
+            agentdriplet@gmail.com
+          </a>
+        </p>
+        <p>Streaming nanopayments, settled in USDC on Arc, powered by Circle.</p>
+      </div>
     </footer>
   );
 }

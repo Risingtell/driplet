@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Radio } from "lucide-react";
+import { Play, Radio } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -28,17 +28,21 @@ export function SiteHeader() {
           Why
         </Link>
         <Link href="/explore" className="transition-colors hover:text-foreground">
-          Explore
+          Watch live
         </Link>
       </nav>
-      <div className="flex items-center gap-3">
-        <Link
-          href="/explore"
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground md:hidden"
-        >
-          Explore
-        </Link>
+      <div className="flex items-center gap-2">
         <ThemeToggle />
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary"
+        >
+          <Link href="/explore">
+            <Play className="size-4" /> Watch live
+          </Link>
+        </Button>
         <Button asChild size="sm">
           <Link href="/studio/go-live">
             <Radio className="size-4" /> Go live

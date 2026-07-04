@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Radio, Coins, Split } from "lucide-react";
+import { ArrowRight, Radio, Coins, Split, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -42,11 +42,21 @@ export default function Landing() {
             Why Driplet
           </Link>
           <Link href="/explore" className="transition-colors hover:text-foreground">
-            Explore
+            Watch live
           </Link>
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary"
+          >
+            <Link href="/explore">
+              <Play className="size-4" /> Watch live
+            </Link>
+          </Button>
           <Button asChild size="sm">
             <Link href="/studio/go-live">
               <Radio className="size-4" /> Go live
