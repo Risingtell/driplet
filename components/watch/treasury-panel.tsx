@@ -10,6 +10,7 @@ interface Payee {
   role: string;
   share: number;
   amount: number;
+  paid?: number;
   address?: string | null;
 }
 
@@ -105,8 +106,15 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
                 ) : null}
               </span>
             </span>
-            <span className="tabular shrink-0 font-mono text-sm text-foreground/90">
-              ${p.amount.toFixed(4)}
+            <span className="shrink-0 text-right">
+              <span className="tabular block font-mono text-sm text-foreground/90">
+                ${p.amount.toFixed(4)}
+              </span>
+              {p.role !== "Commentary" && p.role !== "Live captions agent" && (
+                <span className="tabular block text-[10px] text-muted-foreground">
+                  paid out ${(p.paid ?? 0).toFixed(4)}
+                </span>
+              )}
             </span>
           </li>
         ))}

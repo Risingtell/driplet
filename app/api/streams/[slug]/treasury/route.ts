@@ -27,7 +27,7 @@ export async function GET(
   // REST 1000-row page limit.
   const AGENT_PRICE = 0.005;
 
-  const [watch, own, agent] = await Promise.all([
+  const [watch, own, agent, payouts] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -44,6 +44,12 @@ export async function GET(
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", `/agents/captions/${slug}`),
+    // What the treasury has actually PAID OUT to each payee so far (settles run
+    // per watched interval, so this trails the allocated share of prepays).
+    supabase
+      .from("payment_events")
+      .select("endpoint, amount_usdc")
+      .or(`endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%`),
   ]);
 
   if (watch.error) {
@@ -56,11 +62,19 @@ export async function GET(
   const agentCount = agent.count ?? 0;
   const agentPaid = agentCount * AGENT_PRICE;
 
+  // Sum actual payouts per role (settle labels end in the role, spaces as _).
+  const paidByRole = new Map<string, number>();
+  for (const r of payouts.data ?? []) {
+    const role = ((r.endpoint as string).split("/").pop() ?? "").replace(/_/g, " ");
+    paidByRole.set(role, (paidByRole.get(role) ?? 0) + Number(r.amount_usdc ?? 0));
+  }
+
   const payees = stream.split.map((p) => ({
     name: p.name,
     role: p.role,
     share: p.share,
     amount: total * p.share,
+    paid: paidByRole.get(p.role) ?? 0,
     address: p.address ?? null,
   }));
 
