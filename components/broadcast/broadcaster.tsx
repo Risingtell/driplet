@@ -140,6 +140,23 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
   async function start() {
     setError(null);
     setState("connecting");
+
+    // iPhone Safari only shows the camera/mic permission prompt when
+    // getUserMedia runs inside the tap gesture, BEFORE any network await. The
+    // token fetch and room.connect() below are awaits, so on stricter iOS
+    // devices the camera is silently blocked ("not allowed by the user agent")
+    // by the time LiveKit asks for it. Prime the permission here first (then
+    // release it) so the prompt actually appears; once granted, LiveKit can
+    // re-acquire without a gesture.
+    try {
+      const warm = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      warm.getTracks().forEach((t) => t.stop());
+    } catch (e) {
+      setError(friendlyBroadcastError(e as Error));
+      setState("error");
+      return;
+    }
+
     try {
       const res = await fetch("/api/livekit/token", {
         method: "POST",
@@ -170,6 +187,8 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       updateViewers();
       setState("live");
     } catch (e) {
+      roomRef.current?.disconnect();
+      roomRef.current = null;
       setError(friendlyBroadcastError(e as Error));
       setState("error");
     }
