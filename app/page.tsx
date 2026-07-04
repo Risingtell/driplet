@@ -30,7 +30,9 @@ export default function Landing() {
     <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5">
       {/* Header */}
       <header className="flex items-center justify-between gap-4 py-5">
-        <Logo />
+        <Link href="/" aria-label="Driplet home">
+          <Logo />
+        </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-foreground/70 md:flex">
           <a href="#how" className="transition-colors hover:text-foreground">
             How it works

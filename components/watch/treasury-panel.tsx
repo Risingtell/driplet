@@ -68,7 +68,7 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-xs text-muted-foreground">Total earned</p>
+          <p className="text-xs text-muted-foreground">Total received</p>
           <p className="text-gradient tabular font-mono text-lg font-semibold leading-none">
             ${data.total.toFixed(4)}
           </p>
@@ -140,10 +140,11 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">
-        The stream holds its own balance and splits each payment across its people in real time. It
-        pays the AI co-host it runs only while that stays within the agent&apos;s earned share, and
-        the agent pauses itself when funds run low so the creator is always paid first.
-        Agent-to-agent, no human in the loop.
+        The stream holds its own balance and splits each payment across its people in real time.
+        Wallet prepays (like a $5 Face ID session) arrive up front and stream out to the payees per
+        second actually watched. The treasury pays the AI co-host it runs only while that stays
+        within the agent&apos;s earned share, and the agent pauses itself when funds run low so the
+        creator is always paid first. Agent-to-agent, no human in the loop.
       </p>
     </div>
   );
