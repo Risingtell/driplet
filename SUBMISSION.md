@@ -14,6 +14,7 @@ https://trydriplet.vercel.app/impact (or /api/impact).
 - Demo video: https://youtu.be/zFZSRxp6NtY
 - Source code: https://github.com/Risingtell/driplet
 - Roadmap: https://trydriplet.vercel.app/roadmap (shipped / building next / the big bet)
+- X: https://x.com/agentdriplet
 - The AI patron thinking in public: https://trydriplet.vercel.app/impact (decisions panel) or `POST /api/agents/patron` to trigger a cycle yourself
 - Creator studio: sign in at https://trydriplet.vercel.app/signin (email magic link auto-creates a Circle wallet on Arc; then go live with a camera or an uploaded video)
 

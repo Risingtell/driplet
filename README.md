@@ -5,6 +5,7 @@
 [![settles on Arc testnet](https://img.shields.io/badge/settles_on-Arc_testnet-1f1f1f)](https://testnet.arcscan.app)
 [![payments: Circle x402 + Gateway](https://img.shields.io/badge/payments-Circle_x402_%2B_Gateway-2775CA)](https://github.com/circlefin/arc-nanopayments)
 [![demo video](https://img.shields.io/badge/demo-YouTube-ff0000)](https://youtu.be/zFZSRxp6NtY)
+[![X: @agentdriplet](https://img.shields.io/badge/X-%40agentdriplet-000000)](https://x.com/agentdriplet)
 
 **Pay-per-second live-stream monetization in USDC, settled on Arc.**
 

@@ -24,6 +24,14 @@ export function LandingFooter() {
         <Link href="/roadmap" className="transition-colors hover:text-foreground">
           Roadmap
         </Link>
+        <a
+          href="https://x.com/agentdriplet"
+          target="_blank"
+          rel="noreferrer"
+          className="transition-colors hover:text-foreground"
+        >
+          @agentdriplet
+        </a>
       </nav>
       <p>Streaming nanopayments, settled in USDC on Arc, powered by Circle.</p>
     </footer>
