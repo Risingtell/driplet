@@ -47,11 +47,10 @@ export default function Landing() {
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/explore">Explore</Link>
-          </Button>
           <Button asChild size="sm">
-            <Link href="/studio/go-live">Go live</Link>
+            <Link href="/studio/go-live">
+              <Radio className="size-4" /> Go live
+            </Link>
           </Button>
         </div>
       </header>
