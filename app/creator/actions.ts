@@ -21,6 +21,28 @@ export async function sendMagicLink(formData: FormData) {
 }
 
 /**
+ * Sign in by typing the 6-digit code from the email instead of clicking the
+ * link. Unlike the link (which only works in the browser that requested it,
+ * because of the PKCE cookie), the code works from any device or browser.
+ */
+export async function verifyEmailCode(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+  const token = String(formData.get("token") ?? "").trim();
+  if (!email || !token) return { error: "Enter the code from the email." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  if (error) {
+    return { error: "That code didn't work. It may have expired, request a new email." };
+  }
+  try {
+    await ensureWallet();
+  } catch {
+    // The studio layout retries ensureWallet if this fails.
+  }
+  redirect("/studio");
+}
+
+/**
  * Ensure the signed-in creator has a Circle wallet on Arc. Creates one on first
  * call and stores it. Returns the wallet address.
  */
