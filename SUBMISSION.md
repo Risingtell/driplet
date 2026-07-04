@@ -13,6 +13,8 @@ https://trydriplet.vercel.app/impact (or /api/impact).
 - Owncast sidecar: https://trydriplet.vercel.app/sidecar (per-second pay for any Owncast stream, see "Open source / sidecar" below)
 - Demo video: https://youtu.be/zFZSRxp6NtY
 - Source code: https://github.com/Risingtell/driplet
+- Roadmap: https://trydriplet.vercel.app/roadmap (shipped / building next / the big bet)
+- The AI patron thinking in public: https://trydriplet.vercel.app/impact (decisions panel) or `POST /api/agents/patron` to trigger a cycle yourself
 - Creator studio: sign in at https://trydriplet.vercel.app/signin (email magic link auto-creates a Circle wallet on Arc; then go live with a camera or an uploaded video)
 
 ## Project name
@@ -28,7 +30,7 @@ How it works: when you press Watch, the page sends one payment per second. Inste
 
 Tech: Next.js (App Router) and TypeScript front and back, deployed on Vercel; Supabase (Postgres) for streams and the payment log; payments over x402 settled through Circle Gateway on Arc, built on Circle's @circle-fin/x402-batching client; viem for wallet and chain work; a wallet-connect that auto-adds the Arc network.
 
-During Lepton I took this from the Circle sample to a real product: per-second metered payments, the autonomous multi-payee treasury that pays its own service agent, creator accounts (email sign-in that auto-creates a Circle wallet on Arc), a "go live" flow with real per-wallet payouts, real live video and screen sharing, live chat, video uploads stored on decentralized storage (Walrus), gasless own-wallet payments so viewers can pay from their own wallets, Face ID onboarding that creates a gasless smart-account wallet right in the browser (Circle Modular Wallets, no app and no seed phrase), saveable creator profiles people can re-watch, stream metadata recorded on-chain on Arc (with the video files on Walrus), and a drop-in Owncast sidecar that adds per-second pay to an existing live-stream server without changing its code. There's a public proof feed at /impact, and real users came through WhatsApp creator communities. It's live at trydriplet.vercel.app with nearly 23,000 real on-chain payments and zero failures.
+During Lepton I took this from the Circle sample to a real product: per-second metered payments, the autonomous multi-payee treasury that pays its own service agent, creator accounts (email sign-in that auto-creates a Circle wallet on Arc), a "go live" flow with real per-wallet payouts, real live video and screen sharing, live chat, video uploads stored on decentralized storage (Walrus), gasless own-wallet payments so viewers can pay from their own wallets, Face ID onboarding that creates a gasless smart-account wallet right in the browser (Circle Modular Wallets, no app and no seed phrase), saveable creator profiles people can re-watch, stream metadata recorded on-chain on Arc (with the video files on Walrus), and a drop-in Owncast sidecar that adds per-second pay to an existing live-stream server without changing its code. In the final stretch I closed the agent loop from the other side: an AI patron, an autonomous viewer agent with its own funded wallet that decides with an LLM which streams deserve its money and pays them gaslessly from its own address, publishing every decision (refusals included) with its reasoning. There's a public proof feed at /impact, and real users came through WhatsApp creator communities. It's live at trydriplet.vercel.app with over 23,000 real on-chain payments and zero failures.
 
 ## What it does
 Driplet turns watch time into income, one second at a time. A viewer opens a stream and starts paying the creator a sub-cent amount of USDC per second (as little as $0.0003), settled on Arc through Circle's nanopayments. Each stream has its own treasury that handles the money on its own: as income comes in, it splits in real time between the creator, a co-host, and an AI co-host (a real LLM agent) the stream pays per call out of its own earnings. So money comes in and goes back out automatically, second by second, without anyone managing it.
@@ -41,7 +43,7 @@ I build for the people right around me first: creators in Kano whose audience th
 ## How it uses Arc and the Circle Agent Stack
 Every per-second payment is a real USDC settlement on Arc testnet, and you can verify each one on the live feed. I don't send a raw transaction per second, since Arc's base fee would make that pointless. Instead the drips are batched and settled through Circle Gateway using signed EIP-3009 authorizations, which keeps them gas-free and lets sub-cent amounts actually work. The payments themselves run over x402, both for the viewer's per-second charge and for the AI agent's paid calls. The whole thing is built on Circle's @circle-fin/x402-batching Gateway client.
 
-I use two more parts of the Circle stack for wallets. Creators get a Circle developer-controlled wallet on Arc, created automatically on sign-in, that their payouts land in and that they withdraw from. Viewers who want to pay from their own wallet can create one in the browser with Face ID using Circle Modular Wallets: a passkey (WebAuthn) makes a gasless ERC-4337 smart account on Arc, gas sponsored by Circle's paymaster, and it pays the creator the same Arc USDC the rest of the app uses, with no app install and no seed phrase. So the whole journey, viewer and creator, stays on the Circle Agent Stack and on Arc.
+I use two more parts of the Circle stack for wallets. Creators get a Circle developer-controlled wallet on Arc, created automatically on sign-in, that their payouts land in and that they withdraw from. Viewers who want to pay from their own wallet can create one in the browser with Face ID using Circle Modular Wallets: a passkey (WebAuthn) makes a gasless ERC-4337 smart account on Arc, gas sponsored by Circle's paymaster, and it pays the creator the same Arc USDC the rest of the app uses, with no app install and no seed phrase. The AI patron agent uses the same gasless EIP-3009 rail: it signs authorizations from its own wallet and the treasury relays them on-chain, so even the agent's spending settles as real Arc USDC. So the whole journey, viewer, creator and agent, stays on the Circle Agent Stack and on Arc.
 
 ## Why it's an agents project
 Autonomous agents sit on both sides of Driplet's economy, and every one of their decisions is visible.
@@ -53,10 +55,11 @@ On the spending side, an AI patron with its own funded USDC wallet decides what 
 ## Traction
 Driplet is already being used by real people. I shared it with creator communities I'm part of, and they actually watched and paid. Everything in the first list is live and verifiable on-chain on Arc testnet (open /impact and check any settlement id):
 
-- nearly 23,000 real per-second payments (around 383 minutes watched and paid for)
-- the treasury paid its agent 1,100+ times, on its own, out of stream earnings
-- about $6.90 streamed end to end, split correctly across creator, co-host and agent
-- 13 distinct wallets that paid from their OWN wallet (own-pay or Face ID), not the shared demo wallet, each verifiable as a distinct payer on-chain
+- over 23,000 real per-second payments (around 387 minutes watched and paid for)
+- the treasury paid its agent 1,180+ times, on its own, out of stream earnings
+- about $6.96 streamed end to end, split correctly across creator, co-host and agent
+- 17 distinct wallets that paid from their OWN wallet (own-pay or Face ID), not the shared demo wallet, each verifiable as a distinct payer on-chain — up from 13 earlier in the week and growing
+- an AI patron agent paying from its own distinct wallet too, with every decision (pay or refuse) published with its reasoning on /impact
 - zero failed payments
 - you can watch it land in real time at https://trydriplet.vercel.app/impact (the "distinct paying wallets" stat updates live)
 
