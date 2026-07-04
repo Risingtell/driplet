@@ -19,6 +19,50 @@ import { Button } from "@/components/ui/button";
 type State = "idle" | "connecting" | "live" | "error";
 
 /**
+ * In-app browsers (WhatsApp, Instagram, Facebook, TikTok, Telegram) frequently
+ * block camera/mic access on iOS, so getUserMedia throws NotAllowedError with no
+ * way to recover in-page. Detect them so we can tell the host to open the link
+ * in a real browser instead of showing a dead-end error.
+ */
+function inAppBrowser(): string | null {
+  if (typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent || "";
+  if (/FBAN|FBAV|FB_IAB/.test(ua)) return "Facebook";
+  if (/Instagram/.test(ua)) return "Instagram";
+  if (/WhatsApp/i.test(ua)) return "WhatsApp";
+  if (/Line\//.test(ua)) return "LINE";
+  if (/Twitter/.test(ua)) return "X";
+  if (/TikTok|musical_ly|BytedanceWebview/i.test(ua)) return "TikTok";
+  // WhatsApp's iOS webview often doesn't stamp the UA, so also flag a webview
+  // that isn't Safari/Chrome/Firefox as a likely in-app browser.
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+  const isRealBrowser = /Safari|CriOS|FxiOS|EdgiOS/.test(ua);
+  if (isIOS && !isRealBrowser) return "this app";
+  return null;
+}
+
+/** Turn a raw getUserMedia/LiveKit error into something the host can act on. */
+function friendlyBroadcastError(e: Error): string {
+  const app = inAppBrowser();
+  const msg = e.message || "";
+  const permissionDenied =
+    e.name === "NotAllowedError" || /not allowed|permission|denied/i.test(msg);
+  if (permissionDenied && app) {
+    return `${app}'s built-in browser can't use your camera. Tap the ⋯ or "Open in browser" and open this page in Safari or Chrome, then press Go on air again.`;
+  }
+  if (permissionDenied) {
+    return "Camera access was blocked. Allow camera and microphone for this site (in iPhone: Settings → Safari → Camera → Allow, or tap the ‘aA’ in the address bar → Website Settings), then press Go on air again.";
+  }
+  if (e.name === "NotFoundError" || /no (camera|device)/i.test(msg)) {
+    return "No camera was found on this device. Check that another app isn't already using it.";
+  }
+  if (e.name === "NotReadableError" || /in use|could not start/i.test(msg)) {
+    return "Your camera is busy in another app. Close it (video call, other camera app) and try again.";
+  }
+  return msg || "Could not start your camera.";
+}
+
+/**
  * Creator broadcast studio. Publishes the host's camera + mic into the stream's
  * LiveKit room (room name = slug). Viewers who open /watch/<slug> see this feed
  * and pay per second. Shows the shareable link and a live viewer count.
@@ -33,6 +77,13 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
   const [sharingScreen, setSharingScreen] = useState(false);
   const [facing, setFacing] = useState<"user" | "environment">("user");
   const [micOn, setMicOn] = useState(true);
+  const [warnApp, setWarnApp] = useState<string | null>(null);
+
+  // Warn up front if we're inside an in-app browser that will block the camera,
+  // before the host taps Go on air and hits a confusing failure.
+  useEffect(() => {
+    setWarnApp(inAppBrowser());
+  }, []);
 
   /** Mute or unmute the host's own microphone. */
   async function toggleMic() {
@@ -119,7 +170,7 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       updateViewers();
       setState("live");
     } catch (e) {
-      setError((e as Error).message);
+      setError(friendlyBroadcastError(e as Error));
       setState("error");
     }
   }
@@ -173,6 +224,31 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
           </div>
         )}
       </div>
+
+      {warnApp && !live && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-500">
+          <span>
+            You&apos;re viewing this inside {warnApp}&apos;s browser, which can&apos;t use your
+            camera. Tap the ⋯ menu (or &quot;Open in browser&quot;) and open this page in{" "}
+            <strong>Safari</strong> or <strong>Chrome</strong>, then press Go on air.{" "}
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard?.writeText(window.location.href).then(
+                  () => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  },
+                  () => {},
+                );
+              }}
+              className="underline underline-offset-2"
+            >
+              {copied ? "Link copied — paste it in Safari" : "Copy this page link"}
+            </button>
+          </span>
+        </div>
+      )}
 
       {error && <p className="mt-3 text-sm text-amber-500">{error}</p>}
 
