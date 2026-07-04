@@ -66,23 +66,38 @@ type Session = {
 // Cache the signed-in session so top-ups reuse it without re-running discovery.
 let cached: Session | null = null;
 
-/**
- * Register a new passkey (or log into an existing one) and build the smart
- * account + bundler client. `mode` defaults to register for first-time viewers.
- */
-export async function signInWithPasskey(
-  username: string,
-  mode: "register" | "login" = "register",
-): Promise<Session> {
-  if (!CLIENT_KEY) throw new Error("Passkey wallets are not configured.");
+// The passkey credential ({ id, publicKey }) is enough to rebuild the exact same
+// smart account and to sign later. Persisting it means the viewer logs in with
+// Face ID ONCE per device: on later visits we restore the wallet with no prompt,
+// and Face ID only appears when they actually sign a payment.
+const CRED_KEY = "driplet_passkey_cred";
 
-  const passkeyTransport = toPasskeyTransport(CLIENT_URL, CLIENT_KEY);
-  const credential = await toWebAuthnCredential({
-    transport: passkeyTransport,
-    mode: mode === "login" ? WebAuthnMode.Login : WebAuthnMode.Register,
-    username,
-  });
+type StoredCredential = { id: string; publicKey: Hex };
 
+function persistCredential(credential: StoredCredential) {
+  try {
+    localStorage.setItem(
+      CRED_KEY,
+      JSON.stringify({ id: credential.id, publicKey: credential.publicKey }),
+    );
+  } catch {
+    // storage disabled (private mode) — the session just won't persist
+  }
+}
+
+function readCredential(): StoredCredential | null {
+  try {
+    const raw = localStorage.getItem(CRED_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw) as StoredCredential;
+    return c?.id && c?.publicKey ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Build the smart account + bundler client + Session from a passkey credential. */
+async function buildSession(credential: { id: string; publicKey: Hex }): Promise<Session> {
   const modularTransport = toModularTransport(`${CLIENT_URL}/arcTestnet`, CLIENT_KEY);
   const client = createPublicClient({ chain: arcTestnet, transport: modularTransport });
 
@@ -126,6 +141,47 @@ export async function signInWithPasskey(
 
   cached = session;
   return session;
+}
+
+/**
+ * Register a new passkey (or log into an existing one) and build the smart
+ * account + bundler client. `mode` defaults to register for first-time viewers.
+ * The Face ID ceremony runs here; afterwards the credential is persisted so
+ * future visits restore silently via restoreSession().
+ */
+export async function signInWithPasskey(
+  username: string,
+  mode: "register" | "login" = "register",
+): Promise<Session> {
+  if (!CLIENT_KEY) throw new Error("Passkey wallets are not configured.");
+
+  const passkeyTransport = toPasskeyTransport(CLIENT_URL, CLIENT_KEY);
+  const credential = await toWebAuthnCredential({
+    transport: passkeyTransport,
+    mode: mode === "login" ? WebAuthnMode.Login : WebAuthnMode.Register,
+    username,
+  });
+
+  persistCredential(credential as StoredCredential);
+  return buildSession(credential as { id: string; publicKey: Hex });
+}
+
+/**
+ * Restore a previously signed-in wallet from the persisted credential WITHOUT a
+ * Face ID prompt (reads and address only; signing a payment still prompts). This
+ * is what makes Face ID login a one-time thing per device. Returns null if the
+ * viewer has never signed in on this device.
+ */
+export async function restoreSession(): Promise<Session | null> {
+  if (cached) return cached;
+  if (!CLIENT_KEY || typeof window === "undefined") return null;
+  const credential = readCredential();
+  if (!credential) return null;
+  try {
+    return await buildSession(credential);
+  } catch {
+    return null;
+  }
 }
 
 export function currentSession(): Session | null {

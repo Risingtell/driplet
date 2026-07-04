@@ -143,8 +143,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setOwnErr(null);
       setPkBusy(true);
       try {
-        const { signInWithPasskey, currentSession } = await import("@/lib/passkey");
-        let session = currentSession();
+        const { signInWithPasskey, restoreSession } = await import("@/lib/passkey");
+        // Restore a prior login silently (no Face ID) if this device has one.
+        let session = await restoreSession();
         if (!session) {
           const stored = localStorage.getItem("driplet_passkey_user");
           const username = stored ?? `driplet-${Math.random().toString(16).slice(2, 8)}`;
