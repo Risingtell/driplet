@@ -41,3 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *.dat
+
+# Submission prep, kept local only (backstage material, not product)
+SUBMISSION.md
+VIDEO_SCRIPT.md
+WHATSAPP.md
