@@ -13,6 +13,7 @@ https://trydriplet.vercel.app/impact (or /api/impact).
 - Owncast sidecar: https://trydriplet.vercel.app/sidecar (per-second pay for any Owncast stream, see "Open source / sidecar" below)
 - Demo video: https://youtu.be/zFZSRxp6NtY
 - Source code: https://github.com/Risingtell/driplet
+- Verify everything in under 3 minutes: https://github.com/Risingtell/driplet/blob/master/JUDGE-QUICKSTART.md
 - Roadmap: https://trydriplet.vercel.app/roadmap (shipped / building next / the big bet)
 - X: https://x.com/agentdriplet
 - The AI patron thinking in public: https://trydriplet.vercel.app/impact (decisions panel) or `POST /api/agents/patron` to trigger a cycle yourself
@@ -56,11 +57,11 @@ On the spending side, an AI patron with its own funded USDC wallet decides what 
 ## Traction
 Driplet is already being used by real people. I shared it with creator communities I'm part of, and they actually watched and paid. Everything in the first list is live and verifiable on-chain on Arc testnet (open /impact and check any settlement id):
 
-- over 23,000 real per-second payments (around 387 minutes watched and paid for)
-- the treasury paid its agent 1,180+ times, on its own, out of stream earnings
-- about $6.96 streamed end to end, split correctly across creator, co-host and agent
-- 17 distinct wallets that paid from their OWN wallet (own-pay or Face ID), not the shared demo wallet, each verifiable as a distinct payer on-chain — up from 13 earlier in the week and growing
-- an AI patron agent paying from its own distinct wallet too, with every decision (pay or refuse) published with its reasoning on /impact
+- 23,300+ real per-second payments (around 388 minutes watched and paid for)
+- the treasury paid its agent 1,239 times, on its own, out of stream earnings
+- about $6.99 streamed end to end, split correctly across creator, co-host and agent
+- 21 distinct wallets that paid from their OWN wallet (own-pay or Face ID), not the shared demo wallet, each verifiable as a distinct payer on-chain — up from 13 earlier in the week and growing
+- an AI patron agent that has paid 48 times from its own distinct wallet, with every decision (pay or refuse) published with its reasoning on /impact
 - zero failed payments
 - you can watch it land in real time at https://trydriplet.vercel.app/impact (the "distinct paying wallets" stat updates live)
 

@@ -9,13 +9,20 @@
 
 **Pay-per-second live-stream monetization in USDC, settled on Arc.**
 
+### ⏱️ Judging this? Verify every claim in under 3 minutes → [JUDGE-QUICKSTART.md](./JUDGE-QUICKSTART.md)
+
+> ## **23,303 real settlements · 21 distinct paying wallets · 1,239 autonomous agent payments · $6.99 USDC streamed · 0 failures**
+> All on-chain on Arc testnet, recomputed live at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)** *(snapshot 2026-07-05)*
+
 A creator goes live, and viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own autonomous on-chain treasury that splits incoming drips in real time between the creator, a co-host, and a real AI agent it pays for live commentary, so money flows in from the audience and back out to people and agents with no platform in the middle.
 
-**By the numbers**, all real and on-chain on Arc testnet, updating live at [`/impact`](https://trydriplet.vercel.app/impact):
-**23,000** per-second payments settled · **$6.90** USDC streamed end to end · **13** distinct paying wallets · **1,100+** autonomous agent payments · **0** failed payments *(snapshot 2026-07-02)*
+> Built for the **Lepton Agents Hackathon** (Canteen, with Circle on Arc). Answers **RFB #3, the "Owncast per-second streaming webhook sidecar"** from Canteen's request-for-payments-founders list, live at [`/sidecar`](https://trydriplet.vercel.app/sidecar).
+> **Circle stack used:** Gateway Nanopayments (batched EIP-3009, makes sub-cent payments viable) · x402 (every charge and agent call) · Developer-Controlled Wallets (creator payouts) · Modular Wallets passkey/Face ID (gasless viewer onboarding) · plus a gasless EIP-3009 relay for own-wallet pay.
+> Live: **https://trydriplet.vercel.app** · Proof feed: **/impact** · Demo video: **[youtu.be/zFZSRxp6NtY](https://youtu.be/zFZSRxp6NtY)** · X: **[@agentdriplet](https://x.com/agentdriplet)**
 
-> Built for the **Lepton Agents Hackathon** (Canteen, with Circle on Arc).
-> Live: **https://trydriplet.vercel.app** · Proof feed: **/impact** · Owncast sidecar: **/sidecar** · Demo video: **[youtu.be/zFZSRxp6NtY](https://youtu.be/zFZSRxp6NtY)**
+## The delta: everything here was built during Lepton
+
+First commit **June 16, 2026** (one day after kickoff), starting from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample. **91 commits later**: real live video, the autonomous treasury, two AI agents with money of their own, Face ID onboarding, the Owncast sidecar, on-chain stream metadata with Walrus storage, and real users in Kano paying from 21 distinct wallets. Judges score the gap; the gap is the whole repo.
 
 ---
 
@@ -74,7 +81,7 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 
 ## Traction
 
-Live and on-chain on Arc testnet: nearly 23,000 real per-second payments from real viewers, 13 distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paid 1,100+ times on its own, about $6.90 streamed end to end, zero failed payments. Watch it land in real time at [`/impact`](https://trydriplet.vercel.app/impact).
+Live and on-chain on Arc testnet: 23,303 real per-second payments from real viewers, 21 distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paid 1,239 times on its own, the AI patron 48 more times from its own wallet, about $6.99 streamed end to end, zero failed payments *(snapshot 2026-07-05)*. Watch it land in real time at [`/impact`](https://trydriplet.vercel.app/impact).
 
 ## Tech
 
