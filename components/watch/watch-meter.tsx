@@ -198,6 +198,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         if (/reject|denied|cancel|NotAllowed|abort/i.test(msg)) friendly = "Sign-in cancelled.";
         else if (/entity config|not found in the system/i.test(msg))
           friendly = "Face ID sign-in isn't available right now. Use your own wallet instead.";
+        else if (/timed out|timeout/i.test(msg))
+          friendly =
+            "Circle's gasless network is taking longer than usual to confirm this payment. Your wallet and funds are safe — try again in a minute, or connect an existing wallet below to pay directly instead.";
         setOwnErr(friendly);
       } finally {
         setPkBusy(false);

@@ -9,9 +9,9 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
    Circle Gateway, settled on Arc testnet. The meter and the stream treasury update live.
 2. In a second tab open **https://trydriplet.vercel.app/impact**.
    Watch your own per-second payments land in the live settlement feed within seconds,
-   each with its Circle Gateway settlement id. The totals (23,000+ payments, 21 distinct
-   paying wallets, 1,200+ autonomous agent payments, $0 failed) are computed from the
-   same payment log the feed reads.
+   each with its Circle Gateway settlement id. The totals (25,300+ payments, 22+ distinct
+   paying wallets, 1,400+ autonomous agent payments, $0 failed) are computed from the
+   same payment log the feed reads, and climb live as you watch.
 
 ## Minute 2 — watch an AI agent decide whether to spend its own money
 
@@ -49,7 +49,10 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
 - **Face ID onboarding:** on a watch page tap "Continue with Face ID" — a passkey creates
   a gasless ERC-4337 smart account (Circle Modular Wallets), fund it at
   [faucet.circle.com](https://faucet.circle.com) (Arc Testnet), and pay from your own
-  wallet. Your address joins the distinct-wallet count on `/impact`.
+  wallet. Your address joins the distinct-wallet count on `/impact`. *Note: Circle's
+  sponsored bundler on Arc Testnet has occasionally been slow to confirm post-hackathon;
+  if a payment hangs, "connect an existing wallet" on the same panel pays directly and
+  isn't affected.*
 - **Creator side:** sign in with Google at `/signin` — a Circle developer-controlled
   wallet is created for you automatically; go live with a camera and watch earnings
   settle per second.

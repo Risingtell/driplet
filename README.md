@@ -11,8 +11,8 @@
 
 ### ⏱️ Judging this? Verify every claim in under 3 minutes → [JUDGE-QUICKSTART.md](./JUDGE-QUICKSTART.md)
 
-> ## **25,200+ real settlements · 21 distinct paying wallets · 1,429 autonomous agent payments · $7.57 USDC streamed · 0 failures**
-> All on-chain on Arc testnet, recomputed live at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)** *(snapshot 2026-07-06)*
+> ## **25,300+ real settlements · 22+ distinct paying wallets · 1,400+ autonomous agent payments · $7.61 USDC streamed · 0 failures**
+> All on-chain on Arc testnet, recomputed live at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)** *(snapshot 2026-07-10, and still climbing — check the live number)*
 
 A creator goes live, and viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own autonomous on-chain treasury that splits incoming drips in real time between the creator, a co-host, and a real AI agent it pays for live commentary, so money flows in from the audience and back out to people and agents with no platform in the middle.
 
@@ -22,7 +22,7 @@ A creator goes live, and viewers pay a fraction of a cent for every second they 
 
 ## The delta: everything here was built during Lepton
 
-First commit **June 16, 2026** (one day after kickoff), starting from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample. **91 commits later**: real live video, the autonomous treasury, two AI agents with money of their own, Face ID onboarding, the Owncast sidecar, on-chain stream metadata with Walrus storage, and real users in Kano paying from 21 distinct wallets. Judges score the gap; the gap is the whole repo.
+First commit **June 16, 2026** (one day after kickoff), starting from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample. **91 commits later**: real live video, the autonomous treasury, two AI agents with money of their own, Face ID onboarding, the Owncast sidecar, on-chain stream metadata with Walrus storage, and real users in Kano paying from 22+ distinct wallets. Judges score the gap; the gap is the whole repo.
 
 ---
 
@@ -61,7 +61,7 @@ Every payment is a signed, gas-free off-chain authorization that Circle Gateway 
 | Criterion | Where in Driplet |
 | --- | --- |
 | **Agentic sophistication (30%)** | Autonomous agents on both sides of the money. Spending side: an AI patron with its own funded wallet decides with an LLM which streams deserve its money and pays them gaslessly from its own address, publishing every decision (including refusals) with its reasoning. Earning side: a real LLM co-host that each stream's autonomous treasury pays per call out of its own income, budget-aware (it pauses itself rather than out-earn its share) with its ledger reasoning shown live on the watch page. |
-| **Traction (30%)** | 25,200+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 21 distinct wallets that paid from their own address; every settlement verifiable live at [`/impact`](https://trydriplet.vercel.app/impact). |
+| **Traction (30%)** | 25,300+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 22+ distinct wallets that paid from their own address; every settlement verifiable live at [`/impact`](https://trydriplet.vercel.app/impact). |
 | **Circle tool usage (20%)** | Gateway nanopayments (batched EIP-3009) + x402 for every per-second charge and agent call; Developer-Controlled Wallets for creator payouts; Modular Wallets (passkey/Face ID) with paymaster-sponsored ERC-4337 for viewer onboarding; a gasless EIP-3009 relay for own-wallet pay. |
 | **Innovation (20%)** | Per-second paid live video with a multi-payee on-chain treasury; the Owncast sidecar from Canteen's request-for-payments-founders list, proven against a real Owncast server; Face ID wallet onboarding for non-crypto viewers; stream metadata on Arc with video on Walrus. |
 

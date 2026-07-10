@@ -130,11 +130,33 @@ async function buildSession(credential: { id: string; publicKey: Hex }): Promise
         functionName: "transfer",
         args: [to, value],
       }) as Hex;
+      // Arc Testnet's bundler enforces a priority-fee floor that viem's default
+      // estimator sometimes undershoots (observed rejecting ~0.4 gwei, requiring
+      // >=1 gwei), while the fee cap tracks a fluctuating base fee (observed
+      // requiring >=13.7 gwei at one point) — so estimate live from the chain
+      // and only pad the priority fee, rather than hardcoding either value.
+      const feeEstimate = await client.estimateFeesPerGas();
+      const maxPriorityFeePerGas =
+        feeEstimate.maxPriorityFeePerGas > 2_000_000_000n
+          ? feeEstimate.maxPriorityFeePerGas
+          : 2_000_000_000n;
+      const maxFeePerGas =
+        feeEstimate.maxFeePerGas > maxPriorityFeePerGas
+          ? feeEstimate.maxFeePerGas
+          : maxPriorityFeePerGas * 10n;
       const userOpHash = await bundlerClient.sendUserOperation({
         calls: [{ to: USDC, data }],
         paymaster: true,
+        maxPriorityFeePerGas,
+        maxFeePerGas,
       });
-      const { receipt } = await bundlerClient.waitForUserOperationReceipt({ hash: userOpHash });
+      // Give the bundler more room than viem's default (~6 retries) before giving
+      // up — observed inclusion can lag well past that under load.
+      const { receipt } = await bundlerClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+        pollingInterval: 3_000,
+        retryCount: 20,
+      });
       return receipt.transactionHash as `0x${string}`;
     },
   };
