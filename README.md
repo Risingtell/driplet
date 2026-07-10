@@ -11,7 +11,7 @@
 
 ### ⏱️ Judging this? Verify every claim in under 3 minutes → [JUDGE-QUICKSTART.md](./JUDGE-QUICKSTART.md)
 
-> ## **25,300+ real settlements · 22+ distinct paying wallets · 1,400+ autonomous agent payments · $7.61 USDC streamed · 0 failures**
+> ## **25,700+ real settlements · 22+ distinct paying wallets · 1,400+ autonomous agent payments · $7.72+ USDC streamed · 0 failures**
 > All on-chain on Arc testnet, recomputed live at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)** *(snapshot 2026-07-10, and still climbing — check the live number)*
 
 A creator goes live, and viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own autonomous on-chain treasury that splits incoming drips in real time between the creator, a co-host, and a real AI agent it pays for live commentary, so money flows in from the audience and back out to people and agents with no platform in the middle.
@@ -81,7 +81,7 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 
 ## Traction
 
-Live and on-chain on Arc testnet: 25,200+ real per-second payments from real viewers, 21 distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paid 1,429 times on its own, the AI patron 49 more times from its own wallet, about $7.57 streamed end to end, zero failed payments *(snapshot 2026-07-06)*. Watch it land in real time at [`/impact`](https://trydriplet.vercel.app/impact).
+Every number in this README comes from the same on-chain settlement log that's live at [`/impact`](https://trydriplet.vercel.app/impact) — real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
 
 ## Tech
 

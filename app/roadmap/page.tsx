@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const shipped = [
   {
     title: "Per-second payments",
-    body: "Sub-cent USDC per second watched, over x402 and Circle Gateway on Arc. 23,000+ real settlements, zero failures.",
+    body: "Sub-cent USDC per second watched, over x402 and Circle Gateway on Arc. Tens of thousands of real settlements, zero failures — live count at /impact.",
   },
   {
     title: "Autonomous stream treasury",
