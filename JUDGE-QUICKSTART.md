@@ -49,10 +49,7 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
 - **Face ID onboarding:** on a watch page tap "Continue with Face ID" — a passkey creates
   a gasless ERC-4337 smart account (Circle Modular Wallets), fund it at
   [faucet.circle.com](https://faucet.circle.com) (Arc Testnet), and pay from your own
-  wallet. Your address joins the distinct-wallet count on `/impact`. *Note: Circle's
-  sponsored bundler on Arc Testnet has occasionally been slow to confirm post-hackathon;
-  if a payment hangs, "connect an existing wallet" on the same panel pays directly and
-  isn't affected.*
+  wallet. Your address joins the distinct-wallet count on `/impact`.
 - **Creator side:** sign in with Google at `/signin` — a Circle developer-controlled
   wallet is created for you automatically; go live with a camera and watch earnings
   settle per second.
