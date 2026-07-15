@@ -50,9 +50,16 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
   a gasless ERC-4337 smart account (Circle Modular Wallets), fund it at
   [faucet.circle.com](https://faucet.circle.com) (Arc Testnet), and pay from your own
   wallet. Your address joins the distinct-wallet count on `/impact`.
+- **Email onboarding:** the same watch page also offers "or sign in with email" — a
+  one-time code creates a Circle developer-controlled wallet and pays server-side via
+  Circle's Transaction API, a separate path from Face ID's ERC-4337 flow.
 - **Creator side:** sign in with Google at `/signin` — a Circle developer-controlled
   wallet is created for you automatically; go live with a camera and watch earnings
   settle per second.
+- **Independent verification:** clone the repo and run `npm run verify:impact` — it
+  re-derives every headline number straight from the database using only public
+  read-only credentials and cross-checks them against the live API, so the traction
+  numbers above don't have to be taken on trust.
 - **Reusable primitives:** the README lists 9 standalone building blocks (metered
   per-second loop, autonomous multi-payee treasury, budget-aware agent payee, buyer
   agent, gasless own-wallet relay, passkey onboarding, hardened Gateway client, Owncast
