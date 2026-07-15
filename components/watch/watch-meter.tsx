@@ -14,6 +14,7 @@ import {
   Fingerprint,
   Copy,
   Clapperboard,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
@@ -120,7 +121,6 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   // Email onboarding: a Circle developer-controlled wallet tied to a signed-in
   // email, no browser wallet or passkey. Pays via Circle's Transaction API
   // server-side, so it doesn't depend on the ERC-4337 bundler Face ID uses.
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailStep, setEmailStep] = useState<"idle" | "sent" | "ready">("idle");
   const [emailInput, setEmailInput] = useState("");
   const [emailBusy, setEmailBusy] = useState(false);
@@ -746,62 +746,21 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             </div>
           ) : (
             <div>
-              {pkSupported ? (
-                <>
-                  <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Set one up with Face ID in seconds — no app, no seed phrase, and the gas is on
-                    us. You&apos;re on the free demo wallet until you do.
-                  </p>
-                  <Button
-                    className="mt-3 w-full"
-                    onClick={() => connectPasskey(SESSION_USD)}
-                    disabled={pkBusy || ownBusy}
-                  >
-                    <Fingerprint className="size-4" />{" "}
-                    {pkBusy ? "Setting up…" : "Continue with Face ID"}
-                  </Button>
-                  <button
-                    onClick={() => connectOwnWallet(SESSION_USD)}
-                    disabled={ownBusy || pkBusy}
-                    className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
-                  >
-                    {ownBusy ? "Confirm in wallet…" : "or connect an existing wallet"}
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Paying with the free demo wallet, no setup. Prefer to pay yourself?
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => connectOwnWallet(SESSION_USD)}
-                    disabled={ownBusy || pkBusy}
-                  >
-                    <Wallet className="size-4" />{" "}
-                    {ownBusy ? "Confirm in wallet…" : "Use my own wallet"}
-                  </Button>
-                </div>
-              )}
+              <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Sign in with your email in seconds — no app, no seed phrase, no wallet needed.
+                You&apos;re on the free demo wallet until you do.
+              </p>
 
-              {!showEmailForm ? (
-                <button
-                  onClick={() => setShowEmailForm(true)}
-                  disabled={ownBusy || pkBusy || emailBusy}
-                  className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
-                >
-                  or sign in with email
-                </button>
-              ) : emailStep === "idle" ? (
+              {emailStep === "idle" ? (
                 <form
+                  key="email-request-form"
                   onSubmit={(e) => {
                     e.preventDefault();
                     const email = new FormData(e.currentTarget).get("email");
                     if (typeof email === "string" && email) void requestEmailCode(email);
                   }}
-                  className="mt-2 flex items-center gap-2"
+                  className="mt-3 flex items-center gap-2"
                 >
                   <input
                     name="email"
@@ -811,17 +770,18 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                     className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-primary"
                   />
                   <Button type="submit" size="sm" disabled={emailBusy}>
-                    {emailBusy ? "Sending…" : "Send code"}
+                    <Mail className="size-4" /> {emailBusy ? "Sending…" : "Send code"}
                   </Button>
                 </form>
               ) : emailStep === "sent" ? (
                 <form
+                  key="email-confirm-form"
                   onSubmit={(e) => {
                     e.preventDefault();
                     const code = new FormData(e.currentTarget).get("code");
                     if (typeof code === "string" && code) void confirmEmailCode(code);
                   }}
-                  className="mt-2 flex items-center gap-2"
+                  className="mt-3 flex items-center gap-2"
                 >
                   <input
                     name="code"
@@ -837,6 +797,26 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 </form>
               ) : null}
               {emailErr && <p className="mt-1.5 text-xs text-amber-500">{emailErr}</p>}
+
+              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+                {pkSupported && (
+                  <button
+                    onClick={() => connectPasskey(SESSION_USD)}
+                    disabled={pkBusy || ownBusy || emailBusy}
+                    className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
+                  >
+                    <Fingerprint className="mr-1 inline size-3" />
+                    {pkBusy ? "Setting up…" : "or try Face ID"}
+                  </button>
+                )}
+                <button
+                  onClick={() => connectOwnWallet(SESSION_USD)}
+                  disabled={ownBusy || pkBusy || emailBusy}
+                  className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
+                >
+                  {ownBusy ? "Confirm in wallet…" : "or connect an existing wallet"}
+                </button>
+              </div>
 
               <p className="mt-2 text-xs text-muted-foreground">
                 Using your own wallet? Need testnet USDC?{" "}
