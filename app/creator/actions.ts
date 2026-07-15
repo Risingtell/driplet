@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createCreatorWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
+import { createDeveloperWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
 
 /** Email a passwordless magic link. The link returns to /auth/callback. */
 export async function sendMagicLink(formData: FormData) {
@@ -62,7 +62,7 @@ export async function ensureWallet(): Promise<{ address?: string; error?: string
   if (existing) return { address: existing.address };
 
   try {
-    const wallet = await createCreatorWallet(user.id);
+    const wallet = await createDeveloperWallet(user.id);
     await admin.from("creators").insert({
       user_id: user.id,
       email: user.email,
@@ -183,12 +183,12 @@ export async function getCreatorStreams(): Promise<CreatorStream[]> {
       .eq("endpoint", `/watch/${r.slug}`);
     const drips = count ?? 0;
     // …plus lump payments from viewers' own wallets: MetaMask own-pay, Face ID
-    // (passkey), and the AI patron. These were being ignored, so a creator who
-    // earned only via Face ID saw $0. Sum their amounts.
+    // (passkey), email onboarding, and the AI patron. These were being ignored,
+    // so a creator who earned only via one of these saw $0. Sum their amounts.
     const { data: lumps } = await admin
       .from("payment_events")
       .select("amount_usdc")
-      .in("endpoint", [`/own/${r.slug}`, `/passkey/${r.slug}`, `/patron/${r.slug}`]);
+      .in("endpoint", [`/own/${r.slug}`, `/passkey/${r.slug}`, `/email/${r.slug}`, `/patron/${r.slug}`]);
     const lumpTotal = (lumps ?? []).reduce((s, x) => s + Number(x.amount_usdc ?? 0), 0);
     out.push({
       slug: r.slug,

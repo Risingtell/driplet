@@ -19,8 +19,8 @@ function client(): Client {
   return _client;
 }
 
-/** Create a developer-controlled wallet on Arc Testnet for a creator (refId = our user id). */
-export async function createCreatorWallet(
+/** Create a developer-controlled wallet on Arc Testnet (refId = our user id). Used for both creator and viewer (email-wallet) onboarding. */
+export async function createDeveloperWallet(
   refId: string,
 ): Promise<{ id: string; address: string }> {
   const res = await client().createWallets({
@@ -64,4 +64,45 @@ export async function withdrawUsdc(opts: {
     fee: { type: "level", config: { feeLevel: "MEDIUM" } },
   });
   return { id: res.data?.id ?? "", state: res.data?.state ?? "" };
+}
+
+const FAILURE_STATES = new Set(["CANCELLED", "DENIED", "FAILED", "STUCK"]);
+
+/** Poll a Circle transaction until it's on-chain (or fails) and return its tx hash. */
+export async function waitForTransaction(
+  id: string,
+  timeoutMs = 45_000,
+): Promise<{ state: string; txHash?: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await client().getTransaction({
+      id,
+      waitForState: "CONFIRMED",
+      pollingInterval: 2000,
+      signal: controller.signal,
+    });
+    const tx = res.data?.transaction;
+    return { state: tx?.state ?? "UNKNOWN", txHash: tx?.txHash };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Withdraw USDC from a wallet to an address and wait for it to confirm on-chain. */
+export async function payAndConfirm(opts: {
+  walletId: string;
+  to: string;
+  amountUsd: number;
+}): Promise<{ txHash: string; state: string }> {
+  const tx = await withdrawUsdc({ walletId: opts.walletId, to: opts.to, amount: opts.amountUsd.toFixed(6) });
+  if (!tx.id) throw new Error("Payment could not be initiated.");
+  const result = await waitForTransaction(tx.id);
+  if (FAILURE_STATES.has(result.state)) {
+    throw new Error(`Payment ${result.state.toLowerCase()}.`);
+  }
+  if (!result.txHash) {
+    throw new Error("Payment is still confirming — try again in a moment.");
+  }
+  return { txHash: result.txHash, state: result.state };
 }

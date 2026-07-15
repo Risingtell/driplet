@@ -37,7 +37,7 @@ export async function GET() {
   // watch payment is the same fixed price across all streams, so total =
   // count x price. Counting by the /watch/ endpoint prefix includes every
   // creator-created stream automatically.
-  const [watch, agent, recent, wallets] = await Promise.all([
+  const [watch, agent, recent, wallets, streams] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -57,12 +57,16 @@ export async function GET() {
       .not("endpoint", "like", "/agents/patron/%")
       .order("created_at", { ascending: false })
       .limit(12),
-    // Distinct wallets that paid from their OWN wallet (own-pay + Face ID),
-    // i.e. real people, not the shared demo wallet.
+    // Distinct wallets that paid from their OWN wallet (own-pay, Face ID, or
+    // email onboarding), i.e. real people, not the shared demo wallet.
     supabase
       .from("payment_events")
       .select("payer")
-      .or("endpoint.like./own/%,endpoint.like./passkey/%"),
+      .or("endpoint.like./own/%,endpoint.like./passkey/%,endpoint.like./email/%"),
+    // Distinct creators: each stream's payout split names one payee with
+    // role "Creator" — dedupe by that address to count real streamers, not
+    // stream count (one person can run several streams).
+    supabase.from("streams").select("split"),
   ]);
 
   const err = watch.error ?? agent.error ?? recent.error;
@@ -80,6 +84,14 @@ export async function GET() {
     (wallets.data ?? [])
       .map((r) => (r.payer ?? "").toLowerCase())
       .filter((a) => isWallet(a) && !INFRA_WALLETS.has(a)),
+  ).size;
+
+  const uniqueCreators = new Set(
+    (streams.data ?? [])
+      .flatMap((r) => (Array.isArray(r.split) ? r.split : []))
+      .filter((p: { role?: string }) => p.role === "Creator")
+      .map((p: { address?: string }) => (p.address ?? "").toLowerCase())
+      .filter((a) => isWallet(a)),
   ).size;
 
   const feed = (recent.data ?? []).map((r) => ({
@@ -105,6 +117,7 @@ export async function GET() {
       agentCount,
       agentPaid,
       uniqueWallets,
+      uniqueCreators,
       feed,
       updatedAt: new Date().toISOString(),
     },

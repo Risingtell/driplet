@@ -106,7 +106,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const ownBudgetRef = useRef(0);
   const lastAmountRef = useRef(SESSION_USD);
   // Which wallet funded the current "own" session, so Top up uses the same one.
-  const paySourceRef = useRef<"metamask" | "passkey">("metamask");
+  const paySourceRef = useRef<"metamask" | "passkey" | "email">("metamask");
 
   // Passkey (Circle Modular Wallet) onboarding: a gasless smart account created
   // with Face ID / Touch ID, no extension or seed phrase.
@@ -117,13 +117,25 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const [copied, setCopied] = useState(false);
   const fundRef = useRef<HTMLDivElement>(null);
 
-  // When the wallet is created but unfunded, bring the funding step into view so
-  // it isn't missed below the fold (a tester kept re-tapping Face ID otherwise).
+  // Email onboarding: a Circle developer-controlled wallet tied to a signed-in
+  // email, no browser wallet or passkey. Pays via Circle's Transaction API
+  // server-side, so it doesn't depend on the ERC-4337 bundler Face ID uses.
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailStep, setEmailStep] = useState<"idle" | "sent" | "ready">("idle");
+  const [emailInput, setEmailInput] = useState("");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailErr, setEmailErr] = useState<string | null>(null);
+  const [emailAddr, setEmailAddr] = useState<string | null>(null);
+  const [emailNeedsFunds, setEmailNeedsFunds] = useState(false);
+
+  // When either wallet is created but unfunded, bring the funding step into
+  // view so it isn't missed below the fold (a tester kept re-tapping Face ID
+  // otherwise).
   useEffect(() => {
-    if (pkNeedsFunds && pkAddr) {
+    if ((pkNeedsFunds && pkAddr) || (emailNeedsFunds && emailAddr)) {
       fundRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [pkNeedsFunds, pkAddr]);
+  }, [pkNeedsFunds, pkAddr, emailNeedsFunds, emailAddr]);
 
   useEffect(() => {
     const supported =
@@ -209,16 +221,105 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     [stream.slug],
   );
 
-  const copyPkAddr = useCallback(() => {
-    if (!pkAddr) return;
-    navigator.clipboard?.writeText(pkAddr).then(
+  const copyAddr = useCallback((addr: string | null) => {
+    if (!addr) return;
+    navigator.clipboard?.writeText(addr).then(
       () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       },
       () => {},
     );
-  }, [pkAddr]);
+  }, []);
+
+  // Pay the given amount from the signed-in viewer's email wallet. Reused for
+  // the initial payment and for later top-ups (the Supabase session persists,
+  // so no need to re-enter the emailed code each time).
+  const payWithEmailWallet = useCallback(
+    async (amountUsd: number) => {
+      lastAmountRef.current = amountUsd;
+      setEmailErr(null);
+      setEmailBusy(true);
+      try {
+        const info = (await fetch("/api/viewer-wallet").then((r) => r.json())) as {
+          address?: string;
+          balance?: number;
+          error?: string;
+        };
+        if (info.error || !info.address) throw new Error(info.error ?? "Could not set up your wallet.");
+        setEmailAddr(info.address);
+
+        const bal = info.balance ?? 0;
+        if (bal < 0.01) {
+          setEmailNeedsFunds(true);
+          return;
+        }
+        setEmailNeedsFunds(false);
+
+        const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
+        const res = await fetch(`/api/watch/${stream.slug}/email-pay`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ amountUsd: budget }),
+        });
+        const j = (await res.json()) as { ok?: boolean; tx?: string; amount?: number; error?: string };
+        if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
+
+        setOwnAddress(info.address);
+        ownBudgetRef.current = j.amount ?? budget;
+        setOwnBudget(ownBudgetRef.current);
+        setLastTx(j.tx ?? null);
+        setNeedTopup(false);
+        paySourceRef.current = "email";
+        payModeRef.current = "own";
+        setPayMode("own");
+        setPreviewEnded(false);
+        videoRef.current?.play().catch(() => {});
+      } catch (e) {
+        setEmailErr((e as Error).message || "Payment failed");
+      } finally {
+        setEmailBusy(false);
+      }
+    },
+    [stream.slug],
+  );
+
+  const requestEmailCode = useCallback(async (email: string) => {
+    setEmailErr(null);
+    setEmailBusy(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) throw error;
+      setEmailInput(email);
+      setEmailStep("sent");
+    } catch (e) {
+      setEmailErr((e as Error).message || "Could not send the code.");
+    } finally {
+      setEmailBusy(false);
+    }
+  }, []);
+
+  const confirmEmailCode = useCallback(
+    async (code: string) => {
+      setEmailErr(null);
+      setEmailBusy(true);
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { error } = await supabase.auth.verifyOtp({ email: emailInput, token: code, type: "email" });
+        if (error) throw new Error("That code didn't work. It may have expired — request a new one.");
+        setEmailStep("ready");
+        setEmailBusy(false);
+        await payWithEmailWallet(SESSION_USD);
+      } catch (e) {
+        setEmailErr((e as Error).message || "Could not verify the code.");
+        setEmailBusy(false);
+      }
+    },
+    [emailInput, payWithEmailWallet],
+  );
 
   const connectOwnWallet = useCallback(async (amountUsd: number) => {
     lastAmountRef.current = amountUsd;
@@ -597,10 +698,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       {/* payment source */}
       <div className={`mt-4 rounded-xl border border-border/60 p-3 ${isOwner ? "hidden" : ""}`}>
         {payMode === "demo" ? (
-          pkNeedsFunds && pkAddr ? (
+          (pkNeedsFunds && pkAddr) || (emailNeedsFunds && emailAddr) ? (
             <div ref={fundRef} className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
               <p className="flex items-center gap-1.5 font-medium text-foreground">
-                <Check className="size-4 text-primary" /> Wallet created with Face ID
+                <Check className="size-4 text-primary" /> Wallet created with{" "}
+                {pkNeedsFunds ? "Face ID" : "email"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 One more step — add a little free testnet USDC to this address, then come back and
@@ -608,13 +710,22 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <code className="tabular min-w-0 flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">
-                  {pkAddr}
+                  {pkNeedsFunds ? pkAddr : emailAddr}
                 </code>
-                <Button size="sm" variant="outline" className="shrink-0" onClick={copyPkAddr}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => copyAddr(pkNeedsFunds ? pkAddr : emailAddr)}
+                >
                   {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 </Button>
               </div>
-              <Button asChild className="mt-2 w-full" onClick={copyPkAddr}>
+              <Button
+                asChild
+                className="mt-2 w-full"
+                onClick={() => copyAddr(pkNeedsFunds ? pkAddr : emailAddr)}
+              >
                 <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">
                   {copied ? "Address copied — paste it on the faucet" : "Copy address & open faucet.circle.com"}
                 </a>
@@ -625,10 +736,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               <Button
                 variant="outline"
                 className="mt-2 w-full"
-                onClick={() => connectPasskey(lastAmountRef.current)}
-                disabled={pkBusy}
+                onClick={() =>
+                  pkNeedsFunds ? connectPasskey(lastAmountRef.current) : payWithEmailWallet(lastAmountRef.current)
+                }
+                disabled={pkBusy || emailBusy}
               >
-                {pkBusy ? "Checking…" : "I've funded it — continue"}
+                {(pkNeedsFunds ? pkBusy : emailBusy) ? "Checking…" : "I've funded it — continue"}
               </Button>
             </div>
           ) : (
@@ -672,6 +785,59 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   </Button>
                 </div>
               )}
+
+              {!showEmailForm ? (
+                <button
+                  onClick={() => setShowEmailForm(true)}
+                  disabled={ownBusy || pkBusy || emailBusy}
+                  className="mt-2 w-full text-center text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline disabled:opacity-60"
+                >
+                  or sign in with email
+                </button>
+              ) : emailStep === "idle" ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const email = new FormData(e.currentTarget).get("email");
+                    if (typeof email === "string" && email) void requestEmailCode(email);
+                  }}
+                  className="mt-2 flex items-center gap-2"
+                >
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-primary"
+                  />
+                  <Button type="submit" size="sm" disabled={emailBusy}>
+                    {emailBusy ? "Sending…" : "Send code"}
+                  </Button>
+                </form>
+              ) : emailStep === "sent" ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const code = new FormData(e.currentTarget).get("code");
+                    if (typeof code === "string" && code) void confirmEmailCode(code);
+                  }}
+                  className="mt-2 flex items-center gap-2"
+                >
+                  <input
+                    name="code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                    placeholder="Code from email"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-center font-mono text-xs tracking-widest outline-none focus:border-primary"
+                  />
+                  <Button type="submit" size="sm" disabled={emailBusy}>
+                    {emailBusy ? "Checking…" : "Confirm"}
+                  </Button>
+                </form>
+              ) : null}
+              {emailErr && <p className="mt-1.5 text-xs text-amber-500">{emailErr}</p>}
+
               <p className="mt-2 text-xs text-muted-foreground">
                 Using your own wallet? Need testnet USDC?{" "}
                 <a
@@ -707,11 +873,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 onClick={() =>
                   paySourceRef.current === "passkey"
                     ? connectPasskey(lastAmountRef.current)
-                    : connectOwnWallet(lastAmountRef.current)
+                    : paySourceRef.current === "email"
+                      ? payWithEmailWallet(lastAmountRef.current)
+                      : connectOwnWallet(lastAmountRef.current)
                 }
-                disabled={ownBusy || pkBusy}
+                disabled={ownBusy || pkBusy || emailBusy}
               >
-                {ownBusy || pkBusy
+                {ownBusy || pkBusy || emailBusy
                   ? "Confirm…"
                   : `Top up $${lastAmountRef.current} (≈ ${naira(lastAmountRef.current)}) & keep watching`}
               </Button>
@@ -719,6 +887,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           </div>
         )}
         {ownErr && <p className="mt-2 text-xs text-amber-500">{ownErr}</p>}
+        {emailErr && payMode === "own" && <p className="mt-2 text-xs text-amber-500">{emailErr}</p>}
       </div>
     </div>
   );

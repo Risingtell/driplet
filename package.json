@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "generate-wallets": "node --experimental-transform-types --no-warnings generate-wallets.mts",
-    "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts"
+    "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts",
+    "verify:impact": "node scripts/verify-impact.mjs"
   },
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "^10.6.0",
