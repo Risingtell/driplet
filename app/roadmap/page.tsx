@@ -55,16 +55,16 @@ const shipped = [
     title: "Creator studio with auto-created wallets",
     body: "Email sign-in creates a Circle wallet on Arc automatically. Go live, watch earnings settle, withdraw USDC.",
   },
+  {
+    title: "Editable revenue splits",
+    body: "Creators set their own terms from the studio: what share of every second each payee gets, re-split any time.",
+  },
 ];
 
 const next = [
   {
     title: "Passkey login for creators",
     body: "Creators sign in and self-custody their payout wallet with Face ID, the same way viewers already pay.",
-  },
-  {
-    title: "Editable revenue splits",
-    body: "Creators set their own terms: who gets what share of every second, changed from the studio.",
   },
   {
     title: "Live transcription for the co-host",

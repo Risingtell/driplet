@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Radio, ExternalLink, Clapperboard, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EditSplitDialog } from "@/components/studio/edit-split-dialog";
 import { naira } from "@/lib/currency";
 import { isHostBroadcasting } from "@/lib/livekit";
 import { getCreatorStreams, getWalletInfo } from "@/app/creator/actions";
@@ -69,11 +70,14 @@ export default async function StreamsPage() {
                   {naira(s.streamed)}
                 </div>
               </div>
-              <Link href={`/watch/${s.slug}`} target="_blank">
-                <Button variant="outline" size="sm">
-                  Open <ExternalLink className="size-3.5" />
-                </Button>
-              </Link>
+              <div className="flex shrink-0 items-center gap-2">
+                <EditSplitDialog slug={s.slug} split={s.split} />
+                <Link href={`/watch/${s.slug}`} target="_blank">
+                  <Button variant="outline" size="sm">
+                    Open <ExternalLink className="size-3.5" />
+                  </Button>
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

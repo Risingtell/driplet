@@ -49,7 +49,9 @@ export async function GET(
     supabase
       .from("payment_events")
       .select("endpoint, amount_usdc")
-      .or(`endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%`),
+      .or(
+        `endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%,endpoint.like./payout/jellyfin/${slug}/%`,
+      ),
   ]);
 
   if (watch.error) {

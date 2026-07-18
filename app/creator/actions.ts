@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createDeveloperWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
+import { resolveStream, creatorAddress, updateSplit } from "@/lib/streams-db";
 
 /** Email a passwordless magic link. The link returns to /auth/callback. */
 export async function sendMagicLink(formData: FormData) {
@@ -144,6 +145,7 @@ export interface CreatorStream {
   isLive: boolean;
   drips: number;
   streamed: number;
+  split: { name: string; role: string; share: number }[];
 }
 
 /** Streams created by the signed-in creator (matched by their wallet in the split). */
@@ -196,7 +198,64 @@ export async function getCreatorStreams(): Promise<CreatorStream[]> {
       isLive: !!r.is_live,
       drips,
       streamed: drips * Number(r.rate_per_second) + lumpTotal,
+      split: r.split,
     });
   }
   return out;
+}
+
+/**
+ * Let a stream's owner change what share of every second each existing payee
+ * gets (creator, co-host, AI co-host). Shares by role only — this doesn't add
+ * or remove payees or change payout addresses, just re-splits the pie.
+ */
+export async function updateStreamSplit(
+  slug: string,
+  shares: Record<string, number>,
+): Promise<{ ok?: true; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const admin = adminClient();
+  const { data: creator } = await admin
+    .from("creators")
+    .select("address")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!creator?.address) return { error: "No wallet yet." };
+
+  const stream = await resolveStream(slug);
+  if (!stream) return { error: "Unknown stream." };
+
+  const owner = creatorAddress(stream);
+  if (!owner || owner.toLowerCase() !== creator.address.toLowerCase()) {
+    return { error: "You don't own this stream." };
+  }
+
+  if (stream.split.some((p) => !(p.role in shares))) {
+    return { error: "Missing a share for one of this stream's payees." };
+  }
+
+  let sum = 0;
+  for (const role of Object.keys(shares)) {
+    const share = shares[role];
+    if (!Number.isFinite(share) || share < 0 || share > 1) {
+      return { error: `Invalid share for ${role}.` };
+    }
+    sum += share;
+  }
+  if (Math.abs(sum - 1) > 0.001) {
+    return { error: `Shares must add up to 100% (currently ${(sum * 100).toFixed(1)}%).` };
+  }
+
+  const newSplit = stream.split.map((p) => ({ ...p, share: shares[p.role] }));
+  try {
+    await updateSplit(slug, newSplit);
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }

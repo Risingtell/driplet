@@ -59,7 +59,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
       supabase
         .from("payment_events")
         .select("amount_usdc")
-        .or(`endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%`),
+        .or(
+          `endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%,endpoint.like./payout/jellyfin/${slug}/%`,
+        ),
     ]);
 
     const income =

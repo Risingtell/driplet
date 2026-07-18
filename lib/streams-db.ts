@@ -82,6 +82,12 @@ export interface NewStream {
   split: Payee[];
 }
 
+/** Overwrite a stream's revenue split. Throws on a DB error. */
+export async function updateSplit(slug: string, split: Payee[]): Promise<void> {
+  const { error } = await supabase.from("streams").update({ split }).eq("slug", slug);
+  if (error) throw new Error(error.message);
+}
+
 /** Insert a new creator stream. Throws on a slug collision or DB error. */
 export async function createStream(input: NewStream): Promise<Stream> {
   const { data, error } = await supabase
