@@ -36,6 +36,7 @@ A payment worth a fraction of a cent was impossible when the fee cost more than 
 - **Autonomous stream treasury.** Each stream is its own economic entity. As drips arrive, the treasury splits them live across payees and pays a real AI agent out of its own earnings, a genuine agent-to-agent payment with no human in the loop.
 - **A real AI co-host.** The agent runs a live LLM that writes real one-line commentary and gets paid per call on-chain into its own wallet. Earn and spend, closed loop.
 - **Owncast sidecar.** A drop-in webhook subscriber that adds per-second pay to any self-hosted Owncast stream without changing a line of Owncast. Proven end to end against a real Owncast server. This is the "Owncast per-second streaming webhook sidecar" from Canteen's request-for-payments-founders list. Because it only consumes Owncast's standard webhooks, it works with **every Owncast deployed today** — no fork, no proxy in the video path, no waiting on a plugin framework — and the same settlement core can become a native plugin when Owncast v0.3.0's plugin system lands.
+- **Jellyfin sidecar.** The same settlement core, second member of the sidecar family: a webhook subscriber for Jellyfin's on-demand video. Because a VOD viewer can pause or seek, it tracks each viewer's actual playback position rather than wall-clock time, and settles only the seconds that were genuinely played forward — pausing settles nothing.
 - **A budget-aware agent, with its reasoning on screen.** The co-host decides every cycle whether paying itself keeps it within its 10% share of what the stream actually earned, and pauses itself when it wouldn't, so the creator is always paid first. Its ledger ("income → my share cap → spent → decision") is shown live on the watch page and in the treasury panel.
 - **An autonomous AI patron that pays from its own wallet.** A viewer agent with its own funded USDC wallet looks at what's streaming (host on air, viewers present, chat activity, price) and decides with an LLM whether any stream deserves its money right now. When it pays, it signs a gasless EIP-3009 payment from its own address into the stream's treasury; when it doesn't, it says why. Every decision, including refusals, is public on [`/impact`](https://trydriplet.vercel.app/impact) — and anyone can trigger a cycle (`POST /api/agents/patron`, self-throttled) and watch it think. With the co-host earning on the other side, autonomous agents sit on **both sides** of the economy.
 - **Pay from your own wallet.** Viewers can optionally pay from their own wallet with a single gasless EIP-3009 signature (no gas, no Gateway deposit); the treasury relays it on-chain. The shared demo wallet stays the default so anyone can try it with zero setup.
@@ -116,7 +117,7 @@ Open `/watch/ada-live`, press play, and watch the meter and the treasury split m
 | `/explore` | Discover and search streams and creators |
 | `/c/[address]` | Public creator profile (save to re-watch) |
 | `/studio` | Creator studio: overview, go live, streams, wallet |
-| `/sidecar` | The Owncast per-second webhook sidecar |
+| `/sidecar` | The sidecar family: Owncast (per-second live) and Jellyfin (per-minute VOD) |
 | `/impact` | Public real-time proof feed of every settlement |
 | `/api/watch/[slug]/charge` | x402 per-second charge |
 | `/api/watch/[slug]/own-pay` | Relay a viewer's gasless own-wallet payment |
@@ -125,6 +126,7 @@ Open `/watch/ada-live`, press play, and watch the meter and the treasury split m
 | `/api/agents/patron` | The AI patron: GET its decisions, POST to trigger a cycle |
 | `/api/streams/[slug]/onchain` | Read a stream's metadata back from the Arc registry |
 | `/api/sidecar/owncast` | Owncast webhook receiver that settles per second |
+| `/api/sidecar/jellyfin` | Jellyfin webhook receiver that settles per-minute VOD from playback position |
 
 ## Acknowledgements
 

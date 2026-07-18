@@ -34,7 +34,7 @@ const useCases = [
   {
     icon: Server,
     title: "Self-hosted streamers",
-    body: "Already run Owncast? Drop in Driplet's sidecar and add per-second pay without changing your server.",
+    body: "Already run Owncast or Jellyfin? Drop in Driplet's sidecar and add per-second (or per-minute) pay without changing your server.",
   },
   {
     icon: Globe,

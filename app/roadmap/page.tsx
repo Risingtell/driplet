@@ -48,6 +48,10 @@ const shipped = [
     body: "A drop-in webhook subscriber that adds per-second pay to any self-hosted Owncast server, no fork, no proxy. Proven against a real Owncast instance.",
   },
   {
+    title: "Jellyfin per-minute VOD sidecar",
+    body: "Second member of the sidecar family, same settlement core. Tracks each viewer's actual playback position rather than wall-clock time, so pausing or seeking never gets billed as watched.",
+  },
+  {
     title: "Creator studio with auto-created wallets",
     body: "Email sign-in creates a Circle wallet on Arc automatically. Go live, watch earnings settle, withdraw USDC.",
   },
@@ -67,8 +71,8 @@ const next = [
     body: "The AI co-host hears real speech and captions it, so its paid work grows with the stream.",
   },
   {
-    title: "The sidecar family",
-    body: "The same settlement core for Jellyfin (per-minute VOD) and PeerTube (payments plugin), plus a native Owncast plugin when v0.3.0's plugin system lands. Today's webhook sidecar already works with every Owncast deployed now.",
+    title: "The sidecar family, continued",
+    body: "PeerTube next (payments plugin), plus a native Owncast plugin when v0.3.0's plugin system lands. Owncast and Jellyfin are already live today.",
   },
   {
     title: "Mainnet",

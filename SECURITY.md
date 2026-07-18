@@ -14,7 +14,7 @@ impact) and we'll respond as quickly as we can.
 - The per-second charge, settlement, payout, and relay endpoints enforce server-side
   guards: payouts are clamped to a stream's real recorded income (solvency guard),
   passkey payments are verified on-chain and idempotent per transaction hash, and the
-  Owncast sidecar requires a shared secret in production.
+  sidecar family (Owncast, Jellyfin) requires a shared secret in production.
 - Issues in the upstream settlement core should also be reported to Circle through
   their [Bug Bounty Program](https://hackerone.com/circle-bbp) — parts of this project
   derive from Circle's open-source
