@@ -309,7 +309,8 @@ export function GoLiveForm() {
 
         <p className="text-xs text-muted-foreground">
           Split: 70% you · 20% co-host · 10% AI co-host (90/10 if no co-host). The AI co-host does
-          real work and is paid into its own wallet too.
+          real work and is paid into its own wallet too. You and your co-host&apos;s shares can be
+          changed any time from the studio — the AI co-host&apos;s is fixed.
         </p>
 
         {error && <p className="text-sm text-amber-500">{error}</p>}

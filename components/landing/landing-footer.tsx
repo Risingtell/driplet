@@ -11,7 +11,7 @@ const product = [
 const learn = [
   { href: "/use-cases", label: "Use cases" },
   { href: "/why", label: "Why Driplet" },
-  { href: "/sidecar", label: "Owncast sidecar" },
+  { href: "/sidecar", label: "Sidecar family" },
 ];
 
 export function LandingFooter() {
