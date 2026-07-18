@@ -6,6 +6,32 @@ const COHOST_FALLBACK = process.env.COHOST_ADDRESS;
 const SELLER = (process.env.SELLER_ADDRESS ?? "").toLowerCase();
 const isAddr = (a?: string): a is string => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
 
+/**
+ * Roles paid separately via /agent-pay's own hardcoded budget share, never
+ * through the human split below. Shared with app/creator/actions.ts (which
+ * must never let a creator edit these payees' share, or /agent-pay's fixed
+ * budget assumption and this split stop summing to 100%) and
+ * app/api/streams/[slug]/settle/route.ts (which excludes them from the
+ * "humanShare" solvency calculation).
+ */
+export const AGENT_ROLES = new Set(["Live captions agent", "Commentary"]);
+
+/** Sidecar sources whose payouts count as "paid out" for a stream, alongside
+ *  the direct web-charge flow. Extend this when a new sidecar (e.g. PeerTube)
+ *  ships — settle/route.ts and treasury/route.ts both derive their payout
+ *  ledger filter from this single list instead of hand-duplicating it. */
+export const SIDECAR_SOURCES = ["owncast", "jellyfin"];
+
+/** The payment_events `.or()` filter matching every payout endpoint (direct
+ *  + every known sidecar source) for one stream. */
+export function payoutEndpointFilter(slug: string): string {
+  const clauses = [
+    `endpoint.like./payout/${slug}/%`,
+    ...SIDECAR_SOURCES.map((source) => `endpoint.like./payout/${source}/${slug}/%`),
+  ];
+  return clauses.join(",");
+}
+
 export interface PayeeSettlement {
   name: string;
   role: string;
@@ -38,9 +64,9 @@ export async function settleStreamSeconds(
 
   for (const payee of stream.split) {
     // The AI co-host is paid separately via /agent-pay, never through the human
-    // split. Match both the old ("Live captions agent") and new ("Commentary")
+    // split. Matches both the old ("Live captions agent") and new ("Commentary")
     // role labels so existing DB streams keep settling correctly.
-    if (payee.role === "Live captions agent" || payee.role === "Commentary") continue;
+    if (AGENT_ROLES.has(payee.role)) continue;
     let address = payee.address;
     if (!isAddr(address) && payee.role === "Co-host") address = COHOST_FALLBACK;
     if (!isAddr(address)) continue;

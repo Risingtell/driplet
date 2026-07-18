@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createDeveloperWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
 import { resolveStream, creatorAddress, updateSplit } from "@/lib/streams-db";
+import { AGENT_ROLES } from "@/lib/settlement";
 
 /** Email a passwordless magic link. The link returns to /auth/callback. */
 export async function sendMagicLink(formData: FormData) {
@@ -145,7 +146,7 @@ export interface CreatorStream {
   isLive: boolean;
   drips: number;
   streamed: number;
-  split: { name: string; role: string; share: number }[];
+  split: { name: string; role: string; share: number; fixed: boolean }[];
 }
 
 /** Streams created by the signed-in creator (matched by their wallet in the split). */
@@ -198,16 +199,24 @@ export async function getCreatorStreams(): Promise<CreatorStream[]> {
       isLive: !!r.is_live,
       drips,
       streamed: drips * Number(r.rate_per_second) + lumpTotal,
-      split: r.split,
+      split: (r.split as { name: string; role: string; share: number }[]).map((p) => ({
+        ...p,
+        fixed: AGENT_ROLES.has(p.role),
+      })),
     });
   }
   return out;
 }
 
 /**
- * Let a stream's owner change what share of every second each existing payee
- * gets (creator, co-host, AI co-host). Shares by role only — this doesn't add
- * or remove payees or change payout addresses, just re-splits the pie.
+ * Let a stream's owner change what share of every second each existing human
+ * payee gets (creator, co-host). Shares by role only — this doesn't add or
+ * remove payees or change payout addresses, just re-splits the pie.
+ *
+ * AI co-host (AGENT_ROLES) shares are frozen and rejected if changed: /agent-pay
+ * pays that role from its own hardcoded budget share, independent of whatever
+ * `stream.split` says, so letting a creator edit it here would desync the two
+ * and could push total payouts past 100% of the stream's real income.
  */
 export async function updateStreamSplit(
   slug: string,
@@ -235,23 +244,31 @@ export async function updateStreamSplit(
     return { error: "You don't own this stream." };
   }
 
-  if (stream.split.some((p) => !(p.role in shares))) {
-    return { error: "Missing a share for one of this stream's payees." };
+  const knownRoles = new Set(stream.split.map((p) => p.role));
+  const extraRole = Object.keys(shares).find((role) => !knownRoles.has(role));
+  if (extraRole) {
+    return { error: `Unknown payee role "${extraRole}".` };
   }
 
   let sum = 0;
-  for (const role of Object.keys(shares)) {
-    const share = shares[role];
+  const newSplit = [];
+  for (const p of stream.split) {
+    const share = shares[p.role];
     if (!Number.isFinite(share) || share < 0 || share > 1) {
-      return { error: `Invalid share for ${role}.` };
+      return { error: `Invalid share for ${p.role}.` };
+    }
+    if (AGENT_ROLES.has(p.role) && Math.abs(share - p.share) > 0.0005) {
+      return {
+        error: `${p.name}'s share is fixed and can't be changed here — it's paid separately from its own budget.`,
+      };
     }
     sum += share;
+    newSplit.push({ ...p, share });
   }
   if (Math.abs(sum - 1) > 0.001) {
     return { error: `Shares must add up to 100% (currently ${(sum * 100).toFixed(1)}%).` };
   }
 
-  const newSplit = stream.split.map((p) => ({ ...p, share: shares[p.role] }));
   try {
     await updateSplit(slug, newSplit);
     return { ok: true };

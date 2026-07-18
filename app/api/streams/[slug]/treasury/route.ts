@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { streamEndpoint } from "@/lib/streams";
 import { resolveStream } from "@/lib/streams-db";
+import { payoutEndpointFilter } from "@/lib/settlement";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,9 +50,7 @@ export async function GET(
     supabase
       .from("payment_events")
       .select("endpoint, amount_usdc")
-      .or(
-        `endpoint.like./payout/${slug}/%,endpoint.like./payout/owncast/${slug}/%,endpoint.like./payout/jellyfin/${slug}/%`,
-      ),
+      .or(payoutEndpointFilter(slug)),
   ]);
 
   if (watch.error) {

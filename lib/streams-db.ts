@@ -54,9 +54,14 @@ export async function listStreams(limit = 100): Promise<Stream[]> {
   return [...db, ...seeded];
 }
 
-/** The creator's payout address for a stream, if any (their stable identity). */
+/** The creator's payout address for a stream, if any (their stable identity).
+ *  Returns null (not just "whoever's first") if a stream somehow has more
+ *  than one Creator-role payee — ownership shouldn't be decided by array
+ *  order when it's ambiguous. */
 export function creatorAddress(stream: Stream): string | null {
-  const a = stream.split.find((p) => p.role === "Creator")?.address;
+  const creators = stream.split.filter((p) => p.role === "Creator");
+  if (creators.length !== 1) return null;
+  const a = creators[0].address;
   return a && /^0x[0-9a-fA-F]{40}$/.test(a) ? a : null;
 }
 

@@ -31,7 +31,10 @@ const supabase = createClient(
 function readEvent(body: Record<string, unknown>) {
   const type = String(body.type ?? "").trim();
   const viewerId = body.viewerId != null ? String(body.viewerId) : null;
-  const positionTicks = Number(body.positionTicks ?? NaN);
+  // An unrendered Handlebars field can arrive as "" rather than being omitted
+  // — treat that the same as missing (NaN), not as a literal position of 0.
+  const rawTicks = body.positionTicks;
+  const positionTicks = rawTicks === "" || rawTicks == null ? NaN : Number(rawTicks);
   return { type, viewerId, positionTicks };
 }
 
@@ -47,12 +50,10 @@ export async function POST(req: NextRequest) {
 
   // Shared secret so a public URL can't be abused to drain the treasury.
   // Falls back to the Owncast sidecar's secret so one shared value covers the
-  // whole sidecar family unless a Jellyfin-specific one is set.
-  const secret = (
-    process.env.JELLYFIN_SIDECAR_SECRET ??
-    process.env.OWNCAST_SIDECAR_SECRET ??
-    ""
-  ).trim();
+  // whole sidecar family unless a Jellyfin-specific one is set. `||` (not `??`)
+  // so an env var that exists but was left blank still falls through instead
+  // of silently disabling the check.
+  const secret = (process.env.JELLYFIN_SIDECAR_SECRET || process.env.OWNCAST_SIDECAR_SECRET || "").trim();
   if (secret && url.searchParams.get("key")?.trim() !== secret) {
     return NextResponse.json({ error: "Bad or missing key." }, { status: 401 });
   }
