@@ -5,9 +5,16 @@ import {
   toWebAuthnCredential,
   toModularTransport,
   toCircleSmartAccount,
+  getUserOperationGasPrice,
   WebAuthnMode,
 } from "@circle-fin/modular-wallets-core";
-import { createPublicClient, encodeFunctionData, type Hex } from "viem";
+import {
+  createPublicClient,
+  encodeFunctionData,
+  type Client,
+  type Hex,
+  type Transport,
+} from "viem";
 import { createBundlerClient, toWebAuthnAccount } from "viem/account-abstraction";
 import { arcTestnet } from "viem/chains";
 
@@ -96,6 +103,43 @@ function readCredential(): StoredCredential | null {
   }
 }
 
+/**
+ * Fees for a UserOperation, asked of the bundler instead of inferred from the
+ * chain.
+ *
+ * Arc Testnet's raw eth_* endpoints price ordinary transactions, not
+ * UserOperations, and the two are far apart: on 23 Jul 2026
+ * eth_maxPriorityFeePerGas reported 5 gwei while the bundler's own floor was
+ * 22.875 gwei, so UOs built from raw estimates were rejected as underpriced.
+ * Passing explicit fees also skips the 2x buffer viem applies when it prepares
+ * a UO itself — and even that buffer lands at 10 gwei, still under the floor.
+ * circle_getUserOperationGasPrice is the bundler stating its own terms, so it
+ * tracks whatever the floor moves to.
+ *
+ * The "high" tier is deliberate: gas is paymaster-sponsored, so bidding above
+ * the floor costs the viewer nothing, while bidding under it silently drops
+ * their payment. Drop to `medium` if sponsorship cost ever matters more than
+ * inclusion.
+ *
+ * Returns undefined if the bundler can't be reached, which leaves the fees
+ * unset so viem estimates them and applies its own buffer.
+ */
+async function userOperationFees(
+  client: Client<Transport>,
+): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } | undefined> {
+  try {
+    const price = await getUserOperationGasPrice(client);
+    const level = price?.high ?? price?.medium ?? price?.low;
+    if (!level?.maxFeePerGas || !level?.maxPriorityFeePerGas) return undefined;
+    return {
+      maxFeePerGas: BigInt(level.maxFeePerGas),
+      maxPriorityFeePerGas: BigInt(level.maxPriorityFeePerGas),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 /** Build the smart account + bundler client + Session from a passkey credential. */
 async function buildSession(credential: { id: string; publicKey: Hex }): Promise<Session> {
   const modularTransport = toModularTransport(`${CLIENT_URL}/arcTestnet`, CLIENT_KEY);
@@ -130,25 +174,11 @@ async function buildSession(credential: { id: string; publicKey: Hex }): Promise
         functionName: "transfer",
         args: [to, value],
       }) as Hex;
-      // Arc Testnet's bundler enforces a priority-fee floor that viem's default
-      // estimator sometimes undershoots (observed rejecting ~0.4 gwei, requiring
-      // >=1 gwei), while the fee cap tracks a fluctuating base fee (observed
-      // requiring >=13.7 gwei at one point) — so estimate live from the chain
-      // and only pad the priority fee, rather than hardcoding either value.
-      const feeEstimate = await client.estimateFeesPerGas();
-      const maxPriorityFeePerGas =
-        feeEstimate.maxPriorityFeePerGas > 2_000_000_000n
-          ? feeEstimate.maxPriorityFeePerGas
-          : 2_000_000_000n;
-      const maxFeePerGas =
-        feeEstimate.maxFeePerGas > maxPriorityFeePerGas
-          ? feeEstimate.maxFeePerGas
-          : maxPriorityFeePerGas * 10n;
+      const fees = await userOperationFees(client);
       const userOpHash = await bundlerClient.sendUserOperation({
         calls: [{ to: USDC, data }],
         paymaster: true,
-        maxPriorityFeePerGas,
-        maxFeePerGas,
+        ...(fees ?? {}),
       });
       // Give the bundler more room than viem's default (~6 retries) before giving
       // up — observed inclusion can lag well past that under load.
