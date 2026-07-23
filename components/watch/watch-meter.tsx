@@ -38,6 +38,11 @@ const SESSION_USD = 5;
 // frictionless). Flip on later by setting NEXT_PUBLIC_FREE_PREVIEW_SECONDS=60.
 const FREE_PREVIEW_SECONDS = Number(process.env.NEXT_PUBLIC_FREE_PREVIEW_SECONDS ?? 0);
 
+// The one host Face ID works on: Circle's client key is registered to a single
+// domain, and it must match the passkey's domain name, so this can't be two
+// places at once. Everything else on the site works on any domain.
+const PASSKEY_HOST = "trydriplet.vercel.app";
+
 export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwner?: boolean }) {
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -208,6 +213,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         const msg = (e as Error).message || "Could not set up your passkey wallet";
         let friendly = msg;
         if (/reject|denied|cancel|NotAllowed|abort/i.test(msg)) friendly = "Sign-in cancelled.";
+        // Circle's client key is registered to one domain, and a passkey is bound
+        // to one domain by the WebAuthn spec regardless — so on any other host
+        // (the bare Vercel alias, localhost) every Circle call 401s with an empty
+        // body, which surfaces as a raw JSON-parse error. Say something useful.
+        else if (typeof window !== "undefined" && window.location.hostname !== PASSKEY_HOST)
+          friendly = `Face ID only works on ${PASSKEY_HOST} — open this stream there, or pay with email below.`;
         else if (/entity config|not found in the system/i.test(msg))
           friendly = "Face ID sign-in isn't available right now. Use your own wallet instead.";
         else if (/timed out|timeout/i.test(msg))
