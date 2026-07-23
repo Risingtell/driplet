@@ -130,7 +130,27 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       }
       setSharingScreen(next);
     } catch (e) {
-      setError((e as Error).message);
+      const err = e as Error;
+      const msg = err?.message ?? "";
+      // Host dismissed the OS screen-picker — a deliberate cancel, not an error.
+      if (
+        err?.name === "NotAllowedError" ||
+        err?.name === "AbortError" ||
+        /denied|dismiss|cancell?ed/i.test(msg)
+      ) {
+        return;
+      }
+      // Many mobile browsers (iOS Safari, in-app WebViews) don't expose
+      // getDisplayMedia, so LiveKit throws "getDisplayMedia not supported".
+      // Give the host something actionable instead of the raw API error — the
+      // button still works wherever the browser does support screen capture.
+      if (err?.name === "NotSupportedError" || /getdisplaymedia|not supported|not implemented/i.test(msg)) {
+        setError(
+          "Screen sharing isn't available in this browser. Open Driplet in desktop Chrome, Edge, or Safari to share your screen — your camera works fine here.",
+        );
+        return;
+      }
+      setError(msg);
     }
   }
 
