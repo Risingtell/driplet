@@ -117,6 +117,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   const lastAmountRef = useRef(SESSION_USD);
   // Which wallet funded the current "own" session, so Top up uses the same one.
   const paySourceRef = useRef<"metamask" | "passkey" | "email">("metamask");
+  // The paying address of the current "own" session, used to sync how much of
+  // its prepaid balance has been watched down so a return visit can resume it.
+  const payerRef = useRef<string | null>(null);
 
   // Passkey (Circle Modular Wallet) onboarding: a gasless smart account created
   // with Face ID / Touch ID, no extension or seed phrase.
@@ -158,6 +161,53 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     if (supported) void import("@/lib/passkey");
   }, []);
 
+  // A returning viewer with prepaid-but-unwatched credit resumes it instead of
+  // paying a fresh lump. Returns true if it took over the session. Fails closed:
+  // any error, or no meaningful credit, returns false so the caller prepays as
+  // usual — the exact pre-persistence behaviour, and what happens before the
+  // viewer_credit migration is applied.
+  const tryResumeCredit = useCallback(
+    async (address: string, source: "metamask" | "passkey" | "email"): Promise<boolean> => {
+      try {
+        const { remaining } = (await fetch(
+          `/api/watch/${stream.slug}/credit?payer=${address}`,
+        ).then((r) => r.json())) as { remaining?: number };
+        // Need at least a second's worth of credit to be worth resuming.
+        if (!remaining || remaining < stream.ratePerSecond) return false;
+        payerRef.current = address;
+        ownBudgetRef.current = remaining;
+        setOwnBudget(remaining);
+        setOwnAddress(address);
+        setLastTx(null); // resuming isn't a new payment — no tx, nothing added to /impact
+        setNeedTopup(false);
+        paySourceRef.current = source;
+        payModeRef.current = "own";
+        setPayMode("own");
+        setPreviewEnded(false);
+        videoRef.current?.play().catch(() => {});
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [stream.slug, stream.ratePerSecond],
+  );
+
+  // Best-effort: report `seconds` more of the current session watched down, so
+  // the server's record of remaining credit stays current for the next visit.
+  const syncConsumption = useCallback(
+    (seconds: number) => {
+      const payer = payerRef.current;
+      if (!payer || !(seconds > 0)) return;
+      fetch(`/api/watch/${stream.slug}/credit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payer, seconds }),
+      }).catch(() => {});
+    },
+    [stream.slug],
+  );
+
   const connectPasskey = useCallback(
     async (amountUsd: number) => {
       lastAmountRef.current = amountUsd;
@@ -181,6 +231,10 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         }
         setPkAddr(session.address);
 
+        // A return visit with leftover credit resumes it — no new charge, and no
+        // need to check the wallet balance since the money's already prepaid.
+        if (await tryResumeCredit(session.address, "passkey")) return;
+
         const bal = await session.balance();
         if (bal < 0.01) {
           // Brand-new wallet with no testnet USDC: show the address to fund.
@@ -203,6 +257,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
 
         setOwnAddress(session.address);
+        payerRef.current = session.address;
         ownBudgetRef.current = j.amount ?? budget;
         setOwnBudget(ownBudgetRef.current);
         setLastTx(j.tx ?? tx);
@@ -233,7 +288,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         setPkBusy(false);
       }
     },
-    [stream.slug],
+    [stream.slug, tryResumeCredit],
   );
 
   const copyAddr = useCallback((addr: string | null) => {
@@ -264,6 +319,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         if (info.error || !info.address) throw new Error(info.error ?? "Could not set up your wallet.");
         setEmailAddr(info.address);
 
+        // Resume leftover credit from a prior visit before charging again.
+        if (await tryResumeCredit(info.address, "email")) return;
+
         const bal = info.balance ?? 0;
         if (bal < 0.01) {
           setEmailNeedsFunds(true);
@@ -281,6 +339,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
 
         setOwnAddress(info.address);
+        payerRef.current = info.address;
         ownBudgetRef.current = j.amount ?? budget;
         setOwnBudget(ownBudgetRef.current);
         setLastTx(j.tx ?? null);
@@ -296,7 +355,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         setEmailBusy(false);
       }
     },
-    [stream.slug],
+    [stream.slug, tryResumeCredit],
   );
 
   const requestEmailCode = useCallback(async (email: string) => {
@@ -342,6 +401,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     setOwnBusy(true);
     try {
       const addr = await connectArcWallet();
+      // Resume leftover credit from a prior visit before charging again.
+      if (await tryResumeCredit(addr, "metamask")) return;
       const bal = await getUsdcBalance(addr);
       if (bal < 0.01) {
         setOwnErr("This wallet has no testnet USDC. Get some free at faucet.circle.com, then try again.");
@@ -361,6 +422,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       const j = (await res.json()) as { ok?: boolean; tx?: string; amount?: number; error?: string };
       if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
       setOwnAddress(addr);
+      payerRef.current = addr;
       ownBudgetRef.current = j.amount ?? budget;
       setOwnBudget(ownBudgetRef.current);
       setLastTx(j.tx ?? null);
@@ -378,7 +440,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     } finally {
       setOwnBusy(false);
     }
-  }, [stream.slug]);
+  }, [stream.slug, tryResumeCredit]);
 
   // Every AGENT_PAY_EVERY seconds the stream treasury (a) pays its AI co-host and
   // (b) splits that interval's income out to each human payee's own wallet on Arc.
@@ -434,9 +496,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setPaid((p) => p + stream.ratePerSecond);
       setSeconds((s) => s + 1);
       // Drive the same autonomous split + agent payment as the demo path, so
-      // paying from your own wallet still flows through the stream treasury.
+      // paying from your own wallet still flows through the stream treasury, and
+      // persist consumption so an interrupted session resumes its leftover credit.
       tickCountRef.current += 1;
-      if (tickCountRef.current % AGENT_PAY_EVERY === 0) runTreasuryCycle();
+      if (tickCountRef.current % AGENT_PAY_EVERY === 0) {
+        runTreasuryCycle();
+        syncConsumption(AGENT_PAY_EVERY);
+      }
       setStatus("streaming");
       if (watchingRef.current) setTimeout(loop, 1000);
       return;
@@ -472,7 +538,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       setStatus("retrying");
     }
     if (watchingRef.current) setTimeout(loop, 1000);
-  }, [stream.slug, runTreasuryCycle]);
+  }, [stream.slug, runTreasuryCycle, syncConsumption]);
 
   const start = useCallback(() => {
     if (watchingRef.current) return;

@@ -75,6 +75,11 @@ export async function getStreamRevenue(
       .in("endpoint", [
         `/own/${stream.slug}`,
         `/passkey/${stream.slug}`,
+        // Email-wallet prepays are real treasury income too. They were missing
+        // here (though /impact and creator earnings counted them), so a stream
+        // whose viewers all paid by email showed $0 income and never settled to
+        // its creator.
+        `/email/${stream.slug}`,
         `/patron/${stream.slug}`,
       ]),
     supabase
