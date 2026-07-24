@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getCreatorGateway, ensureCreatorFunded } from "@/lib/server-gateway";
-import { streamEndpoint } from "@/lib/streams";
 import { resolveStream } from "@/lib/streams-db";
+import { getStreamRevenue } from "@/lib/settlement";
 
 // The treasury may top up before paying the agent; allow headroom.
 export const maxDuration = 60;
@@ -15,7 +15,9 @@ const supabase = createClient(
 const ARC_NETWORK = "eip155:5042002";
 const AGENT_PRICE = 0.005;
 // The AI co-host earns up to its 10% split share of what the stream has actually
-// taken in. It never pays itself beyond that, so the creator's cut is protected.
+// EARNED — watched-down value, not cash sitting in the treasury as unspent
+// viewer credit. It never pays itself beyond that, so the creator's cut is
+// protected.
 const AGENT_BUDGET_SHARE = 0.1;
 
 /**
@@ -31,26 +33,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   const stream = await resolveStream(slug);
   if (!stream) return NextResponse.json({ error: "Unknown stream" }, { status: 404 });
 
-  // This stream's real income (per-second drips + own-wallet/Face ID lump pays)
-  // and what its agent has already been paid.
-  const [watch, own, agent] = await Promise.all([
-    supabase
-      .from("payment_events")
-      .select("id", { count: "exact", head: true })
-      .eq("endpoint", streamEndpoint(slug)),
-    supabase
-      .from("payment_events")
-      .select("amount_usdc")
-      .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`, `/patron/${slug}`]),
+  // What this stream has genuinely earned — NOT what it holds. A prepaid
+  // session lands as a $5 lump the moment a viewer signs in, but the stream
+  // hasn't earned it until it's watched down. Budgeting against cash-in let the
+  // agent pay itself out of viewers' unspent credit, taking a multiple of its
+  // 10% share of real revenue.
+  const [revenue, agent] = await Promise.all([
+    getStreamRevenue(supabase, stream),
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
       .eq("endpoint", `/agents/captions/${slug}`),
   ]);
 
-  const income =
-    (watch.count ?? 0) * stream.ratePerSecond +
-    (own.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
+  const income = revenue.earned;
   const agentSpent = (agent.count ?? 0) * AGENT_PRICE;
   // Floor at one payment so a brand-new stream still gets a first line of
   // commentary; after that the agent is strictly capped at its earned share.
@@ -58,7 +54,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
 
   // The decision, spelled out — shown live in the UI so the agent's economic
   // reasoning is visible, not buried in server logic.
-  const ledger = `Stream income $${income.toFixed(4)} → my ${AGENT_BUDGET_SHARE * 100}% share cap $${budget.toFixed(4)} → spent $${agentSpent.toFixed(4)}`;
+  const ledger = `Stream earned $${income.toFixed(4)} → my ${AGENT_BUDGET_SHARE * 100}% share cap $${budget.toFixed(4)} → spent $${agentSpent.toFixed(4)}`;
 
   if (income <= 0 || agentSpent + AGENT_PRICE > budget) {
     return NextResponse.json({

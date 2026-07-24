@@ -15,7 +15,12 @@ interface Payee {
 }
 
 interface Treasury {
+  /** Cash the treasury holds for this stream, prepaid balances included. */
   total: number;
+  /** Of that, what viewers have actually watched down — the real revenue. */
+  earned?: number;
+  /** Prepaid but unwatched: viewers' credit, sitting here until they spend it. */
+  held?: number;
   count: number;
   agentPaid: number;
   agentCount: number;
@@ -69,13 +74,29 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-xs text-muted-foreground">Total received</p>
+          <p className="text-xs text-muted-foreground">Earned so far</p>
           <p className="text-gradient tabular font-mono text-lg font-semibold leading-none">
-            ${data.total.toFixed(4)}
+            ${(data.earned ?? data.total).toFixed(4)}
           </p>
-          <p className="tabular text-[11px] text-muted-foreground">≈ {naira(data.total)}</p>
+          <p className="tabular text-[11px] text-muted-foreground">
+            ≈ {naira(data.earned ?? data.total)}
+          </p>
         </div>
       </div>
+
+      {/* Prepaid sessions land as a lump long before they're watched, so the
+          treasury usually holds more than the stream has earned. Showing both
+          keeps the split honest: payees share the earned figure, and the rest
+          is still the viewers' to spend. */}
+      {(data.held ?? 0) > 0.0001 && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Holding{" "}
+          <span className="tabular font-mono text-foreground/80">
+            ${(data.held ?? 0).toFixed(4)}
+          </span>{" "}
+          of prepaid viewer credit — split as it&apos;s watched, not before.
+        </p>
+      )}
 
       {/* split bar */}
       <div className="mt-5 flex h-2.5 w-full overflow-hidden rounded-full bg-muted">

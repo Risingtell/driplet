@@ -31,7 +31,11 @@ const AGENT_PAY_EVERY = 20;
 
 // Default own-wallet session: one signature prepays this much (capped by the
 // viewer's balance), enough to watch for hours so it never runs out mid-demo.
-const SESSION_USD = 5;
+// What a viewer prepays when they open a session. Deliberately small: the
+// unspent remainder currently lives in this component's memory, so anything
+// they don't watch is stranded when the tab closes. Keep this low until viewer
+// credit is persisted server-side and a returning viewer can resume it.
+const SESSION_USD = 0.5;
 
 // Free preview: seconds a viewer can watch on the demo wallet before being asked
 // to connect their own wallet. 0 = unlimited free demo (the default, keeps reach

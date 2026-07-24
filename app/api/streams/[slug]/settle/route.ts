@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveStream } from "@/lib/streams-db";
-import { settleStreamSeconds, AGENT_ROLES, payoutEndpointFilter } from "@/lib/settlement";
-import { streamEndpoint } from "@/lib/streams";
+import { settleStreamSeconds, AGENT_ROLES, getStreamRevenue } from "@/lib/settlement";
 
 // Pays out to several wallets and may top up the treasury first.
 export const maxDuration = 60;
@@ -43,27 +42,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
 
   let seconds = Math.min(requested, MAX_SECONDS_PER_CALL);
   if (humanShare > 0) {
-    // The stream's real income (per-second drips + own-wallet/Face ID lumps)
-    // vs what its treasury has already paid out for it.
-    const [watch, own, paid] = await Promise.all([
-      supabase
-        .from("payment_events")
-        .select("id", { count: "exact", head: true })
-        .eq("endpoint", streamEndpoint(slug)),
-      supabase
-        .from("payment_events")
-        .select("amount_usdc")
-        .in("endpoint", [`/own/${slug}`, `/passkey/${slug}`, `/patron/${slug}`]),
-      supabase.from("payment_events").select("amount_usdc").or(payoutEndpointFilter(slug)),
-    ]);
-
-    const income =
-      (watch.count ?? 0) * stream.ratePerSecond +
-      (own.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
-    const alreadyPaid = (paid.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
-
-    const remaining = income - alreadyPaid;
-    const affordable = Math.floor(remaining / (humanShare * stream.ratePerSecond));
+    // Solvency is a cash question, not an earnings one: the treasury can pay a
+    // creator for seconds genuinely watched out of the prepay that funded them,
+    // so this guards on cash actually held minus what's already gone out.
+    const { cashIn, paidOut } = await getStreamRevenue(supabase, stream);
+    const affordable = Math.floor((cashIn - paidOut) / (humanShare * stream.ratePerSecond));
     seconds = Math.min(seconds, Math.max(0, affordable));
   }
 
