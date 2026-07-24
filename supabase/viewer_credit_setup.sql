@@ -21,3 +21,14 @@ create table if not exists public.viewer_credit (
 -- Only ever read/written by the server via the service-role key, which bypasses
 -- RLS. Enable RLS with no public policy so anon/auth clients can't touch it.
 alter table public.viewer_credit enable row level security;
+
+-- Seed: treat every prepay made BEFORE this ledger existed as already fully
+-- consumed. Those sessions were watched down in the browser and are over, so
+-- their prepaid should not suddenly look resumable. Only watching from here on
+-- builds resumable credit. Safe to re-run — never clobbers live consumption.
+insert into public.viewer_credit (payer, slug, consumed_usdc)
+select lower(payer), split_part(endpoint, '/', 3), sum(amount_usdc::numeric)
+from public.payment_events
+where endpoint like '/passkey/%' or endpoint like '/email/%' or endpoint like '/own/%'
+group by lower(payer), split_part(endpoint, '/', 3)
+on conflict (payer, slug) do nothing;
