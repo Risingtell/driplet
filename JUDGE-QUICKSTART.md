@@ -9,8 +9,8 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
    Circle Gateway, settled on Arc testnet. The meter and the stream treasury update live.
 2. In a second tab open **https://trydriplet.vercel.app/impact**.
    Watch your own per-second payments land in the live settlement feed within seconds,
-   each with its Circle Gateway settlement id. The totals (25,300+ payments, 22+ distinct
-   paying wallets, 1,400+ autonomous agent payments, $0 failed) are computed from the
+   each with its Circle Gateway settlement id. The totals (36,900+ payments, 37 distinct
+   paying wallets, 1,600+ autonomous agent payments, $0 failed) are computed from the
    same payment log the feed reads, and climb live as you watch.
 
 ## Minute 2 — watch an AI agent decide whether to spend its own money
