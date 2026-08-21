@@ -10,7 +10,7 @@ import "server-only";
  */
 const API_KEY = process.env.GROQ_API_KEY;
 const BASE_URL = process.env.AI_BASE_URL ?? "https://api.groq.com/openai/v1";
-const MODEL = process.env.AI_MODEL ?? "llama-3.1-8b-instant";
+const MODEL = process.env.AI_MODEL ?? "openai/gpt-oss-20b";
 
 const FALLBACK = [
   "Welcome in — glad you're here.",
@@ -38,22 +38,33 @@ export async function generateCommentary(): Promise<string> {
       body: JSON.stringify({
         model: MODEL,
         temperature: 1,
-        max_tokens: 32,
+        // Reasoning tokens count toward the limit, so a one-liner still needs
+        // headroom; keep the thinking short since this is 12 words of chat.
+        reasoning_effort: "low",
+        max_tokens: 256,
         messages: [
           {
             role: "system",
             content:
-              "You are an upbeat AI co-host on a live stream. Reply with ONE short, friendly, varied line to the audience (max 12 words). No emojis, no quotes, no hashtags.",
+              "You are an upbeat AI co-host on a live stream. Reply with ONE short, friendly, varied line to the audience (max 12 words). No emojis, no quotes, no hashtags, no dashes.",
           },
           { role: "user", content: "Say something to the live audience right now." },
         ],
       }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) return fallback();
+    if (!res.ok) {
+      // Silent fallback reads as a working AI, so leave a trace in the logs —
+      // a retired model or a dead key looks identical from the outside.
+      console.warn(`co-host LLM ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return fallback();
+    }
     const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const text = json.choices?.[0]?.message?.content?.trim();
-    if (!text) return fallback();
+    if (!text) {
+      console.warn("co-host LLM returned no content");
+      return fallback();
+    }
     return text.replace(/^["']|["']$/g, "").slice(0, 120);
   } catch {
     return fallback();

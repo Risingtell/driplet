@@ -149,7 +149,7 @@ async function decide(candidates: Candidate[], balance: number): Promise<PatronD
   const baseUrl = process.env.AI_BASE_URL ?? "https://api.groq.com/openai/v1";
   // The decision needs reliable JSON + arithmetic over signals; use a stronger
   // model than the co-host's one-liner generator (still free on Groq).
-  const model = process.env.PATRON_AI_MODEL ?? "llama-3.3-70b-versatile";
+  const model = process.env.PATRON_AI_MODEL ?? "openai/gpt-oss-120b";
 
   const heuristic = (): PatronDecision => {
     const top = [...alive].sort(
@@ -171,7 +171,9 @@ async function decide(candidates: Candidate[], balance: number): Promise<PatronD
       body: JSON.stringify({
         model,
         temperature: 0.4,
-        max_tokens: 160,
+        // Reasoning tokens share this budget with the JSON answer.
+        reasoning_effort: "low",
+        max_tokens: 700,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -187,7 +189,12 @@ async function decide(candidates: Candidate[], balance: number): Promise<PatronD
       }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return heuristic();
+    if (!res.ok) {
+      // A retired model or a dead key falls back to the heuristic silently,
+      // which reads exactly like a working patron. Say so in the logs.
+      console.warn(`patron LLM ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return heuristic();
+    }
     const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "") as PatronDecision;
     if (parsed.action === "watch" && alive.some((c) => c.slug === parsed.slug)) {
