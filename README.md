@@ -22,7 +22,7 @@ A creator goes live, and viewers pay a fraction of a cent for every second they 
 
 ## The delta: everything here was built during Lepton
 
-First commit **June 16, 2026** (one day after kickoff), starting from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample. **114 commits later**: real live video, the autonomous treasury, two AI agents with money of their own, Face ID onboarding, the Owncast sidecar, on-chain stream metadata with Walrus storage, and real users in Kano paying from 37 distinct wallets. Judges score the gap; the gap is the whole repo.
+First commit **June 16, 2026** (one day after kickoff), starting from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample. **117 commits later**: real live video, the autonomous treasury, two AI agents with money of their own, Face ID onboarding, the Owncast sidecar, on-chain stream metadata with Walrus storage, and real users in Kano paying from 37 distinct wallets. Judges score the gap; the gap is the whole repo.
 
 ---
 
