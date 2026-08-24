@@ -25,6 +25,20 @@ function fallback(): string {
   return FALLBACK[Math.floor(Date.now() / 7000) % FALLBACK.length];
 }
 
+/**
+ * Long dashes read as machine-written, and asking the model not to use them
+ * only mostly works — it still returns an em dash often enough that viewers
+ * see it. Swap them for the comma the sentence wanted, deterministically.
+ */
+export function plainText(s: string): string {
+  return s
+    .replace(/^\s*[—–]\s*/, "")
+    .replace(/\s*[—–]\s*$/, "")
+    .replace(/\s*[—–]\s*/g, ", ")
+    .replace(/\s+,/g, ",")
+    .trim();
+}
+
 /** Real (or fallback) one-line live commentary from the AI co-host agent. */
 export async function generateCommentary(): Promise<string> {
   if (!API_KEY) return fallback();
@@ -65,7 +79,7 @@ export async function generateCommentary(): Promise<string> {
       console.warn("co-host LLM returned no content");
       return fallback();
     }
-    return text.replace(/^["']|["']$/g, "").slice(0, 120);
+    return plainText(text.replace(/^["']|["']$/g, "")).slice(0, 120);
   } catch {
     return fallback();
   }

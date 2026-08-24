@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createPublicClient, http, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { listStreams } from "@/lib/streams-db";
+import { plainText } from "@/lib/agent-ai";
 import { relayTransferWithAuthorization, type Authorization } from "@/lib/relayer";
 import { streams as demoStreams, type Stream } from "@/lib/streams";
 
@@ -198,10 +199,10 @@ async function decide(candidates: Candidate[], balance: number): Promise<PatronD
     const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "") as PatronDecision;
     if (parsed.action === "watch" && alive.some((c) => c.slug === parsed.slug)) {
-      return { action: "watch", slug: parsed.slug, rationale: String(parsed.rationale).slice(0, 300) };
+      return { action: "watch", slug: parsed.slug, rationale: plainText(String(parsed.rationale)).slice(0, 300) };
     }
     if (parsed.action === "skip") {
-      return { action: "skip", slug: null, rationale: String(parsed.rationale).slice(0, 300) };
+      return { action: "skip", slug: null, rationale: plainText(String(parsed.rationale)).slice(0, 300) };
     }
     return heuristic();
   } catch {
