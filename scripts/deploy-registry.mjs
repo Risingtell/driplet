@@ -1,6 +1,8 @@
 /**
- * Compile + deploy StreamRegistry to Arc testnet. Run once:
+ * Compile + deploy StreamRegistry to Arc. Run once per network:
  *   node scripts/deploy-registry.mjs
+ * Deploys to Arc mainnet unless NEXT_PUBLIC_ARC_NETWORK=testnet is set in
+ * .env.local, matching lib/arc-network.ts.
  * Prints the deployed address and writes the ABI to lib/stream-registry-abi.json.
  */
 import fs from "fs";
@@ -31,12 +33,21 @@ const c = out.contracts["StreamRegistry.sol"].StreamRegistry;
 const abi = c.abi;
 const bytecode = ("0x" + c.evm.bytecode.object);
 
-const arc = {
-  id: 5042002,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-};
+const testnet = (env.NEXT_PUBLIC_ARC_NETWORK ?? "").trim().toLowerCase() === "testnet";
+const arc = testnet
+  ? {
+      id: 5042002,
+      name: "Arc Testnet",
+      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+      rpcUrls: { default: { http: ["https://rpc.testnet.arc.io"] } },
+    }
+  : {
+      id: 5042,
+      name: "Arc",
+      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+      rpcUrls: { default: { http: ["https://rpc.mainnet.arc.io"] } },
+    };
+console.log(`Deploying StreamRegistry to ${arc.name} (chain ${arc.id})`);
 const account = privateKeyToAccount(env.SELLER_PRIVATE_KEY);
 const wallet = createWalletClient({ account, chain: arc, transport: http() });
 const pub = createPublicClient({ chain: arc, transport: http() });

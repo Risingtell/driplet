@@ -17,6 +17,7 @@ import {
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BackToTop } from "@/components/back-to-top";
+import { ARC, arcTxUrl } from "@/lib/arc-network";
 
 interface FeedItem {
   id: string;
@@ -159,7 +160,7 @@ export default function ImpactPage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          Live on Arc testnet
+          Live on {ARC.name}
         </span>
         <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
           Real payments, <span className="text-gradient">happening right now</span>
@@ -217,7 +218,7 @@ export default function ImpactPage() {
                   </span>
                   {d.tx && (
                     <a
-                      href={`https://testnet.arcscan.app/tx/${d.tx}`}
+                      href={arcTxUrl(d.tx)}
                       target="_blank"
                       rel="noreferrer"
                       className="shrink-0 font-mono text-xs text-muted-foreground hover:text-foreground"

@@ -7,7 +7,7 @@ import {
   parseUnits,
   parseEther,
 } from "viem";
-import { arcTestnet } from "viem/chains";
+import { ARC, arcChain } from "./lib/arc-network";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import * as readline from "node:readline/promises";
 
@@ -69,12 +69,12 @@ if (!funderKey) {
   process.exit(1);
 }
 
-const ARC_TESTNET_USDC = "0x3600000000000000000000000000000000000000" as const;
-const ARC_TESTNET_RPC = "https://rpc.testnet.arc.network";
+const ARC_TESTNET_USDC = ARC.usdc;
+const ARC_TESTNET_RPC = ARC.rpc;
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 const DEPOSIT_AMOUNT = process.env.DEPOSIT_AMOUNT ?? "1";
-// Amount of native USDC to send for gas (Arc testnet gas = USDC with 18 decimals)
+// Amount of native USDC to send for gas (Arc gas = USDC with 18 decimals)
 const GAS_FUND_AMOUNT = parseEther("0.01");
 
 const endpoints = [
@@ -96,12 +96,12 @@ console.log(`Ephemeral agent wallet: ${ephemeralAccount.address}`);
 // --- Fund the ephemeral wallet from the funder ---
 const funderAccount = privateKeyToAccount(funderKey);
 const publicClient = createPublicClient({
-  chain: arcTestnet,
+  chain: arcChain,
   transport: http(ARC_TESTNET_RPC),
 });
 const funderWallet = createWalletClient({
   account: funderAccount,
-  chain: arcTestnet,
+  chain: arcChain,
   transport: http(ARC_TESTNET_RPC),
 });
 
@@ -157,7 +157,7 @@ console.log(`  USDC transferred (${usdcTxHash.slice(0, 10)}...)`);
 
 // --- Create GatewayClient with the ephemeral wallet ---
 const gateway = new GatewayClient({
-  chain: "arcTestnet",
+  chain: ARC.gatewayChain,
   privateKey: ephemeralKey,
 });
 

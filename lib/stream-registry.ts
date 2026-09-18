@@ -2,6 +2,7 @@ import "server-only";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import abi from "./stream-registry-abi.json";
+import { ARC, arcChain } from "./arc-network";
 
 /**
  * On-chain stream metadata on Arc. Files live on Walrus; the pointer + metadata
@@ -9,14 +10,8 @@ import abi from "./stream-registry-abi.json";
  * end: metadata on Arc, blobs on Walrus.
  */
 const ADDRESS = process.env.STREAM_REGISTRY_ADDRESS as `0x${string}` | undefined;
-const EXPLORER = "https://testnet.arcscan.app";
-
-const arc = {
-  id: 5042002,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-} as const;
+const EXPLORER = ARC.explorer;
+const arc = arcChain;
 
 export function registryAddress(): string | null {
   return ADDRESS ?? null;

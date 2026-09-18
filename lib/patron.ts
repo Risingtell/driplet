@@ -6,6 +6,7 @@ import { listStreams } from "@/lib/streams-db";
 import { plainText } from "@/lib/agent-ai";
 import { relayTransferWithAuthorization, type Authorization } from "@/lib/relayer";
 import { streams as demoStreams, type Stream } from "@/lib/streams";
+import { ARC, arcChain } from "@/lib/arc-network";
 
 /**
  * The AI patron: an autonomous viewer agent with its OWN funded wallet on Arc.
@@ -21,9 +22,9 @@ import { streams as demoStreams, type Stream } from "@/lib/streams";
  * autonomous agents on BOTH sides of the economy: one spends, one earns, and
  * the treasuries in between split it all with no human in the loop.
  */
-const USDC = "0x3600000000000000000000000000000000000000" as const;
-const CHAIN_ID = 5042002;
-const ARC_NETWORK = "eip155:5042002";
+const USDC = ARC.usdc;
+const CHAIN_ID = ARC.chainId;
+const ARC_NETWORK = ARC.caip2;
 
 const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
 const PATRON_KEY = (process.env.PATRON_AGENT_KEY ?? "").trim() as `0x${string}`;
@@ -43,12 +44,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-const arc = {
-  id: CHAIN_ID,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-} as const;
+const arc = arcChain;
 
 const erc20 = [
   {

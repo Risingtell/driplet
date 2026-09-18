@@ -1,5 +1,6 @@
 import "server-only";
 import { GatewayClient } from "@circle-fin/x402-batching/client";
+import { ARC } from "@/lib/arc-network";
 
 /**
  * Server-side "viewer" wallet that pays per-second on behalf of the demo
@@ -22,7 +23,7 @@ function manage(key: `0x${string}` | undefined, label: string) {
   const get = (): GatewayClient => {
     if (!key) throw new Error(`${label} wallet key is not configured.`);
     if (!client) {
-      client = new GatewayClient({ chain: "arcTestnet", privateKey: key });
+      client = new GatewayClient({ chain: ARC.gatewayChain, privateKey: key });
     }
     return client;
   };

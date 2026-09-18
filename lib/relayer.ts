@@ -1,21 +1,16 @@
 import "server-only";
 import { createPublicClient, createWalletClient, http, hexToSignature } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { ARC, arcChain } from "./arc-network";
 
 /**
  * Gasless own-wallet payments. A viewer signs an EIP-3009
  * TransferWithAuthorization over Arc's USDC (no gas, no Gateway deposit — just a
  * signature in their wallet). The treasury relays it on-chain here, so the
- * viewer's own USDC moves to the payee. Verified working on Arc testnet.
+ * viewer's own USDC moves to the payee.
  */
-const USDC = "0x3600000000000000000000000000000000000000" as const;
-
-const arc = {
-  id: 5042002,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-} as const;
+const USDC = ARC.usdc;
+const arc = arcChain;
 
 const twaAbi = [
   {

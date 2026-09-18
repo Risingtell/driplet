@@ -9,10 +9,11 @@ import {
   isOnArc,
   shortAddress,
 } from "@/lib/arc-chain";
+import { ARC } from "@/lib/arc-network";
 
 /**
  * "Connect wallet" control. On click it prompts the wallet, then automatically
- * adds + switches to Arc Testnet (no manual network setup). Once connected it
+ * adds + switches to Arc (no manual network setup). Once connected it
  * shows the address and live Arc-network status.
  */
 export function ConnectArc() {
@@ -65,10 +66,10 @@ export function ConnectArc() {
             ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
             : "border-amber-500/30 bg-amber-500/5 text-amber-500"
         }`}
-        title={onArc ? "Connected to Arc Testnet" : "Wrong network — switch to Arc Testnet"}
+        title={onArc ? `Connected to ${ARC.name}` : `Wrong network, switch to ${ARC.name}`}
       >
         <CheckCircle2 className="h-3.5 w-3.5" />
-        {onArc ? "Arc Testnet" : "Wrong network"} · {shortAddress(address)}
+        {onArc ? ARC.name : "Wrong network"} · {shortAddress(address)}
       </span>
     );
   }

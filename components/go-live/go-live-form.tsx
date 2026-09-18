@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
 import { uploadToWalrus, WALRUS_MAX_BYTES } from "@/lib/walrus";
 import { getWalletInfo } from "@/app/creator/actions";
+import { ARC, arcTxUrl } from "@/lib/arc-network";
 
 /** The Go Live form (camera or video). Lives inside the Creator Studio layout. */
 export function GoLiveForm() {
@@ -148,7 +149,7 @@ export function GoLiveForm() {
             <Check className="mr-1 inline h-3.5 w-3.5 text-primary" />
             Metadata recorded on Arc ·{" "}
             <a
-              href={`https://testnet.arcscan.app/tx/${onchainTx}`}
+              href={arcTxUrl(onchainTx)}
               target="_blank"
               rel="noreferrer"
               className="text-primary hover:underline"
@@ -211,7 +212,7 @@ export function GoLiveForm() {
             <div className="text-xs text-muted-foreground">
               {creatorWallet
                 ? "Your Driplet wallet (from email sign-in). Earnings land here."
-                : "Where your share lands. We auto-add & switch to Arc Testnet."}
+                : `Where your share lands. We auto-add & switch to ${ARC.name}.`}
             </div>
           </div>
           {host ? (

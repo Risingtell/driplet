@@ -2,6 +2,7 @@ import "server-only";
 import {
   initiateDeveloperControlledWalletsClient,
 } from "@circle-fin/developer-controlled-wallets";
+import { ARC } from "@/lib/arc-network";
 
 const apiKey = process.env.CIRCLE_API_KEY;
 const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
@@ -19,13 +20,13 @@ function client(): Client {
   return _client;
 }
 
-/** Create a developer-controlled wallet on Arc Testnet (refId = our user id). Used for both creator and viewer (email-wallet) onboarding. */
+/** Create a developer-controlled wallet on Arc (refId = our user id). Used for both creator and viewer (email-wallet) onboarding. */
 export async function createDeveloperWallet(
   refId: string,
 ): Promise<{ id: string; address: string }> {
   const res = await client().createWallets({
     walletSetId: walletSetId!,
-    blockchains: ["ARC-TESTNET"],
+    blockchains: [ARC.circleBlockchain],
     count: 1,
     accountType: "EOA",
     metadata: [{ refId }],

@@ -1,4 +1,5 @@
 import { getEthereum } from "@/lib/arc-chain";
+import { ARC } from "@/lib/arc-network";
 
 /**
  * Viewer "pay from my own wallet" via a gasless EIP-3009 signature. The viewer
@@ -7,7 +8,7 @@ import { getEthereum } from "@/lib/arc-chain";
  * wallet.
  */
 const USDC = "0x3600000000000000000000000000000000000000";
-const CHAIN_ID = 5042002;
+const CHAIN_ID = ARC.chainId;
 
 export interface SignedAuthorization {
   authorization: {

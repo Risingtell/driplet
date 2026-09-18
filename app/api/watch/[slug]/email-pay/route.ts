@@ -3,12 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { resolveStream } from "@/lib/streams-db";
 import { payAndConfirm } from "@/lib/circle";
+import { ARC } from "@/lib/arc-network";
 
 // Confirming a Circle transaction on-chain can take a few seconds.
 export const maxDuration = 60;
 
 const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
-const ARC_NETWORK = "eip155:5042002";
+const ARC_NETWORK = ARC.caip2;
 
 /**
  * POST → pay the stream treasury from the signed-in viewer's Circle

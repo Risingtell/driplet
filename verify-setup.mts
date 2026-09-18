@@ -1,10 +1,11 @@
-// One-off setup verifier: checks Supabase tables + on-chain USDC balances on Arc testnet.
+// One-off setup verifier: checks Supabase tables + on-chain USDC balances on Arc.
 import { createPublicClient, http, formatUnits, erc20Abi } from "viem";
+import { ARC } from "./lib/arc-network";
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SB_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ARC_RPC = "https://rpc.testnet.arc.network";
-const USDC = "0x3600000000000000000000000000000000000000" as const;
+const ARC_RPC = ARC.rpc;
+const USDC = ARC.usdc;
 
 function ok(s: string) { console.log(`\x1b[32m✓\x1b[0m ${s}`); }
 function bad(s: string) { console.log(`\x1b[31m✗\x1b[0m ${s}`); }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createPublicClient, http } from "viem";
 import { resolveStream } from "@/lib/streams-db";
+import { ARC, arcChain } from "@/lib/arc-network";
 
 // Reading a fresh receipt right after the userOp can take a moment.
 export const maxDuration = 60;
@@ -12,17 +13,12 @@ const supabase = createClient(
 );
 
 const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
-const ARC_NETWORK = "eip155:5042002";
-const USDC = "0x3600000000000000000000000000000000000000";
+const ARC_NETWORK = ARC.caip2;
+const USDC = ARC.usdc;
 // keccak256("Transfer(address,address,uint256)")
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
-const arc = {
-  id: 5042002,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-} as const;
+const arc = arcChain;
 
 const isAddr = (a?: string | null): a is `0x${string}` => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
 const topicAddr = (t: string) => "0x" + t.slice(-40).toLowerCase();

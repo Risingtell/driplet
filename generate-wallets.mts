@@ -56,8 +56,9 @@ console.log(`\n${green("Written to")} ${envPath}`);
 
 console.log(`
 ${bold("Next steps:")}
-  ${dim("1.")} Fund the buyer wallet with testnet USDC so agents can make payments.
-     Visit Circle's faucet and request USDC for the Arc Testnet:
+  ${dim("1.")} Fund the buyer wallet with USDC on Arc so agents can make payments.
+     On mainnet send USDC to it from an exchange or any wallet (network: Arc, chain 5042).
+     On testnet request it from Circle's faucet:
 
      ${underline("https://faucet.circle.com/")}
 

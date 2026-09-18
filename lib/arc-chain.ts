@@ -1,21 +1,14 @@
 /**
- * Arc Testnet wallet helpers. Lets a viewer/creator connect any EVM wallet and
- * have the site automatically ADD the Arc Testnet network and SWITCH to it, so
- * nobody has to configure RPC/chain settings by hand. Raw EIP-1193 — no wallet
- * library dependency.
+ * Arc wallet helpers. Lets a viewer/creator connect any EVM wallet and have the
+ * site automatically ADD the Arc network and SWITCH to it, so nobody has to
+ * configure RPC/chain settings by hand. Raw EIP-1193, no wallet library
+ * dependency. Which Arc network is decided in `lib/arc-network.ts`.
  */
 
-export const ARC_TESTNET_CHAIN_ID = 5042002;
-export const ARC_TESTNET_CHAIN_ID_HEX = "0x4cef52"; // 5042002
+import { ARC, ARC_WALLET_PARAMS } from "@/lib/arc-network";
 
-/** Parameters passed to `wallet_addEthereumChain`. Arc is USDC-native. */
-export const ARC_TESTNET_PARAMS = {
-  chainId: ARC_TESTNET_CHAIN_ID_HEX,
-  chainName: "Arc Testnet",
-  nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 18 },
-  rpcUrls: ["https://rpc.testnet.arc.network"],
-  blockExplorerUrls: ["https://testnet.arcscan.app"],
-} as const;
+export const ARC_CHAIN_ID = ARC.chainId;
+export const ARC_CHAIN_ID_HEX = ARC.chainIdHex;
 
 export interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -31,24 +24,24 @@ export function getEthereum(): Eip1193Provider | null {
 }
 
 /**
- * Switch the wallet to Arc Testnet, adding the network first if the wallet
+ * Switch the wallet to Arc, adding the network first if the wallet
  * doesn't know it yet (error 4902). After this resolves the wallet is on Arc.
  */
 export async function addAndSwitchToArc(eth: Eip1193Provider): Promise<void> {
   try {
     await eth.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: ARC_TESTNET_CHAIN_ID_HEX }],
+      params: [{ chainId: ARC_CHAIN_ID_HEX }],
     });
   } catch (err) {
     const code = (err as { code?: number }).code;
     // 4902: chain not added to the wallet. Some wallets nest it as -32603.
     if (code === 4902 || code === -32603) {
-      await eth.request({ method: "wallet_addEthereumChain", params: [ARC_TESTNET_PARAMS] });
+      await eth.request({ method: "wallet_addEthereumChain", params: [ARC_WALLET_PARAMS] });
       // addEthereumChain usually switches too; make it explicit for wallets that don't.
       await eth.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: ARC_TESTNET_CHAIN_ID_HEX }],
+        params: [{ chainId: ARC_CHAIN_ID_HEX }],
       });
     } else {
       throw err;
@@ -57,7 +50,7 @@ export async function addAndSwitchToArc(eth: Eip1193Provider): Promise<void> {
 }
 
 /**
- * Prompt the user to connect a wallet, then auto-add + switch to Arc Testnet.
+ * Prompt the user to connect a wallet, then auto-add + switch to Arc.
  * Returns the connected address. Throws a friendly error if no wallet exists.
  */
 export async function connectArcWallet(): Promise<string> {
@@ -73,10 +66,10 @@ export async function connectArcWallet(): Promise<string> {
   return accounts[0];
 }
 
-/** Whether the wallet is currently on Arc Testnet. */
+/** Whether the wallet is currently on the configured Arc network. */
 export async function isOnArc(eth: Eip1193Provider): Promise<boolean> {
   const chainId = (await eth.request({ method: "eth_chainId" })) as string;
-  return chainId?.toLowerCase() === ARC_TESTNET_CHAIN_ID_HEX;
+  return chainId?.toLowerCase() === ARC_CHAIN_ID_HEX;
 }
 
 export function shortAddress(addr: string): string {

@@ -22,6 +22,7 @@ import { naira } from "@/lib/currency";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
 import { signWatchAuthorization, getUsdcBalance } from "@/lib/own-wallet";
 import type { Stream } from "@/lib/streams";
+import { ARC } from "@/lib/arc-network";
 
 type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting" | "preview";
 
@@ -412,7 +413,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       if (await tryResumeCredit(addr, "metamask")) return;
       const bal = await getUsdcBalance(addr);
       if (bal < 0.01) {
-        setOwnErr("This wallet has no testnet USDC. Get some free at faucet.circle.com, then try again.");
+        setOwnErr(
+          ARC.faucet
+            ? "This wallet has no testnet USDC. Get some free at faucet.circle.com, then try again."
+            : `This wallet has no USDC on ${ARC.name}. Send a little USDC to it (network: Arc), then try again.`,
+        );
         return;
       }
       const info = (await fetch(`/api/watch/${stream.slug}/own-pay`).then((r) => r.json())) as {
@@ -841,8 +846,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 {pkNeedsFunds ? "Face ID" : "email"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                One more step — add a little free testnet USDC to this address, then come back and
-                continue.
+                {ARC.faucet
+                  ? "One more step: add a little free testnet USDC to this address, then come back and continue."
+                  : `One more step: send a little USDC to this address on ${ARC.name} (from an exchange or any wallet), then come back and continue.`}
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <code className="tabular min-w-0 flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">
@@ -857,18 +863,27 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                   {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 </Button>
               </div>
-              <Button
-                asChild
-                className="mt-2 w-full"
-                onClick={() => copyAddr(pkNeedsFunds ? pkAddr : emailAddr)}
-              >
-                <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">
-                  {copied ? "Address copied — paste it on the faucet" : "Copy address & open faucet.circle.com"}
-                </a>
-              </Button>
-              <p className="mt-1.5 text-[11px] text-muted-foreground">
-                Pick Arc Testnet, paste your address, request USDC, then continue.
-              </p>
+              {ARC.faucet ? (
+                <>
+                  <Button
+                    asChild
+                    className="mt-2 w-full"
+                    onClick={() => copyAddr(pkNeedsFunds ? pkAddr : emailAddr)}
+                  >
+                    <a href={ARC.faucet} target="_blank" rel="noreferrer">
+                      {copied ? "Address copied, paste it on the faucet" : "Copy address & open faucet.circle.com"}
+                    </a>
+                  </Button>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    Pick {ARC.name}, paste your address, request USDC, then continue.
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  Network: {ARC.name} (chain id {ARC.chainId}). Gas is USDC too, so nothing else is needed.
+                  A dollar covers hours of watching.
+                </p>
+              )}
               <Button
                 variant="outline"
                 className="mt-2 w-full"
@@ -944,15 +959,21 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
               )}
 
               <p className="mt-2 text-xs text-muted-foreground">
-                Using your own wallet? Need testnet USDC?{" "}
-                <a
-                  href="https://faucet.circle.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  Get it free at faucet.circle.com →
-                </a>
+                {ARC.faucet ? (
+                  <>
+                    Using your own wallet? Need testnet USDC?{" "}
+                    <a
+                      href={ARC.faucet}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Get it free at faucet.circle.com →
+                    </a>
+                  </>
+                ) : (
+                  <>Using your own wallet? It needs USDC on {ARC.name} (chain id {ARC.chainId}). A dollar covers hours.</>
+                )}
               </p>
             </div>
           )

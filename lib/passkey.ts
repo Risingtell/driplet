@@ -16,11 +16,11 @@ import {
   type Transport,
 } from "viem";
 import { createBundlerClient, toWebAuthnAccount } from "viem/account-abstraction";
-import { arcTestnet } from "viem/chains";
+import { ARC, arcChain } from "@/lib/arc-network";
 
 /**
  * Passkey onboarding for viewers via Circle Modular Wallets. A viewer creates
- * (or signs into) a gasless smart-account wallet on Arc Testnet with Face ID /
+ * (or signs into) a gasless smart-account wallet on Arc with Face ID /
  * Touch ID — no MetaMask extension, no seed phrase. The smart account then pays
  * the creator in the same Arc USDC the rest of the app uses, gas sponsored by
  * Circle's paymaster (ERC-4337). This removes the #1 friction real viewers hit:
@@ -28,7 +28,7 @@ import { arcTestnet } from "viem/chains";
  */
 
 // The ERC-20 USDC the whole app accounts in (NOT Arc's 18-decimal native token).
-const USDC = "0x3600000000000000000000000000000000000000" as const;
+const USDC = ARC.usdc;
 
 const CLIENT_KEY = process.env.NEXT_PUBLIC_CIRCLE_CLIENT_KEY ?? "";
 const CLIENT_URL =
@@ -107,7 +107,7 @@ function readCredential(): StoredCredential | null {
  * Fees for a UserOperation, asked of the bundler instead of inferred from the
  * chain.
  *
- * Arc Testnet's raw eth_* endpoints price ordinary transactions, not
+ * Arc's raw eth_* endpoints price ordinary transactions, not
  * UserOperations, and the two are far apart: on 23 Jul 2026
  * eth_maxPriorityFeePerGas reported 5 gwei while the bundler's own floor was
  * 22.875 gwei, so UOs built from raw estimates were rejected as underpriced.
@@ -142,8 +142,8 @@ async function userOperationFees(
 
 /** Build the smart account + bundler client + Session from a passkey credential. */
 async function buildSession(credential: { id: string; publicKey: Hex }): Promise<Session> {
-  const modularTransport = toModularTransport(`${CLIENT_URL}/arcTestnet`, CLIENT_KEY);
-  const client = createPublicClient({ chain: arcTestnet, transport: modularTransport });
+  const modularTransport = toModularTransport(`${CLIENT_URL}/${ARC.modularChain}`, CLIENT_KEY);
+  const client = createPublicClient({ chain: arcChain, transport: modularTransport });
 
   const smartAccount = await toCircleSmartAccount({
     client,
@@ -152,7 +152,7 @@ async function buildSession(credential: { id: string; publicKey: Hex }): Promise
 
   const bundlerClient = createBundlerClient({
     account: smartAccount,
-    chain: arcTestnet,
+    chain: arcChain,
     transport: modularTransport,
   });
 

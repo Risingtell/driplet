@@ -23,16 +23,11 @@ import {
   GATEWAY_DOMAINS,
 } from "@circle-fin/x402-batching/client";
 import { createClient } from "@supabase/supabase-js";
+import { ARC, WITHDRAW_CHAINS } from "@/lib/arc-network";
 
-const SUPPORTED_CHAIN_LABELS: Record<string, string> = {
-  arcTestnet: "Arc Testnet",
-  baseSepolia: "Base Sepolia",
-  sepolia: "Ethereum Sepolia",
-  arbitrumSepolia: "Arbitrum Sepolia",
-  optimismSepolia: "Optimism Sepolia",
-  avalancheFuji: "Avalanche Fuji",
-  polygonAmoy: "Polygon Amoy",
-};
+const SUPPORTED_CHAIN_LABELS: Record<string, string> = Object.fromEntries(
+  WITHDRAW_CHAINS.map((c) => [c.value, c.label]),
+);
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,11 +65,11 @@ export async function POST(req: NextRequest) {
   }
 
   const gateway = new GatewayClient({
-    chain: "arcTestnet",
+    chain: ARC.gatewayChain,
     privateKey: privateKey as `0x${string}`,
   });
 
-  const isCrossChain = destinationChain !== "arcTestnet";
+  const isCrossChain = destinationChain !== ARC.gatewayChain;
 
   // Pre-check: ensure the seller wallet has native tokens for gas on source chain
   try {
@@ -85,7 +80,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         {
-          error: `Seller wallet (${gateway.address}) has no native tokens on Arc Testnet to pay for gas fees. Fund it with testnet ETH first.`,
+          error: `Seller wallet (${gateway.address}) holds no USDC on ${ARC.name} to pay for gas. Fund it first.`,
         },
         { status: 400 },
       );

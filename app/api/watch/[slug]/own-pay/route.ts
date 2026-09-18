@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveStream } from "@/lib/streams-db";
 import { relayTransferWithAuthorization, type Authorization } from "@/lib/relayer";
+import { ARC } from "@/lib/arc-network";
 
 // Relaying a tx + waiting for the receipt can take a few seconds.
 export const maxDuration = 60;
@@ -12,7 +13,7 @@ const supabase = createClient(
 );
 
 const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
-const ARC_NETWORK = "eip155:5042002";
+const ARC_NETWORK = ARC.caip2;
 const isAddr = (a?: string | null): a is `0x${string}` => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
 
 // Viewers always pay the stream treasury, which then auto-splits in real time to

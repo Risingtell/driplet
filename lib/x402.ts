@@ -19,16 +19,17 @@
 import { BatchFacilitatorClient } from "@circle-fin/x402-batching/server";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { ARC } from "@/lib/arc-network";
 
-// Arc Testnet contract addresses (from @circle-fin/x402-batching SDK)
-const ARC_TESTNET_NETWORK = "eip155:5042002";
-const ARC_TESTNET_USDC = "0x3600000000000000000000000000000000000000";
-const ARC_TESTNET_GATEWAY_WALLET = "0x0077777d7EBA4688BDeF3E311b846F25870A19B9";
+// Arc network, USDC and Gateway wallet all follow the configured network.
+const ARC_TESTNET_NETWORK = ARC.caip2;
+const ARC_TESTNET_USDC = ARC.usdc;
+const ARC_TESTNET_GATEWAY_WALLET = ARC.gatewayWallet;
 
 export const sellerAddress = process.env.SELLER_ADDRESS as `0x${string}`;
 
 export const facilitator = new BatchFacilitatorClient({
-  url: "https://gateway-api-testnet.circle.com",
+  url: ARC.gatewayApi,
 });
 
 const supabase = createClient(

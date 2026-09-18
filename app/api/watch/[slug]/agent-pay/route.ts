@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getCreatorGateway, ensureCreatorFunded } from "@/lib/server-gateway";
 import { resolveStream } from "@/lib/streams-db";
 import { getStreamRevenue } from "@/lib/settlement";
+import { ARC } from "@/lib/arc-network";
 
 // The treasury may top up before paying the agent; allow headroom.
 export const maxDuration = 60;
@@ -12,7 +13,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-const ARC_NETWORK = "eip155:5042002";
+const ARC_NETWORK = ARC.caip2;
 const AGENT_PRICE = 0.005;
 // The AI co-host earns up to its 10% split share of what the stream has actually
 // EARNED — watched-down value, not cash sitting in the treasury as unspent

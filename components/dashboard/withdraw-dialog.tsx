@@ -39,26 +39,13 @@ import {
 } from "@/components/ui/dialog";
 import { BanknoteArrowDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { WITHDRAW_CHAINS } from "@/lib/arc-network";
 
-const CHAIN_EXPLORERS: Record<string, string> = {
-  arcTestnet: "https://testnet.arcscan.io/tx/",
-  baseSepolia: "https://sepolia.basescan.org/tx/",
-  sepolia: "https://sepolia.etherscan.io/tx/",
-  arbitrumSepolia: "https://sepolia.arbiscan.io/tx/",
-  optimismSepolia: "https://sepolia-optimism.etherscan.io/tx/",
-  avalancheFuji: "https://testnet.snowscan.xyz/tx/",
-  polygonAmoy: "https://amoy.polygonscan.com/tx/",
-};
+const CHAIN_EXPLORERS: Record<string, string> = Object.fromEntries(
+  WITHDRAW_CHAINS.map((c) => [c.value, c.explorerTx]),
+);
 
-const SUPPORTED_CHAINS = [
-  { value: "arcTestnet", label: "Arc Testnet" },
-  { value: "baseSepolia", label: "Base Sepolia" },
-  { value: "sepolia", label: "Ethereum Sepolia" },
-  { value: "arbitrumSepolia", label: "Arbitrum Sepolia" },
-  { value: "optimismSepolia", label: "Optimism Sepolia" },
-  { value: "avalancheFuji", label: "Avalanche Fuji" },
-  { value: "polygonAmoy", label: "Polygon Amoy" },
-];
+const SUPPORTED_CHAINS = WITHDRAW_CHAINS.map(({ value, label }) => ({ value, label }));
 
 interface WithdrawDialogProps {
   maxAvailable: string;
@@ -67,7 +54,7 @@ interface WithdrawDialogProps {
 
 export function WithdrawDialog({ maxAvailable, onWithdraw }: WithdrawDialogProps) {
   const [open, setOpen] = useState(false);
-  const [chain, setChain] = useState("arcTestnet");
+  const [chain, setChain] = useState(WITHDRAW_CHAINS[0].value);
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
