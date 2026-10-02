@@ -7,7 +7,7 @@ import { ARC } from "@/lib/arc-network";
  * audience. In production each viewer connects their own wallet; for the demo
  * we reuse the funded testnet wallet and keep its Gateway balance topped up.
  */
-const DEPOSIT_AMOUNT = "1"; // USDC topped into Gateway when the balance runs low
+const DEPOSIT_AMOUNT = "0.25"; // USDC topped into Gateway when the balance runs low
 const MIN_AVAILABLE = 50_000n; // 0.05 USDC (atomic units) before we re-deposit
 
 /**
