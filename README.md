@@ -83,6 +83,18 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 8. **Face ID wallet onboarding** (Circle Modular Wallets): a passkey creates a gasless ERC-4337 smart account on Arc in the browser, gas sponsored, paying in the same USDC as the rest of the app. A reusable "let a normal person get a paying wallet with their face" flow.
 9. **An autonomous buyer agent** (`lib/patron.ts`): an LLM-driven agent with its own wallet that evaluates live signals, decides what's worth paying for, pays gaslessly via signed EIP-3009, and records every decision with its reasoning. A reusable "agent that spends its own money accountably" template.
 
+## Deployed on Arc mainnet
+
+| | |
+| --- | --- |
+| Chain | Arc mainnet, chain id 5042 |
+| `StreamRegistry` ([`contracts/StreamRegistry.sol`](./contracts/StreamRegistry.sol)) | [`0x620cdedeecec27648ac10121e789135a07cda981`](https://explorer.arc.io/address/0x620cdedeecec27648ac10121e789135a07cda981) |
+| Source verification | Sourcify exact match on creation and runtime bytecode: [repo.sourcify.dev/5042/0x620cdede…](https://repo.sourcify.dev/5042/0x620cdedeecec27648ac10121e789135a07cda981) |
+| Deploy transaction | [`0x07344ed9…bcb620`](https://explorer.arc.io/tx/0x07344ed923f6c4f4f85c92a5692a3e51d0f146a1e69169c56623f34106bcb620), block 21,992,160 |
+| Settlement | USDC `0x3600…0000` through Circle Gateway |
+
+The same record is machine-readable at [`deployments/arc-mainnet.json`](./deployments/arc-mainnet.json).
+
 ## Traction
 
 Every testnet number in this README comes from the same on-chain settlement log that's live at [`driplet-testnet.vercel.app/impact`](https://driplet-testnet.vercel.app/impact), and mainnet activity is logged the same way at [`trydriplet.vercel.app/impact`](https://trydriplet.vercel.app/impact): real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.

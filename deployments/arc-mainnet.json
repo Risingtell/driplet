@@ -1,0 +1,27 @@
+{
+  "network": "Arc mainnet",
+  "chainId": 5042,
+  "contracts": {
+    "StreamRegistry": {
+      "address": "0x620cdedeecec27648ac10121e789135a07cda981",
+      "source": "contracts/StreamRegistry.sol",
+      "deployScript": "scripts/deploy-registry.mjs",
+      "transactionHash": "0x07344ed923f6c4f4f85c92a5692a3e51d0f146a1e69169c56623f34106bcb620",
+      "blockNumber": 21992160,
+      "deployer": "0xfeeE02d5F26Bb80AB88802eB230D8b69044fA1B4",
+      "compiler": "solc 0.8.37+commit.f401782d, optimizer on, 200 runs",
+      "verification": {
+        "sourcify": "exact_match",
+        "url": "https://repo.sourcify.dev/5042/0x620cdedeecec27648ac10121e789135a07cda981"
+      }
+    }
+  },
+  "settlement": {
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "gatewayWallet": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE",
+    "streamTreasury": "0xfeeE02d5F26Bb80AB88802eB230D8b69044fA1B4",
+    "aiPatron": "0x81d24923348bCDa41B2e96138B45Bc58E9dd94a1"
+  },
+  "live": "https://trydriplet.vercel.app",
+  "announcement": "https://x.com/agentdriplet/status/2106336252694069466"
+}
