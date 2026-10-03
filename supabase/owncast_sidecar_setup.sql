@@ -13,3 +13,7 @@ create table if not exists owncast_sessions (
 
 create index if not exists owncast_sessions_lookup
   on owncast_sessions (stream_slug, viewer_id);
+
+-- Only ever read/written by the server via the service-role key, which bypasses
+-- RLS. Enable RLS with no public policy so anon/auth clients can't touch it.
+alter table owncast_sessions enable row level security;

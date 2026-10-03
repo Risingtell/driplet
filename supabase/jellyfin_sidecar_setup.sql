@@ -23,3 +23,7 @@ alter table jellyfin_sessions add column if not exists total_seconds double prec
 
 create index if not exists jellyfin_sessions_lookup
   on jellyfin_sessions (stream_slug, viewer_id);
+
+-- Only ever read/written by the server via the service-role key, which bypasses
+-- RLS. Enable RLS with no public policy so anon/auth clients can't touch it.
+alter table jellyfin_sessions enable row level security;
