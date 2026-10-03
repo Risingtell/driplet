@@ -2,12 +2,14 @@
 
 No setup, no keys, no sign-up. Every claim below is checkable from a browser.
 
+These steps run against the Lepton build on Arc testnet at driplet-testnet.vercel.app, so they cost nothing. Driplet now runs on Arc mainnet with real USDC at https://trydriplet.vercel.app.
+
 ## Minute 1 — see real money move, caused by you
 
-1. Open **https://trydriplet.vercel.app/watch/ada-live** and press play.
+1. Open **https://driplet-testnet.vercel.app/watch/ada-live** and press play.
    Every second you watch sends a real $0.0003 USDC payment over x402, batched through
    Circle Gateway, settled on Arc testnet. The meter and the stream treasury update live.
-2. In a second tab open **https://trydriplet.vercel.app/impact**.
+2. In a second tab open **https://driplet-testnet.vercel.app/impact**.
    Watch your own per-second payments land in the live settlement feed within seconds,
    each with its Circle Gateway settlement id. The totals (36,900+ payments, 37 distinct
    paying wallets, 1,600+ autonomous agent payments, $0 failed) are computed from the
@@ -19,7 +21,7 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
    funded wallet):
 
    ```bash
-   curl -X POST https://trydriplet.vercel.app/api/agents/patron
+   curl -X POST https://driplet-testnet.vercel.app/api/agents/patron
    ```
 
    The response shows what it saw (every stream's live signals) and what it decided,
@@ -38,9 +40,9 @@ No setup, no keys, no sign-up. Every claim below is checkable from a browser.
 6. **Stream metadata on-chain:** every creator stream is registered in a `StreamRegistry`
    contract on Arc ([`0x1579…3a3a`](https://testnet.arcscan.app/address/0x1579746117fb136100423120f4f914f8b6991a3a)),
    with video blobs on Walrus. Read one straight from the chain:
-   `https://trydriplet.vercel.app/api/streams/ada-live/onchain`
+   `https://driplet-testnet.vercel.app/api/streams/ada-live/onchain`
 7. **The Owncast sidecar** (RFB #3 from Canteen's request-for-payments-founders list):
-   live stats and explainer at **https://trydriplet.vercel.app/sidecar** — a webhook
+   live stats and explainer at **https://driplet-testnet.vercel.app/sidecar** — a webhook
    subscriber that adds per-second pay to any existing Owncast server, proven against a
    real Owncast 0.2.5 instance.
 

@@ -2,7 +2,7 @@
 
 [![live: trydriplet.vercel.app](https://img.shields.io/badge/live-trydriplet.vercel.app-14b8a6)](https://trydriplet.vercel.app)
 [![proof feed: /impact](https://img.shields.io/badge/proof_feed-%2Fimpact-0ea5e9)](https://trydriplet.vercel.app/impact)
-[![settles on Arc testnet](https://img.shields.io/badge/settles_on-Arc_testnet-1f1f1f)](https://testnet.arcscan.app)
+[![settles on Arc mainnet](https://img.shields.io/badge/settles_on-Arc_mainnet-1f1f1f)](https://explorer.arc.io)
 [![payments: Circle x402 + Gateway](https://img.shields.io/badge/payments-Circle_x402_%2B_Gateway-2775CA)](https://github.com/circlefin/arc-nanopayments)
 [![demo video](https://img.shields.io/badge/demo-YouTube-ff0000)](https://youtu.be/PaQt4rzGJC4)
 [![X: @agentdriplet](https://img.shields.io/badge/X-%40agentdriplet-000000)](https://x.com/agentdriplet)
@@ -12,7 +12,9 @@
 ### ⏱️ Judging this? Verify every claim in under 3 minutes → [JUDGE-QUICKSTART.md](./JUDGE-QUICKSTART.md)
 
 > ## **36,900+ real settlements · 37 distinct paying wallets · 1,600+ autonomous agent payments · $11+ USDC streamed · 0 failures**
-> All on-chain on Arc testnet, recomputed live at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)** *(snapshot 2026-08-21, and still climbing — check the live number)*
+> All on-chain on Arc testnet during and after the Lepton hackathon, recomputed live at **[driplet-testnet.vercel.app/impact](https://driplet-testnet.vercel.app/impact)** *(snapshot 2026-08-21)*
+>
+> **Now live on Arc mainnet** with real USDC at **[trydriplet.vercel.app](https://trydriplet.vercel.app)**. The mainnet ledger starts fresh and is public at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)**.
 
 A creator goes live, and viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own autonomous on-chain treasury that splits incoming drips in real time between the creator, a co-host, and a real AI agent it pays for live commentary, so money flows in from the audience and back out to people and agents with no platform in the middle.
 
@@ -63,7 +65,7 @@ Every payment is a signed, gas-free off-chain authorization that Circle Gateway 
 | Criterion | Where in Driplet |
 | --- | --- |
 | **Agentic sophistication (30%)** | Autonomous agents on both sides of the money. Spending side: an AI patron with its own funded wallet decides with an LLM which streams deserve its money and pays them gaslessly from its own address, publishing every decision (including refusals) with its reasoning. Earning side: a real LLM co-host that each stream's autonomous treasury pays per call out of its own income, budget-aware (it pauses itself rather than out-earn its share) with its ledger reasoning shown live on the watch page. |
-| **Traction (30%)** | 36,900+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 37 distinct wallets that paid from their own address; every settlement verifiable live at [`/impact`](https://trydriplet.vercel.app/impact). |
+| **Traction (30%)** | 36,900+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 37 distinct wallets that paid from their own address; every settlement verifiable live at the testnet [`/impact`](https://driplet-testnet.vercel.app/impact). |
 | **Circle tool usage (20%)** | Gateway nanopayments (batched EIP-3009) + x402 for every per-second charge and agent call; Developer-Controlled Wallets for creator payouts and email-based viewer onboarding; Modular Wallets (passkey/Face ID) with paymaster-sponsored ERC-4337 as a second viewer onboarding path; a gasless EIP-3009 relay for own-wallet pay. |
 | **Innovation (20%)** | Per-second paid live video with a multi-payee on-chain treasury; the Owncast sidecar from Canteen's request-for-payments-founders list, proven against a real Owncast server; Face ID wallet onboarding for non-crypto viewers; stream metadata on Arc with video on Walrus. |
 
@@ -83,13 +85,13 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 
 ## Traction
 
-Every number in this README comes from the same on-chain settlement log that's live at [`/impact`](https://trydriplet.vercel.app/impact) — real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
+Every testnet number in this README comes from the same on-chain settlement log that's live at [`driplet-testnet.vercel.app/impact`](https://driplet-testnet.vercel.app/impact), and mainnet activity is logged the same way at [`trydriplet.vercel.app/impact`](https://trydriplet.vercel.app/impact): real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
 
 ## Tech
 
 - **Next.js 16** (App Router) + **Tailwind v4** / shadcn UI, light and dark themes
 - **Circle Nanopayments** via **`@circle-fin/x402-batching`** (`GatewayClient` + `BatchFacilitatorClient`)
-- **x402** payment protocol, **Arc testnet** settlement (USDC-native L1)
+- **x402** payment protocol, **Arc mainnet** settlement (USDC-native L1), with Arc testnet one env var away
 - **viem** for wallet and chain access, plus a gasless EIP-3009 relay for own-wallet pay
 - **Supabase** (Postgres) for streams, the payment log, and chat
 - **LiveKit** for live video and screen share, **Walrus** for decentralized video storage
@@ -97,7 +99,7 @@ Every number in this README comes from the same on-chain settlement log that's l
 
 ## Run it locally
 
-Prerequisites: Node 22+, a Supabase project, testnet USDC from [faucet.circle.com](https://faucet.circle.com) (Arc Testnet).
+Prerequisites: Node 22+, a Supabase project, and USDC on Arc. Driplet runs on Arc mainnet by default; set `NEXT_PUBLIC_ARC_NETWORK=testnet` to run it free with testnet USDC from [faucet.circle.com](https://faucet.circle.com) (Arc Testnet).
 
 ```bash
 npm install

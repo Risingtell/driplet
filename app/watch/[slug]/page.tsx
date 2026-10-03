@@ -7,6 +7,7 @@ import { registryExplorerUrl } from "@/lib/stream-registry";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Stream } from "@/lib/streams";
+import { ARC } from "@/lib/arc-network";
 import { SiteHeader } from "@/components/site-header";
 import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
@@ -23,8 +24,10 @@ export default function WatchPage({ params }: { params: Promise<{ slug: string }
       </Suspense>
 
       <p className="py-6 text-center text-xs text-muted-foreground">
-        Live testnet demo. Payments settle in real USDC on Arc; ₦ shown alongside for local
-        context.
+        {ARC.type === "testnet"
+          ? "Live testnet demo. Payments settle in testnet USDC on Arc Testnet"
+          : "Payments settle in real USDC on Arc mainnet"}
+        ; ₦ shown alongside for local context.
       </p>
     </main>
   );
