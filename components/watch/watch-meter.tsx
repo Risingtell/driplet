@@ -578,6 +578,19 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
   }, []);
 
   const watching = status !== "idle";
+  // Picture and sound only while the meter is charging (or about to, or the
+  // owner is previewing). Stop, credit running out, the free-preview wall and
+  // a failing payment all leave this state, so none of them can keep the stream
+  // playing for free.
+  const playing = !previewEnded && (status === "streaming" || status === "connecting");
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (watching) startedRef.current = true;
+    // Before the first Watch, a recorded video plays muted as a teaser.
+    if (!startedRef.current) return;
+    if (playing) videoRef.current?.play().catch(() => {});
+    else videoRef.current?.pause();
+  }, [playing, watching]);
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
     seconds % 60,
   ).padStart(2, "0")}`;
@@ -649,7 +662,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         {/* Live streams show the host's real camera (LiveKit); recorded streams
             autoplay the video file (Watch resumes + pays, Stop pauses it). */}
         {stream.isLive ? (
-          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} muted={muted} />
+          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} muted={muted} active={playing} />
         ) : (
           <video
             ref={videoRef}

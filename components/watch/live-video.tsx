@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Room, RoomEvent, Track, type RemoteTrack } from "livekit-client";
-import { Loader2, Radio } from "lucide-react";
+import {
+  Room,
+  RoomEvent,
+  Track,
+  type RemoteTrack,
+  type RemoteTrackPublication,
+} from "livekit-client";
+import { Loader2, Pause, Radio } from "lucide-react";
 
 type State = "connecting" | "waiting" | "live" | "error";
 
@@ -10,17 +16,25 @@ type State = "connecting" | "waiting" | "live" | "error";
  * Viewer-side live player. Joins the stream's LiveKit room (room name = slug) as
  * a subscriber and attaches the host's camera + mic. Shows a friendly overlay
  * while connecting or before the host has started broadcasting.
+ *
+ * The room is joined as soon as the page opens, so the LIVE badge is right and
+ * charging can wait for the host, but picture and sound only flow while
+ * `active` (the viewer is watching and paying). Otherwise every track is
+ * switched off at the server, so stopping the meter stops the stream itself.
  */
 export function LiveVideo({
   slug,
   onLiveChange,
   muted = false,
+  active = false,
 }: {
   slug: string;
   /** Fires true once the host's video is playing, false while waiting/ended. */
   onLiveChange?: (live: boolean) => void;
   /** Mute the host's incoming audio (viewer-controlled). */
   muted?: boolean;
+  /** The viewer is watching and paying: only then do picture and sound flow. */
+  active?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioWrap = useRef<HTMLDivElement>(null);
@@ -28,16 +42,37 @@ export function LiveVideo({
   const [screen, setScreen] = useState(false);
   const tracksRef = useRef<Map<string, RemoteTrack>>(new Map());
   const mutedRef = useRef(muted);
-  mutedRef.current = muted;
+  const activeRef = useRef(active);
+  const roomRef = useRef<Room | null>(null);
   const cb = useRef(onLiveChange);
-  cb.current = onLiveChange;
+  // Latest props for the LiveKit event handlers, which outlive any one render.
+  useEffect(() => {
+    mutedRef.current = muted;
+    activeRef.current = active;
+    cb.current = onLiveChange;
+  });
 
-  // Apply mute to any attached audio elements when the viewer toggles it.
+  // Not watching is always silent, whatever the mute button says.
   useEffect(() => {
     audioWrap.current?.querySelectorAll("audio").forEach((a) => {
-      a.muted = muted;
+      a.muted = muted || !active;
     });
-  }, [muted]);
+  }, [muted, active]);
+
+  // Start or stop the host's tracks at the server as the viewer starts and stops.
+  useEffect(() => {
+    const room = roomRef.current;
+    if (room) {
+      for (const p of room.remoteParticipants.values()) {
+        for (const pub of p.trackPublications.values()) pub.setEnabled(active);
+      }
+    }
+    const el = videoRef.current;
+    if (el) {
+      if (active) el.play().catch(() => {});
+      else el.pause();
+    }
+  }, [active]);
 
   useEffect(() => {
     let room: Room | null = null;
@@ -57,6 +92,7 @@ export function LiveVideo({
         }
 
         room = new Room({ adaptiveStream: true, dynacast: true });
+        roomRef.current = room;
 
         // Show the best available video track: prefer a screen share, else the
         // camera. Only fall back to "waiting" when no video track remains, so
@@ -81,11 +117,13 @@ export function LiveVideo({
           cb.current?.(true);
         };
 
-        room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+        room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, pub: RemoteTrackPublication) => {
           if (track.sid) tracksRef.current.set(track.sid, track);
+          // A track that arrives while the viewer isn't watching stays off.
+          pub.setEnabled(activeRef.current);
           if (track.kind === Track.Kind.Audio && audioWrap.current) {
             const el = track.attach() as HTMLMediaElement;
-            el.muted = mutedRef.current;
+            el.muted = mutedRef.current || !activeRef.current;
             audioWrap.current.appendChild(el);
           } else if (track.kind === Track.Kind.Video) {
             reattach();
@@ -112,6 +150,7 @@ export function LiveVideo({
     return () => {
       cancelled = true;
       room?.disconnect();
+      roomRef.current = null;
     };
   }, [slug]);
 
@@ -124,6 +163,13 @@ export function LiveVideo({
         playsInline
       />
       <div ref={audioWrap} className="hidden" />
+      {state === "live" && !active && (
+        <div className="absolute inset-0 grid place-items-center bg-black/80 text-center text-sm text-white/80">
+          <span className="flex items-center gap-2">
+            <Pause className="size-4 text-primary" /> The host is live. Press Watch to tune in.
+          </span>
+        </div>
+      )}
       {state !== "live" && (
         <div className="absolute inset-0 grid place-items-center bg-black/70 text-center text-sm text-white/80">
           {state === "connecting" && (
