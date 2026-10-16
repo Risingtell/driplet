@@ -69,7 +69,9 @@ export async function GET() {
     supabase.from("streams").select("split"),
   ]);
 
-  const err = watch.error ?? agent.error ?? recent.error;
+  // Any failed query fails the response: a missing wallets or streams read
+  // must not quietly publish 0 users or 0 creators.
+  const err = watch.error ?? agent.error ?? recent.error ?? wallets.error ?? streams.error;
   if (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
