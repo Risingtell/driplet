@@ -2,7 +2,7 @@
 
 No setup, no keys, no sign-up. Every claim below is checkable from a browser.
 
-These steps run against the Lepton build on Arc testnet at driplet-testnet.vercel.app, so they cost nothing. Driplet now runs on Arc mainnet with real USDC at https://trydriplet.vercel.app.
+These steps were written for the Lepton build on Arc testnet at driplet-testnet.vercel.app. Lepton judging is over and that testnet backend is now archived, so the live steps below may not respond; the full testnet ledger is in [history/lepton-testnet](./history/lepton-testnet) and `npm run verify:history` re-derives every number offline. Driplet now runs on Arc mainnet with real USDC at https://trydriplet.vercel.app.
 
 ## Minute 1 — see real money move, caused by you
 
@@ -58,10 +58,11 @@ These steps run against the Lepton build on Arc testnet at driplet-testnet.verce
 - **Creator side:** sign in with Google at `/signin` — a Circle developer-controlled
   wallet is created for you automatically; go live with a camera and watch earnings
   settle per second.
-- **Independent verification:** clone the repo and run `npm run verify:impact` — it
-  re-derives every headline number straight from the database using only public
-  read-only credentials and cross-checks them against the live API, so the traction
-  numbers above don't have to be taken on trust.
+- **Independent verification:** clone the repo and run `npm run verify:history` to
+  re-derive every testnet headline number offline from the archived ledger (with
+  SHA-256 checks on the files), and `npm run verify:impact` to cross-check the live
+  mainnet numbers against the database using only public read-only credentials, so
+  the traction numbers don't have to be taken on trust.
 - **Reusable primitives:** the README lists 9 standalone building blocks (metered
   per-second loop, autonomous multi-payee treasury, budget-aware agent payee, buyer
   agent, gasless own-wallet relay, passkey onboarding, hardened Gateway client, Owncast

@@ -12,7 +12,7 @@
 ### ⏱️ Judging this? Verify every claim in under 3 minutes → [JUDGE-QUICKSTART.md](./JUDGE-QUICKSTART.md)
 
 > ## **36,900+ real settlements · 37 distinct paying wallets · 1,600+ autonomous agent payments · $11+ USDC streamed · 0 failures**
-> All on-chain on Arc testnet during and after the Lepton hackathon, recomputed live at **[driplet-testnet.vercel.app/impact](https://driplet-testnet.vercel.app/impact)** *(snapshot 2026-08-21)*
+> All on-chain on Arc testnet during and after the Lepton hackathon. The full ledger (50,728 rows) is archived in **[history/lepton-testnet](./history/lepton-testnet)** and re-derived offline by `npm run verify:history`.
 >
 > **Now live on Arc mainnet** with real USDC at **[trydriplet.vercel.app](https://trydriplet.vercel.app)**. The mainnet ledger starts fresh and is public at **[trydriplet.vercel.app/impact](https://trydriplet.vercel.app/impact)**.
 
@@ -65,7 +65,7 @@ Every payment is a signed, gas-free off-chain authorization that Circle Gateway 
 | Criterion | Where in Driplet |
 | --- | --- |
 | **Agentic sophistication (30%)** | Autonomous agents on both sides of the money. Spending side: an AI patron with its own funded wallet decides with an LLM which streams deserve its money and pays them gaslessly from its own address, publishing every decision (including refusals) with its reasoning. Earning side: a real LLM co-host that each stream's autonomous treasury pays per call out of its own income, budget-aware (it pauses itself rather than out-earn its share) with its ledger reasoning shown live on the watch page. |
-| **Traction (30%)** | 36,900+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 37 distinct wallets that paid from their own address; every settlement verifiable live at the testnet [`/impact`](https://driplet-testnet.vercel.app/impact). |
+| **Traction (30%)** | 36,900+ real settlements from real viewers reached through WhatsApp creator communities in Kano; 37 distinct wallets that paid from their own address; every settlement archived in [`history/lepton-testnet`](./history/lepton-testnet) and re-derivable offline with `npm run verify:history`. |
 | **Circle tool usage (20%)** | Gateway nanopayments (batched EIP-3009) + x402 for every per-second charge and agent call; Developer-Controlled Wallets for creator payouts and email-based viewer onboarding; Modular Wallets (passkey/Face ID) with paymaster-sponsored ERC-4337 as a second viewer onboarding path; a gasless EIP-3009 relay for own-wallet pay. |
 | **Innovation (20%)** | Per-second paid live video with a multi-payee on-chain treasury; the Owncast sidecar from Canteen's request-for-payments-founders list, proven against a real Owncast server; Face ID wallet onboarding for non-crypto viewers; stream metadata on Arc with video on Walrus. |
 
@@ -97,7 +97,7 @@ The same record is machine-readable at [`deployments/arc-mainnet.json`](./deploy
 
 ## Traction
 
-Every testnet number in this README comes from the same on-chain settlement log that's live at [`driplet-testnet.vercel.app/impact`](https://driplet-testnet.vercel.app/impact), and mainnet activity is logged the same way at [`trydriplet.vercel.app/impact`](https://trydriplet.vercel.app/impact): real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
+Every testnet number in this README comes from the on-chain settlement log archived in [`history/lepton-testnet`](./history/lepton-testnet) (`npm run verify:history` re-derives them offline and checks the file hashes), and mainnet activity is logged the same way, live, at [`trydriplet.vercel.app/impact`](https://trydriplet.vercel.app/impact) (`npm run verify:impact` cross-checks it against the database): real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
 
 ## Tech
 

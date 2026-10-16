@@ -3,20 +3,22 @@
 // the database and cross-checks them against the live /impact API — so
 // anyone (judges included) can confirm the numbers aren't just self-reported.
 // Uses only public, read-only credentials; no secrets required to run this.
+// This checks the live Arc mainnet app. The Lepton-era testnet numbers are
+// archived in history/lepton-testnet/ and checked offline by verify:history.
 
-const SUPABASE_URL = "https://zfkfufsimnjeoeuggomq.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Wa_7_k7HVhQ5bZOgdQzk_A_37WZL6N9";
+const SUPABASE_URL = "https://mpbuivmzoivtrqiznlix.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_H0S603cmoZDuciWrREspdg_y1ktvxLx";
 const IMPACT_URL = process.env.IMPACT_URL ?? "https://trydriplet.vercel.app/api/impact";
 
-// Infrastructure wallets excluded from "distinct paying wallets" — the
-// treasury, shared demo wallet, captions agent, and co-host fallback. These
-// are public Arc addresses, not secrets; the live app excludes the same set.
+// Infrastructure wallets excluded from "distinct paying wallets": the
+// treasury, shared demo wallet, captions agent, and co-host. These are public
+// Arc mainnet addresses, not secrets; the live app excludes the same set.
 const INFRA_WALLETS = new Set(
   [
-    "0x8156f646a79cf7C97986298eEa8B5ed136426094", // SELLER (treasury)
-    "0x0C63826eE08aF1f144ec5D84B6c56fe393fE19F5", // BUYER (shared demo wallet)
-    "0x61c14fe51c3720b4d10798EE4608d161e992B172", // captions agent
-    "0x3A0654529eF560bCfCFCD714a39ACdDfef878baE", // co-host fallback
+    "0xfeeE02d5F26Bb80AB88802eB230D8b69044fA1B4", // SELLER (treasury)
+    "0xcFeE2C55f3b3535f182df635AF94269a3Ece7D71", // BUYER (shared demo wallet)
+    "0x68137887E2c9c44B884195AA0B20BFeD2AEAfa97", // captions agent
+    "0x8360B5A0e9bb442a07709E146C82de60422570e8", // co-host
   ].map((a) => a.toLowerCase()),
 );
 const isWallet = (a) => /^0x[0-9a-f]{40}$/.test(a);

@@ -1,0 +1,1135 @@
+[
+  {
+    "slug": "friday-lagos-party-ds79e",
+    "title": "Friday Lagos Party",
+    "creator": "Ajala",
+    "location": "Lagos Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xe94040f188711427d7cdcd3a407700baf8c4d62f"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-22T01:05:06.306384+00:00"
+  },
+  {
+    "slug": "lagos-party-e9yxm",
+    "title": "Lagos Party",
+    "creator": "Oluwasogo",
+    "location": "Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "https://youtube.com/shorts/3W",
+    "split": [
+      {
+        "name": "Oluwasogo",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xe94040f188711427d7cdcd3a407700baf8c4d62f"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-22T01:46:37.109085+00:00"
+  },
+  {
+    "slug": "lagos-party-tkcry",
+    "title": "Lagos Party",
+    "creator": "Ajala",
+    "location": "Lagos",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/watch/friday-lagos-party-ds79e",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xe94040f188711427d7cdcd3a407700baf8c4d62f"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-22T01:59:01.212253+00:00"
+  },
+  {
+    "slug": "test-run-my-live-s1yzj",
+    "title": "Test run my live",
+    "creator": "Oluwasogo",
+    "location": "Kano Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Oluwasogo",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xe94040f188711427d7cdcd3a407700baf8c4d62f"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-22T19:57:40.930825+00:00"
+  },
+  {
+    "slug": "owncast-sidecar-demo-32zzt",
+    "title": "Owncast Sidecar Demo",
+    "creator": "Sidecar Demo Streamer",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    "split": [
+      {
+        "name": "Sidecar Demo Streamer",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-24T08:56:15.706402+00:00"
+  },
+  {
+    "slug": "walrus-upload-demo-5lcw3",
+    "title": "Walrus Upload Demo",
+    "creator": "Walrus Demo",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "http://localhost:3000/api/video/1cHeTi5MPW5Q_leUv2OYbOfEGtbhX2K1f3FNMK7AWKU?ct=video/mp4",
+    "split": [
+      {
+        "name": "Walrus Demo",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-24T09:42:24.244001+00:00"
+  },
+  {
+    "slug": "millionaire-skits-nngvo",
+    "title": "Millionaire skits",
+    "creator": "Ajala",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/bQ9Xy8CNRcW3e9V1pSzUBSwKqmbIrWYIWUjDtsH0yB4?ct=video%2Fmp4",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-24T13:09:42.942995+00:00"
+  },
+  {
+    "slug": "millionaire-chitchat-a8srr",
+    "title": "Millionaire chitchat",
+    "creator": "Ajala",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-24T13:19:08.039747+00:00"
+  },
+  {
+    "slug": "ajala-the-traveller-dtdai",
+    "title": "Ajala the traveller",
+    "creator": "Israel",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Israel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-25T01:19:49.715505+00:00"
+  },
+  {
+    "slug": "arc-metadata-test-6zkid",
+    "title": "Arc Metadata Test",
+    "creator": "Ada",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/WALRUSBLOBxyz789?ct=video/mp4",
+    "split": [
+      {
+        "name": "Ada",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-25T12:22:58.55363+00:00"
+  },
+  {
+    "slug": "live-at-a-crypto-gathering-in-kano-y0rx5",
+    "title": "Live at a crypto gathering in Kano",
+    "creator": "Ajala",
+    "location": "Kano,  Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-25T15:12:10.216212+00:00"
+  },
+  {
+    "slug": "easy-accessment-rogkj",
+    "title": "Easy accessment",
+    "creator": "Bobo",
+    "location": "Abuja",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Bobo",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c64a9f266aaef9ec13a07a922a2fd7c32f47d84"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-25T16:53:06.551331+00:00"
+  },
+  {
+    "slug": "night-gist-et8ou",
+    "title": "Night gist",
+    "creator": "Adonis",
+    "location": "Kano Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/HmnSG2JZk8Kyzzff_5pGiHK3ISpIlF0tqV8yzdaCtfU?ct=video%2Fquicktime",
+    "split": [
+      {
+        "name": "Adonis",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI Captions",
+        "role": "Live captions agent",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-26T20:38:49.638894+00:00"
+  },
+  {
+    "slug": "barber-shop-gist-2qxt4",
+    "title": "Barber shop gist",
+    "creator": "Easy",
+    "location": "Gents, Kano.",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Easy",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-27T20:22:03.417799+00:00"
+  },
+  {
+    "slug": "kano-kasuwa-gist-m9yn5",
+    "title": "Kano Kasuwa Gist",
+    "creator": "Ahmad",
+    "location": "Bata Market",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ahmad",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-28T16:06:40.925739+00:00"
+  },
+  {
+    "slug": "kano-kasuwa-gist-ybd5p",
+    "title": "Kano Kasuwa Gist",
+    "creator": "Ahmad",
+    "location": "Bata Market History",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/nvb4tCAW_U-ivnwEiRGX-ih2NCVBiEbpL_zbEArgkJg?ct=video%2Fquicktime",
+    "split": [
+      {
+        "name": "Ahmad",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-28T16:19:14.016245+00:00"
+  },
+  {
+    "slug": "kano-kasuwa-37eaf",
+    "title": "Kano Kasuwa",
+    "creator": "Bello",
+    "location": "Bata Market History",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/VgcQzgGAyQIwqUsdSGQpLO24QoAWs4k_oaI-2g3B-U0?ct=video%2Fmp4",
+    "split": [
+      {
+        "name": "Bello",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-28T16:20:19.259912+00:00"
+  },
+  {
+    "slug": "test-xqskv",
+    "title": "Test",
+    "creator": "QuietStorm",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "QuietStorm",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x81293da69511d158011cfbfea1f6a47e60363c12"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-06-28T18:43:40.668909+00:00"
+  },
+  {
+    "slug": "mainstream-media-zve1f",
+    "title": "Mainstream Media",
+    "creator": "Olaoluwa",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Olaoluwa",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T09:17:59.038406+00:00"
+  },
+  {
+    "slug": "mainstream-media-3-vrzcy",
+    "title": "Mainstream media 3",
+    "creator": "Olalomi",
+    "location": "Kano State",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Olalomi",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T10:40:07.34099+00:00"
+  },
+  {
+    "slug": "job-ideas-bsngu",
+    "title": "Job ideas",
+    "creator": "Rae",
+    "location": "Kano Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rae",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T12:30:11.236705+00:00"
+  },
+  {
+    "slug": "job-ideas-xzyh9",
+    "title": "Job ideas",
+    "creator": "Rae",
+    "location": "Kano, Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rae",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T12:34:09.361016+00:00"
+  },
+  {
+    "slug": "hrm-9ocyb",
+    "title": "HRM",
+    "creator": "Rachael",
+    "location": "Lagos",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rachael",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T12:50:42.103159+00:00"
+  },
+  {
+    "slug": "pm-logic-5jmzo",
+    "title": "PM logic",
+    "creator": "Rachael",
+    "location": "Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rachael",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T12:57:47.052225+00:00"
+  },
+  {
+    "slug": "keys-8gd56",
+    "title": "Keys",
+    "creator": "Lanre",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Lanre",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T13:00:40.262275+00:00"
+  },
+  {
+    "slug": "hrm-e8t03",
+    "title": "Hrm",
+    "creator": "Rae",
+    "location": "Lagos Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rae",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T13:35:05.088659+00:00"
+  },
+  {
+    "slug": "hrm-ideas-v3lkd",
+    "title": "hrm ideas",
+    "creator": "Rae",
+    "location": "Gombe Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Rae",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T13:38:02.703006+00:00"
+  },
+  {
+    "slug": "travel-experience-6ywuw",
+    "title": "Travel experience",
+    "creator": "Ola",
+    "location": "Benin,Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ola",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T19:41:52.071582+00:00"
+  },
+  {
+    "slug": "hope-fbx3v",
+    "title": "Hope",
+    "creator": "Joy",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Joy",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T19:53:45.553934+00:00"
+  },
+  {
+    "slug": "hope-rising-b5dzc",
+    "title": "Hope Rising",
+    "creator": "Nan",
+    "location": "Benin Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Nan",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-04T20:03:31.00362+00:00"
+  },
+  {
+    "slug": "demo-stream-h57z3",
+    "title": "Demo Stream",
+    "creator": "Oluwasogo Ajala",
+    "location": "Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Oluwasogo Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-05T22:31:01.59965+00:00"
+  },
+  {
+    "slug": "my-demo-f0nkr",
+    "title": "My demo",
+    "creator": "Ajala",
+    "location": "Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-05T22:47:57.368195+00:00"
+  },
+  {
+    "slug": "business-wd97y",
+    "title": "Business",
+    "creator": "Peter",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Peter",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x4617ac806cb29e78f1de27454e18f1ca5b6508aa"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-07T14:59:34.94255+00:00"
+  },
+  {
+    "slug": "diy-solar-installation-master-class-ct6bp",
+    "title": "DIY Solar Installation Master Class",
+    "creator": "Elijah Benedict",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Elijah Benedict",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x825bd98a4fa6932783180c51dcacbe5095207d43"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-10T10:28:28.746965+00:00"
+  },
+  {
+    "slug": "diy-solar-installation-master-class-v5tpl",
+    "title": "DIY Solar Installation Master Class",
+    "creator": "Elijah Benedict",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "https://trydriplet.vercel.app/api/video/hn_A_tr0CbveggKIkJLjPJKbTa3tAGKJkT6Iitl_38U?ct=video%2Fquicktime",
+    "split": [
+      {
+        "name": "Elijah Benedict",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x825bd98a4fa6932783180c51dcacbe5095207d43"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-10T10:30:06.353188+00:00"
+  },
+  {
+    "slug": "church-services-pmw55",
+    "title": "Church services",
+    "creator": "Israel",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Israel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x739f1b0e1dc2915d801cbe5ce7cd161c165a5278"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-12T10:31:08.904967+00:00"
+  },
+  {
+    "slug": "night-life-49ng3",
+    "title": "Night life",
+    "creator": "Israel",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Israel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-13T01:22:43.681246+00:00"
+  },
+  {
+    "slug": "live-match-o2et7",
+    "title": "Live Match",
+    "creator": "Bamishebi",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Bamishebi",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-15T21:55:51.161183+00:00"
+  },
+  {
+    "slug": "match-navtr",
+    "title": "match",
+    "creator": "samuel",
+    "location": "",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "samuel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x739f1b0e1dc2915d801cbe5ce7cd161c165a5278"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-15T22:58:29.054301+00:00"
+  },
+  {
+    "slug": "ping-pong-dsmt1",
+    "title": "Ping pong",
+    "creator": "Elizabeth",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Elizabeth",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x1749d72dd449e32fd0147c848a6239005ba924bb"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-18T23:21:57.308496+00:00"
+  },
+  {
+    "slug": "husband-and-wife-series-jyo5z",
+    "title": "Husband and wife series",
+    "creator": "Ajala",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Ajala",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-24T09:46:32.1965+00:00"
+  },
+  {
+    "slug": "pain-in-the-ass-pj7ud",
+    "title": "Pain in the ass",
+    "creator": "Dee",
+    "location": "Osun Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Dee",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-26T23:54:19.989631+00:00"
+  },
+  {
+    "slug": "you-are-an-ass-sometimes-m79zd",
+    "title": "You are an ass sometimes",
+    "creator": "Meee",
+    "location": "Bayelsa Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Meee",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x5c1a1673049d163f02be083fb25888c69ab31fc2"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-27T00:00:29.36548+00:00"
+  },
+  {
+    "slug": "chat-with-eli-sm0jy",
+    "title": "Chat with Eli",
+    "creator": "Elijah Benedict",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Elijah Benedict",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0xe8e0003df98210eafcd33d568f508752a98bd97f"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-07-28T20:19:51.513173+00:00"
+  },
+  {
+    "slug": "macos-gist-7qb0y",
+    "title": "MacOS Gist",
+    "creator": "Khalifa",
+    "location": "Kaduna",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Khalifa",
+        "role": "Creator",
+        "share": 0.7,
+        "address": "0xf6b7ccc20c3b615892f6df18faa17f87b2197790"
+      },
+      {
+        "name": "Kafanchan",
+        "role": "Co-host",
+        "share": 0.2,
+        "address": "0xf0d563C8544007d64A89d51131D5ADeF571Aa36D"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-08-01T20:46:44.980446+00:00"
+  },
+  {
+    "slug": "iphone-hacks-z8u1b",
+    "title": "iPhone hacks",
+    "creator": "Jamal",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Jamal",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x8dee1ef5263229be479357c078aad9551fa6c803"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-08-05T20:48:59.486484+00:00"
+  },
+  {
+    "slug": "free-things-f9sya",
+    "title": "Free Things",
+    "creator": "Oluwasogo Israel",
+    "location": "Kano",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Oluwasogo Israel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x739f1b0e1dc2915d801cbe5ce7cd161c165a5278"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-08-22T09:28:44.969256+00:00"
+  },
+  {
+    "slug": "hidden-gem-a0y22",
+    "title": "Hidden gem",
+    "creator": "Oluwwsogo Israel",
+    "location": "Nigeria",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Oluwwsogo Israel",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x739f1b0e1dc2915d801cbe5ce7cd161c165a5278"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-08-22T21:24:31.586153+00:00"
+  },
+  {
+    "slug": "cyndy-vibe-3i3vh",
+    "title": "Cyndy vibe",
+    "creator": "Cynthia Nnoli",
+    "location": "Abuja",
+    "rate_per_second": 0.0003,
+    "video_url": "",
+    "split": [
+      {
+        "name": "Cynthia Nnoli",
+        "role": "Creator",
+        "share": 0.9,
+        "address": "0x2dc1b81e8d2c7576c4726809248ff8968cfd25ff"
+      },
+      {
+        "name": "AI co-host",
+        "role": "Commentary",
+        "share": 0.1,
+        "address": "0x61c14fe51c3720b4d10798EE4608d161e992B172"
+      }
+    ],
+    "created_at": "2026-09-13T06:15:58.016428+00:00"
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "source": "https://zfkfufsimnjeoeuggomq.supabase.co (Driplet's Arc testnet database, chain eip155:5042002)",
+  "exportedAt": "2026-10-16T04:43:17.126Z",
+  "firstPayment": "2026-06-16T09:29:15.256537+00:00",
+  "lastPayment": "2026-10-03T08:45:05.728422+00:00",
+  "rows": {
+    "payment_events": 50728,
+    "streams": 49
+  },
+  "totals": {
+    "watchCount": 37091,
+    "totalStreamed": 11.1273,
+    "minutesStreamed": 618.183333,
+    "agentCount": 1640,
+    "agentPaid": 8.2,
+    "uniqueWallets": 37,
+    "uniqueCreators": 12
+  },
+  "sha256": {
+    "payment_events.csv": "86b1b440fd5e9ca4096d43fc56c4c5c9b03aae4b230523ab87623d8edd661b21",
+    "streams.json": "bdf1598d577e775a9b9d136dc28b23c4e061c10087cfe60a0c4c143e61a20962"
+  }
+}
