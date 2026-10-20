@@ -4,9 +4,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { formatUnits } from "viem";
 import { createDeveloperWallet, getUsdc, withdrawUsdc } from "@/lib/circle";
+import { getWithdrawable, withdrawGatewayEarnings } from "@/lib/creator-gateway";
 import { resolveStream, creatorAddress, updateSplit } from "@/lib/streams-db";
-import { AGENT_ROLES } from "@/lib/settlement";
+import { AGENT_ROLES, payoutEndpointFilter } from "@/lib/settlement";
 
 /** Email a passwordless magic link. The link returns to /auth/callback. */
 export async function sendMagicLink(formData: FormData) {
@@ -77,10 +79,17 @@ export async function ensureWallet(): Promise<{ address?: string; error?: string
   }
 }
 
-/** The signed-in creator's wallet address + USDC balance. */
+/**
+ * The signed-in creator's wallet address and money. Stream payouts arrive as a
+ * Circle Gateway balance owned by that address (`earnings`), not as USDC in the
+ * wallet itself (`balance`, only non-zero if someone sent USDC there directly).
+ * `withdrawable` is the earnings left after Gateway's fee for moving them.
+ */
 export async function getWalletInfo(): Promise<{
   address?: string;
   balance?: number;
+  earnings?: number;
+  withdrawable?: number;
   error?: string;
 }> {
   const supabase = await createClient();
@@ -97,16 +106,30 @@ export async function getWalletInfo(): Promise<{
     .maybeSingle();
   if (!data) return { error: "No wallet yet." };
 
-  try {
-    const { amount } = await getUsdc(data.circle_wallet_id);
-    return { address: data.address, balance: amount };
-  } catch {
-    return { address: data.address, balance: 0 };
-  }
+  const [onchain, gateway] = await Promise.allSettled([
+    getUsdc(data.circle_wallet_id),
+    getWithdrawable(data.address),
+  ]);
+  return {
+    address: data.address,
+    balance: onchain.status === "fulfilled" ? onchain.value.amount : 0,
+    earnings: gateway.status === "fulfilled" ? Number(formatUnits(gateway.value.balance, 6)) : 0,
+    withdrawable: gateway.status === "fulfilled" ? Number(formatUnits(gateway.value.max, 6)) : 0,
+  };
 }
 
-/** Withdraw USDC from the creator's wallet to any Arc address. */
-export async function withdraw(formData: FormData) {
+/**
+ * Withdraw to any Arc address. Earnings come out of Gateway first (that's where
+ * payouts land); USDC sitting in the wallet itself is used only when the amount
+ * is more than the earnings can cover.
+ */
+export async function withdraw(formData: FormData): Promise<{
+  ok?: true;
+  state?: string;
+  txHash?: string;
+  fee?: string;
+  error?: string;
+}> {
   const to = String(formData.get("to") ?? "").trim();
   const amount = String(formData.get("amount") ?? "").trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(to)) return { error: "Enter a valid 0x… address." };
@@ -121,12 +144,31 @@ export async function withdraw(formData: FormData) {
   const admin = adminClient();
   const { data } = await admin
     .from("creators")
-    .select("circle_wallet_id")
+    .select("circle_wallet_id, address")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!data) return { error: "No wallet found." };
 
   try {
+    const [{ max }, onchain] = await Promise.all([
+      getWithdrawable(data.address).catch(() => ({ max: 0n })),
+      getUsdc(data.circle_wallet_id).catch(() => ({ amount: 0 })),
+    ]);
+    const fromEarnings = Number(formatUnits(max, 6));
+    if (Number(amount) > fromEarnings && Number(amount) > onchain.amount) {
+      return {
+        error: `You can withdraw up to $${Math.max(fromEarnings, onchain.amount).toFixed(6)} right now.`,
+      };
+    }
+    if (Number(amount) <= fromEarnings) {
+      const res = await withdrawGatewayEarnings({
+        walletId: data.circle_wallet_id,
+        address: data.address as `0x${string}`,
+        to: to as `0x${string}`,
+        amount,
+      });
+      return { ok: true, state: "CONFIRMED", txHash: res.txHash, fee: res.fee };
+    }
     const tx = await withdrawUsdc({ walletId: data.circle_wallet_id, to, amount });
     return { ok: true, state: tx.state };
   } catch (e) {
@@ -145,7 +187,9 @@ export interface CreatorStream {
   title: string;
   isLive: boolean;
   drips: number;
-  streamed: number;
+  /** What this creator has actually been paid from the stream: their payout
+   *  rows, so it matches what reaches their wallet. */
+  paidToYou: number;
   split: { name: string; role: string; share: number; fixed: boolean }[];
 }
 
@@ -179,27 +223,36 @@ export async function getCreatorStreams(): Promise<CreatorStream[]> {
 
   const out: CreatorStream[] = [];
   for (const r of mine) {
-    // Per-second watch payments (fixed price → count x rate)…
-    const { count } = await admin
-      .from("payment_events")
-      .select("id", { count: "exact", head: true })
-      .eq("endpoint", `/watch/${r.slug}`);
-    const drips = count ?? 0;
-    // …plus lump payments from viewers' own wallets: MetaMask own-pay, Face ID
-    // (passkey), email onboarding, and the AI patron. These were being ignored,
-    // so a creator who earned only via one of these saw $0. Sum their amounts.
-    const { data: lumps } = await admin
-      .from("payment_events")
-      .select("amount_usdc")
-      .in("endpoint", [`/own/${r.slug}`, `/passkey/${r.slug}`, `/email/${r.slug}`, `/patron/${r.slug}`]);
-    const lumpTotal = (lumps ?? []).reduce((s, x) => s + Number(x.amount_usdc ?? 0), 0);
+    const split = r.split as { name: string; role: string; share: number; address?: string }[];
+    // Payout labels end in the payee's role, spaces written as underscores.
+    const myRoles = new Set(
+      split
+        .filter((p) => (p.address ?? "").toLowerCase() === addr)
+        .map((p) => p.role.replace(/\s+/g, "_")),
+    );
+    const [{ count }, { data: payouts }] = await Promise.all([
+      admin
+        .from("payment_events")
+        .select("id", { count: "exact", head: true })
+        .eq("endpoint", `/watch/${r.slug}`),
+      // Not what viewers paid in (a prepay is mostly unwatched credit, and the
+      // co-host takes a share), but what the treasury actually paid this
+      // creator for seconds watched.
+      admin
+        .from("payment_events")
+        .select("endpoint, amount_usdc")
+        .or(payoutEndpointFilter(r.slug)),
+    ]);
+    const paidToYou = (payouts ?? [])
+      .filter((x) => myRoles.has((x.endpoint as string).split("/").pop() ?? ""))
+      .reduce((s, x) => s + Number(x.amount_usdc ?? 0), 0);
     out.push({
       slug: r.slug,
       title: r.title,
       isLive: !!r.is_live,
-      drips,
-      streamed: drips * Number(r.rate_per_second) + lumpTotal,
-      split: (r.split as { name: string; role: string; share: number }[]).map((p) => ({
+      drips: count ?? 0,
+      paidToYou,
+      split: split.map((p) => ({
         ...p,
         fixed: AGENT_ROLES.has(p.role),
       })),

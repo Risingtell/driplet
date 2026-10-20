@@ -223,9 +223,17 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
     setState("idle");
   }
 
+  // Leaving the page takes the host off air. Next keeps a page we navigate away
+  // from mounted but hidden (cacheComponents) and Back shows it again, so reset
+  // the studio too, or it would still say LIVE over a disconnected room.
   useEffect(() => {
     return () => {
       roomRef.current?.disconnect();
+      roomRef.current = null;
+      setViewers(0);
+      setSharingScreen(false);
+      setMicOn(true);
+      setState("idle");
     };
   }, []);
 

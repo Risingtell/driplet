@@ -1,5 +1,12 @@
 import "server-only";
-import { createPublicClient, createWalletClient, http, hexToSignature } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  erc20Abi,
+  http,
+  hexToSignature,
+  parseUnits,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { ARC, arcChain } from "./arc-network";
 
@@ -74,4 +81,37 @@ export async function relayTransferWithAuthorization(
   const receipt = await pub.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("The transfer reverted on-chain.");
   return hash;
+}
+
+/**
+ * Send USDC from the treasury to `to` on Arc (the ERC-20 view, 6 decimals).
+ * Used to refund a viewer's unwatched prepay. Resolves as soon as the transfer
+ * is submitted, with `confirmed` settling once it is mined. Callers that keep a
+ * ledger need the split: a submitted transfer may still land even if waiting
+ * for its receipt fails, so it must never be treated as unsent.
+ */
+export async function sendTreasuryUsdc(
+  to: `0x${string}`,
+  amountUsd: number,
+): Promise<{ hash: `0x${string}`; confirmed: Promise<void> }> {
+  const key = process.env.SELLER_PRIVATE_KEY as `0x${string}` | undefined;
+  if (!key) throw new Error("Treasury wallet is not configured.");
+
+  const account = privateKeyToAccount(key);
+  const wallet = createWalletClient({ account, chain: arc, transport: http() });
+  const pub = createPublicClient({ chain: arc, transport: http() });
+
+  const hash = await wallet.writeContract({
+    address: USDC,
+    abi: erc20Abi,
+    functionName: "transfer",
+    args: [to, parseUnits(amountUsd.toFixed(6), 6)],
+  });
+  const confirmed = pub.waitForTransactionReceipt({ hash }).then((receipt) => {
+    if (receipt.status !== "success") throw new Error("The refund reverted on-chain.");
+  });
+  // The caller awaits this later; until then a rejection must not count as
+  // unhandled (Node would kill the function).
+  confirmed.catch(() => {});
+  return { hash, confirmed };
 }

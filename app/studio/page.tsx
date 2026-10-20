@@ -7,11 +7,12 @@ import { getWalletInfo, getCreatorStreams } from "@/app/creator/actions";
 export default async function OverviewPage() {
   const [info, streams] = await Promise.all([getWalletInfo(), getCreatorStreams()]);
   const totalDrips = streams.reduce((s, x) => s + x.drips, 0);
-  const totalStreamed = streams.reduce((s, x) => s + x.streamed, 0);
+  const totalEarned = streams.reduce((s, x) => s + x.paidToYou, 0);
+  const ready = (info.withdrawable ?? 0) + (info.balance ?? 0);
 
   const stats = [
-    { label: "Total earned", value: `$${totalStreamed.toFixed(4)}`, sub: `≈ ${naira(totalStreamed)}`, icon: Droplet },
-    { label: "Wallet balance (withdrawable)", value: `$${(info.balance ?? 0).toFixed(4)}`, sub: `≈ ${naira(info.balance ?? 0)}`, icon: Wallet },
+    { label: "Total earned", value: `$${totalEarned.toFixed(4)}`, sub: `≈ ${naira(totalEarned)}`, icon: Droplet },
+    { label: "Ready to withdraw", value: `$${ready.toFixed(4)}`, sub: `≈ ${naira(ready)}`, icon: Wallet },
     { label: "Per-second payments", value: totalDrips.toLocaleString(), sub: undefined as string | undefined, icon: Droplet },
     { label: "Streams", value: String(streams.length), sub: undefined as string | undefined, icon: Clapperboard },
   ];
@@ -20,9 +21,9 @@ export default async function OverviewPage() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Your earnings and streams at a glance. &quot;Total earned&quot; is everything viewers have
-        paid you; &quot;wallet balance&quot; is what has settled to your wallet and is ready to
-        withdraw.
+        Your earnings and streams at a glance. &quot;Total earned&quot; is everything you have been
+        paid for seconds watched; &quot;ready to withdraw&quot; is what you can send out right now,
+        after a small network fee.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

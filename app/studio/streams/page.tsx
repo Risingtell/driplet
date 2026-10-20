@@ -66,8 +66,8 @@ export default async function StreamsPage() {
                   ) : null}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  {s.drips.toLocaleString()} drips · ${s.streamed.toFixed(4)} streamed · ≈{" "}
-                  {naira(s.streamed)}
+                  {s.drips.toLocaleString()} drips · ${s.paidToYou.toFixed(4)} paid to you · ≈{" "}
+                  {naira(s.paidToYou)}
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">

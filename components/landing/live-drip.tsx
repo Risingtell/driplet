@@ -21,6 +21,7 @@ export function LiveDrip() {
   const [seconds, setSeconds] = useState(0);
   const [paid, setPaid] = useState(0);
   const startedAt = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     // Read the clock on mount (not during render) to stay compatible with
@@ -31,7 +32,15 @@ export function LiveDrip() {
       setSeconds(Math.floor(elapsed));
       setPaid(elapsed * RATE_PER_SECOND);
     }, 100);
-    return () => clearInterval(id);
+    // Next keeps this page mounted but hidden after we navigate away, so pause
+    // the loop then and pick it up again if the page comes back. The element is
+    // captured now because React detaches refs before running the cleanup.
+    const video = videoRef.current;
+    video?.play().catch(() => {});
+    return () => {
+      clearInterval(id);
+      video?.pause();
+    };
   }, []);
 
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
@@ -43,6 +52,7 @@ export function LiveDrip() {
       {/* faux video surface */}
       <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl bg-black">
         <video
+          ref={videoRef}
           className="absolute inset-0 size-full object-cover"
           src="https://media.w3.org/2010/05/sintel/trailer.mp4"
           autoPlay

@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCreatorGateway, ensureCreatorFunded } from "@/lib/server-gateway";
 import { streamEndpoint, type Stream } from "@/lib/streams";
+import { getRefunded } from "@/lib/viewer-credit";
 
 const COHOST_FALLBACK = process.env.COHOST_ADDRESS;
 const SELLER = (process.env.SELLER_ADDRESS ?? "").toLowerCase();
@@ -35,7 +36,8 @@ export function payoutEndpointFilter(slug: string): string {
 
 export interface StreamRevenue {
   /** Cash the treasury actually holds for this stream: per-second drips plus
-   *  own-wallet / Face ID / patron lump prepays. */
+   *  own-wallet / Face ID / patron lump prepays, minus unwatched prepay already
+   *  refunded to viewers. */
   cashIn: number;
   /** What the treasury has already paid out to its human payees. */
   paidOut: number;
@@ -64,7 +66,7 @@ export async function getStreamRevenue(
   supabase: SupabaseClient,
   stream: Stream,
 ): Promise<StreamRevenue> {
-  const [watch, own, paid] = await Promise.all([
+  const [watch, own, paid, refunded] = await Promise.all([
     supabase
       .from("payment_events")
       .select("id", { count: "exact", head: true })
@@ -86,12 +88,18 @@ export async function getStreamRevenue(
       .from("payment_events")
       .select("endpoint, amount_usdc")
       .or(payoutEndpointFilter(stream.slug)),
+    getRefunded(supabase, { slug: stream.slug }),
   ]);
+
+  // Refunded prepay has left the treasury. If we can't tell how much, stop
+  // here rather than count it as income: every caller would otherwise pay out
+  // against money that may already be back in a viewer's wallet.
+  if (refunded === null) throw new Error("Could not read viewer refunds.");
 
   const sum = (rows: { amount_usdc?: string | number | null }[] | null) =>
     (rows ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
 
-  const cashIn = (watch.count ?? 0) * stream.ratePerSecond + sum(own.data);
+  const cashIn = Math.max(0, (watch.count ?? 0) * stream.ratePerSecond + sum(own.data) - refunded);
   const paidOut = sum(paid.data);
 
   // Payout labels end in the payee's role, spaces written as underscores.
@@ -179,4 +187,41 @@ export async function settleStreamSeconds(
   }
 
   return settled;
+}
+
+// One settle call covers at most this many watched seconds (the watch page
+// settles every 20s; the Owncast sidecar settles through settleStreamSeconds
+// directly, so long real sessions are unaffected).
+const MAX_SECONDS_PER_CALL = 600;
+
+/**
+ * Settle a client-reported number of watched seconds, clamped so this stream's
+ * cumulative payouts can never exceed the cash it actually holds.
+ *
+ * Solvency guard: `seconds` comes from the client, so before settling we
+ * re-derive the stream's real recorded income and what has already been paid
+ * out, and clamp the interval to fit. An attacker posting a huge `seconds` gets
+ * a paused treasury, not a drained one. Solvency is a cash question, not an
+ * earnings one: the treasury can pay a creator for seconds genuinely watched out
+ * of the prepay that funded them.
+ */
+export async function settleWithinIncome(
+  supabase: SupabaseClient,
+  stream: Stream,
+  requestedSeconds: number,
+  opts: { origin: string },
+): Promise<{ settled: PayeeSettlement[]; guard?: "solvency" }> {
+  const humanShare = stream.split
+    .filter((p) => !AGENT_ROLES.has(p.role))
+    .reduce((s, p) => s + p.share, 0);
+
+  let seconds = Math.min(Math.floor(requestedSeconds), MAX_SECONDS_PER_CALL);
+  if (humanShare > 0) {
+    const { cashIn, paidOut } = await getStreamRevenue(supabase, stream);
+    const affordable = Math.floor((cashIn - paidOut) / (humanShare * stream.ratePerSecond));
+    seconds = Math.min(seconds, Math.max(0, affordable));
+  }
+  if (seconds <= 0) return { settled: [], guard: "solvency" };
+
+  return { settled: await settleStreamSeconds(stream, seconds, opts) };
 }

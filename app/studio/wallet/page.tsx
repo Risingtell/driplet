@@ -3,5 +3,12 @@ import { getWalletInfo } from "@/app/creator/actions";
 
 export default async function WalletPage() {
   const info = await getWalletInfo();
-  return <WalletPanel address={info.address ?? ""} balance={info.balance ?? 0} />;
+  return (
+    <WalletPanel
+      address={info.address ?? ""}
+      balance={info.balance ?? 0}
+      earnings={info.earnings ?? 0}
+      withdrawable={info.withdrawable ?? 0}
+    />
+  );
 }

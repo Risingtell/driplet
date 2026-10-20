@@ -30,12 +30,9 @@ type Status = "idle" | "connecting" | "streaming" | "retrying" | "waiting" | "pr
 // Kept short so the autonomous agent-to-agent payment is visible in a demo.
 const AGENT_PAY_EVERY = 20;
 
-// Default own-wallet session: one signature prepays this much (capped by the
-// viewer's balance), enough to watch for hours so it never runs out mid-demo.
-// What a viewer prepays when they open a session. Deliberately small: the
-// unspent remainder currently lives in this component's memory, so anything
-// they don't watch is stranded when the tab closes. Keep this low until viewer
-// credit is persisted server-side and a returning viewer can resume it.
+// What a viewer prepays when they open a session (capped by their balance).
+// Whatever they don't watch goes back to their wallet when they leave the
+// stream, so this only needs to cover a comfortable sitting.
 const SESSION_USD = 0.5;
 
 // Free preview: seconds a viewer can watch on the demo wallet before being asked
@@ -203,6 +200,9 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
 
   // Best-effort: report `seconds` more of the current session watched down, so
   // the server's record of remaining credit stays current for the next visit.
+  // The server's figure wins if it is clearly lower than ours (the leftover was
+  // refunded from elsewhere), so a session can't keep drawing on money that has
+  // already gone back to the wallet.
   const syncConsumption = useCallback(
     (seconds: number) => {
       const payer = payerRef.current;
@@ -211,7 +211,36 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payer, seconds }),
-      }).catch(() => {});
+      })
+        .then((r) => r.json())
+        .then((j: { ok?: boolean; remaining?: number }) => {
+          if (!j.ok || typeof j.remaining !== "number" || payerRef.current !== payer) return;
+          const slack = 2 * AGENT_PAY_EVERY * stream.ratePerSecond;
+          if (j.remaining < ownBudgetRef.current - slack) {
+            ownBudgetRef.current = j.remaining;
+            setOwnBudget(j.remaining);
+          }
+        })
+        .catch(() => {});
+    },
+    [stream.slug, stream.ratePerSecond],
+  );
+
+  // Before paying on this stream, send back anything this wallet left unwatched
+  // on other streams, so a viewer moving between creators never finds their
+  // money stuck behind the last one. Returns how much came back.
+  const reclaimOtherCredit = useCallback(
+    async (payer: string): Promise<number> => {
+      try {
+        const j = (await fetch("/api/viewer/refund-others", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payer, except: stream.slug }),
+        }).then((r) => r.json())) as { refunded?: number };
+        return j.refunded ?? 0;
+      } catch {
+        return 0;
+      }
     },
     [stream.slug],
   );
@@ -242,6 +271,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         // A return visit with leftover credit resumes it — no new charge, and no
         // need to check the wallet balance since the money's already prepaid.
         if (await tryResumeCredit(session.address, "passkey")) return;
+        await reclaimOtherCredit(session.address);
 
         const bal = await session.balance();
         if (bal < 0.01) {
@@ -296,7 +326,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         setPkBusy(false);
       }
     },
-    [stream.slug, tryResumeCredit],
+    [stream.slug, tryResumeCredit, reclaimOtherCredit],
   );
 
   const copyAddr = useCallback((addr: string | null) => {
@@ -329,8 +359,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
 
         // Resume leftover credit from a prior visit before charging again.
         if (await tryResumeCredit(info.address, "email")) return;
-
-        const bal = info.balance ?? 0;
+        let bal = info.balance ?? 0;
+        if ((await reclaimOtherCredit(info.address)) > 0) {
+          const fresh = (await fetch("/api/viewer-wallet").then((r) => r.json())) as { balance?: number };
+          bal = fresh.balance ?? bal;
+        }
         if (bal < 0.01) {
           setEmailNeedsFunds(true);
           return;
@@ -363,7 +396,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         setEmailBusy(false);
       }
     },
-    [stream.slug, tryResumeCredit],
+    [stream.slug, tryResumeCredit, reclaimOtherCredit],
   );
 
   const requestEmailCode = useCallback(async (email: string) => {
@@ -411,6 +444,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       const addr = await connectArcWallet();
       // Resume leftover credit from a prior visit before charging again.
       if (await tryResumeCredit(addr, "metamask")) return;
+      await reclaimOtherCredit(addr);
       const bal = await getUsdcBalance(addr);
       if (bal < 0.01) {
         setOwnErr(
@@ -452,7 +486,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     } finally {
       setOwnBusy(false);
     }
-  }, [stream.slug, tryResumeCredit]);
+  }, [stream.slug, tryResumeCredit, reclaimOtherCredit]);
 
   // Every AGENT_PAY_EVERY seconds the stream treasury (a) pays its AI co-host and
   // (b) splits that interval's income out to each human payee's own wallet on Arc.
@@ -575,6 +609,49 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     watchingRef.current = false;
     setStatus("idle");
     videoRef.current?.pause();
+  }, []);
+
+  // Leaving the stream ends the session. Next keeps a page we navigate away
+  // from mounted but hidden (cacheComponents), so without this the video kept
+  // playing and the meter kept charging on whatever page came next. We stop
+  // both, then settle the seconds watched since the last sync and send the
+  // unwatched rest of the prepay back to the viewer's wallet.
+  const leave = useCallback(() => {
+    stop();
+    const payer = payerRef.current;
+    if (payModeRef.current !== "own" || !payer) return;
+    const seconds = tickCountRef.current % AGENT_PAY_EVERY;
+    tickCountRef.current -= seconds;
+    payerRef.current = null;
+    ownBudgetRef.current = 0;
+    setOwnBudget(0);
+    setNeedTopup(true);
+    // keepalive lets the request outlive a closing tab.
+    fetch(`/api/watch/${stream.slug}/refund`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payer, seconds }),
+      keepalive: true,
+    }).catch(() => {});
+  }, [stop, stream.slug]);
+
+  const leaveRef = useRef(leave);
+  useEffect(() => {
+    leaveRef.current = leave;
+  });
+  // Runs on a hidden route (its effects are cleaned up) and on a real unmount;
+  // pagehide covers closing the tab or leaving the site. React detaches refs
+  // before it runs this cleanup, so the video element is captured up front:
+  // through videoRef it would already be null and keep playing.
+  useEffect(() => {
+    const video = videoRef.current;
+    const onPageHide = () => leaveRef.current();
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      video?.pause();
+      leaveRef.current();
+    };
   }, []);
 
   const watching = status !== "idle";
@@ -1003,6 +1080,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             {lastTx && (
               <p className="tabular mt-1 font-mono text-xs text-muted-foreground">
                 prepaid on-chain · tx {lastTx.slice(0, 12)}…
+              </p>
+            )}
+            {!needTopup && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Leave this stream and whatever you haven&apos;t watched goes back to your wallet.
               </p>
             )}
             {needTopup && (

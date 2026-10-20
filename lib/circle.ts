@@ -107,3 +107,29 @@ export async function payAndConfirm(opts: {
   }
   return { txHash: result.txHash, state: result.state };
 }
+
+/**
+ * Call a contract function from a developer-controlled wallet and wait for it
+ * to land. Gas comes out of the wallet's own USDC on Arc.
+ */
+export async function callContractAsWallet(opts: {
+  walletId: string;
+  contractAddress: string;
+  abiFunctionSignature: string;
+  abiParameters: unknown[];
+}): Promise<{ txHash: string }> {
+  const res = await client().createContractExecutionTransaction({
+    walletId: opts.walletId,
+    contractAddress: opts.contractAddress,
+    abiFunctionSignature: opts.abiFunctionSignature,
+    abiParameters: opts.abiParameters,
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+  });
+  const id = res.data?.id;
+  if (!id) throw new Error("The contract call could not be initiated.");
+  const result = await waitForTransaction(id);
+  if (FAILURE_STATES.has(result.state) || !result.txHash) {
+    throw new Error(`The contract call ended ${result.state.toLowerCase()}.`);
+  }
+  return { txHash: result.txHash };
+}
