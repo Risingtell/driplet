@@ -93,7 +93,9 @@ export default function Landing() {
             </Button>
           </div>
 
-          <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
+          {/* Narrower gaps on phones: at 24px the three figures could not fit a
+              320px screen and stretched the whole hero past its edge. */}
+          <div className="mt-10 flex items-center gap-4 text-sm text-muted-foreground sm:gap-6">
             <div>
               <p className="tabular font-mono text-xl font-semibold text-foreground">&lt;500ms</p>
               <p className="text-xs">settlement on Arc</p>
