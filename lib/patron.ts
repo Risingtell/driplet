@@ -380,20 +380,40 @@ const DECISIONS_READ = 60;
 /** Public status: who the patron is, what it holds, and its recent decisions. */
 export async function getPatronStatus(): Promise<PatronStatus> {
   const address = patronAddress();
-  const [paid, decisions, balance] = await Promise.all([
-    supabase.from("payment_events").select("amount_usdc").like("endpoint", "/patron/%"),
+  const decisionRows = () =>
     supabase
       .from("payment_events")
-      .select("created_at, raw")
+      .select("id, created_at, raw")
       .eq("endpoint", DECISION_ENDPOINT)
-      .order("created_at", { ascending: false })
-      .limit(DECISIONS_READ),
+      .order("created_at", { ascending: false });
+  const [paid, recent, history, balance] = await Promise.all([
+    supabase.from("payment_events").select("amount_usdc").like("endpoint", "/patron/%"),
+    decisionRows().limit(DECISIONS_READ),
+    // The latest decisions that weren't "stop". An empty wallet says stop on
+    // every cycle, and a long run of those would otherwise push the patron's
+    // real history (its payments) off the page.
+    decisionRows().neq("raw->>action", "stop").limit(DECISIONS_SHOWN),
     address ? patronBalance(address).catch(() => 0) : Promise.resolve(0),
   ]);
   const rows = paid.data ?? [];
 
+  type DecisionRow = { id: string; created_at: string; raw: unknown };
+  const recentRows = (recent.data ?? []) as DecisionRow[];
+  const historyRows = (history.data ?? []) as DecisionRow[];
+  // Newest first: the recent window, then the older history past its end.
+  const oldestRecent = recentRows[recentRows.length - 1]?.created_at;
+  const inRecent = new Set(recentRows.map((r) => r.id));
+  const timeline = [
+    ...recentRows,
+    ...historyRows.filter((r) => !inRecent.has(r.id) && (!oldestRecent || r.created_at < oldestRecent)),
+  ];
+  // The window was full, so the run it ends in may carry on past it.
+  const windowCut = recentRows.length === DECISIONS_READ ? recentRows.length - 1 : -1;
+
   const collapsed: PatronStatus["decisions"] = [];
-  for (const d of decisions.data ?? []) {
+  let cutGroup: PatronStatus["decisions"][number] | null = null;
+  for (let i = 0; i < timeline.length; i++) {
+    const d = timeline[i];
     const raw = (d.raw ?? {}) as {
       action?: string;
       slug?: string | null;
@@ -402,7 +422,7 @@ export async function getPatronStatus(): Promise<PatronStatus> {
       tx?: string | null;
     };
     const entry = {
-      at: d.created_at as string,
+      at: d.created_at,
       action: raw.action ?? "skip",
       slug: raw.slug ?? null,
       // Same clean-up new LLM rationales already get when recorded; older rows
@@ -411,24 +431,46 @@ export async function getPatronStatus(): Promise<PatronStatus> {
       paidUsd: raw.paidUsd ?? 0,
       tx: raw.tx ?? null,
       repeats: 1,
-      since: d.created_at as string,
+      since: d.created_at,
     };
     const prev = collapsed[collapsed.length - 1];
     // Rows arrive newest first. A payment is its own event and never merges;
-    // the same non-paying decision again just extends the run backwards.
+    // the same non-paying decision again just extends the run backwards. Stops
+    // merge whatever balance their wording quotes: they are all "out of money".
     if (
       prev &&
       entry.action !== "watch" &&
       prev.action === entry.action &&
       prev.slug === entry.slug &&
-      prev.rationale === entry.rationale
+      (entry.action === "stop" || prev.rationale === entry.rationale)
     ) {
       prev.repeats += 1;
       prev.since = entry.at;
+      if (i === windowCut) cutGroup = prev;
       continue;
     }
     if (collapsed.length === DECISIONS_SHOWN) break;
     collapsed.push(entry);
+    if (i === windowCut) cutGroup = entry;
+  }
+
+  // A stop run that ran past the window was only partly counted. Every
+  // decision between the last non-stop before it and its newest row is part of
+  // it, so count those exactly and take its true start.
+  if (cutGroup?.action === "stop") {
+    const group = cutGroup;
+    const boundary = historyRows.find((r) => r.created_at < group.since)?.created_at;
+    let q = supabase
+      .from("payment_events")
+      .select("created_at", { count: "exact" })
+      .eq("endpoint", DECISION_ENDPOINT)
+      .lte("created_at", group.at);
+    if (boundary) q = q.gt("created_at", boundary);
+    const run = await q.order("created_at", { ascending: true }).limit(1);
+    if (!run.error && run.count) {
+      group.repeats = run.count;
+      group.since = (run.data?.[0]?.created_at as string | undefined) ?? group.since;
+    }
   }
 
   return {

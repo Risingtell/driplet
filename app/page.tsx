@@ -29,7 +29,7 @@ export default function Landing() {
   return (
     <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5">
       {/* Header */}
-      <header className="flex items-center justify-between gap-4 py-5">
+      <header className="flex items-center justify-between gap-2 py-5 sm:gap-4">
         <Link href="/" aria-label="Driplet home">
           <Logo />
         </Link>
@@ -44,7 +44,7 @@ export default function Landing() {
             Why Driplet
           </Link>
         </nav>
-        <div className="flex shrink-0 items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
           <ThemeToggle />
           <Button
             asChild
@@ -53,7 +53,7 @@ export default function Landing() {
             className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary"
           >
             <Link href="/explore">
-              <Play className="size-4" /> Watch live
+              <Play className="size-4" /> <span className="max-[399px]:sr-only">Watch live</span>
             </Link>
           </Button>
           <Button asChild size="sm">
