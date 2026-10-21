@@ -13,6 +13,8 @@ create table if not exists public.viewer_refunds (
   payer text not null,
   slug text not null,
   amount_usdc numeric not null default 0,
+  -- The refund's own network fee, which came out of it (Driplet pays no gas).
+  fee_usdc numeric not null default 0,
   status text not null default 'pending' check (status in ('pending', 'sent', 'failed')),
   tx_hash text,
   created_at timestamptz not null default now()

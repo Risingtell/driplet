@@ -25,7 +25,7 @@ const shipped = [
   },
   {
     title: "Pay only for what you watch",
-    body: "Viewers prepay a small amount and watch it down by the second. Whatever they don't watch goes back to their wallet when they leave, so it can be spent on another creator.",
+    body: "Viewers prepay a small amount and watch it down by the second. Whatever they don't watch goes back to their wallet when they leave, less the transfer's fraction-of-a-cent network fee, so it can be spent on another creator.",
   },
   {
     title: "A real AI co-host that earns",
@@ -36,12 +36,12 @@ const shipped = [
     body: "An autonomous viewer agent with its own funded wallet decides what deserves its money and pays gaslessly from its own address. Every decision, refusals included, is public on the live proof page.",
   },
   {
-    title: "Pay from your own wallet, gas-free",
-    body: "One EIP-3009 signature and the treasury relays it on-chain. No gas, no deposit, no plumbing.",
+    title: "Pay from your own wallet",
+    body: "One USDC payment from any Arc wallet. Its network fee is paid in USDC too, about a tenth of a cent, so no second token and no deposit are needed.",
   },
   {
     title: "Withdraw earnings to any wallet",
-    body: "Creator earnings collect in Circle Gateway and come out to any Arc address from the studio. The treasury submits the transfer and pays its gas, so creators never need gas money.",
+    body: "Creator earnings collect in Circle Gateway and come out to any Arc address from the studio. The network fees come out of the withdrawal, so creators never need gas money up front.",
   },
   {
     title: "Creator studio with auto-created wallets",
@@ -72,7 +72,7 @@ const shipped = [
 const next = [
   {
     title: "Face ID on mainnet",
-    body: "Face ID wallets already ran on testnet: no app, no seed phrase, no extension. On mainnet they switch on once Circle issues the mainnet client key. Email and your own wallet work today.",
+    body: "Face ID wallets already ran on testnet: no app, no seed phrase, no extension. On mainnet the wallet pays its own network fee in USDC, and it switches on after a live test. Email and your own wallet work today.",
   },
   {
     title: "Passkey login for creators",

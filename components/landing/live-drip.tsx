@@ -136,8 +136,8 @@ export function LiveDrip() {
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Every second auto-splits to the creator, co-host, and the AI co-host, settled in USDC,
-        gas-free.
+        Every second auto-splits to the creator, co-host, and the AI co-host, settled in USDC on
+        Arc.
       </p>
     </div>
   );

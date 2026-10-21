@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveStream } from "@/lib/streams-db";
 import { getStreamRevenue } from "@/lib/settlement";
 import { getViewerCredit } from "@/lib/viewer-credit";
-import { sendTreasuryUsdc } from "@/lib/relayer";
+import { estimateTreasuryUsdcFee, sendTreasuryUsdc } from "@/lib/relayer";
 
 /**
  * Send a viewer's unwatched prepay on a stream back to the wallet that paid it,
@@ -22,6 +22,11 @@ import { sendTreasuryUsdc } from "@/lib/relayer";
  * Fails closed. Each attempt first claims a 'pending' row (one per payer and
  * stream, enforced by a unique index), and only then works out the amount, so
  * two simultaneous requests can never both send the same leftover.
+ *
+ * Driplet pays no one's gas, so the refund's own network fee comes out of it.
+ * The row's amount is what left the treasury (what the viewer received plus
+ * that fee), which is what their credit and the stream's cash both drop by;
+ * fee_usdc says how much of it was the fee.
  */
 
 // Below this a refund costs about as much in gas as it returns.
@@ -31,7 +36,9 @@ const PREPAY_PREFIXES = ["/own/", "/passkey/", "/email/"];
 
 export interface RefundResult {
   slug: string;
+  /** What reached the viewer's wallet, after the network fee. */
   amount: number;
+  feeUsd?: number;
   tx?: string;
   status: "sent" | "nothing" | "busy" | "failed";
 }
@@ -61,17 +68,25 @@ export async function refundViewer(
       getViewerCredit(supabase, slug, payer),
       getStreamRevenue(supabase, stream),
     ]);
-    const amount = Math.floor(Math.min(credit.remaining, revenue.held) * 1e6) / 1e6;
+    const gross = Math.floor(Math.min(credit.remaining, revenue.held) * 1e6) / 1e6;
+    if (gross < MIN_REFUND) {
+      await release();
+      return { slug, amount: 0, status: "nothing" };
+    }
+    // The transfer's network fee comes out of the refund.
+    const feeEstimate = await estimateTreasuryUsdcFee(payer, gross);
+    const amount = Math.floor((gross - feeEstimate) * 1e6) / 1e6;
     if (amount < MIN_REFUND) {
       await release();
       return { slug, amount: 0, status: "nothing" };
     }
 
-    // Record the amount before any money moves, so a crash after sending still
-    // counts it as refunded rather than offering it again.
+    // Record the most this can take from the treasury before any money moves,
+    // so a crash after sending still counts it as refunded rather than
+    // offering it again.
     const { error: amountError } = await supabase
       .from("viewer_refunds")
-      .update({ amount_usdc: String(amount) })
+      .update({ amount_usdc: String(gross) })
       .eq("id", claim.id);
     if (amountError) {
       await release();
@@ -87,16 +102,30 @@ export async function refundViewer(
       return { slug, amount: 0, status: "failed" };
     }
     await supabase.from("viewer_refunds").update({ tx_hash: sent.hash }).eq("id", claim.id);
+    let feeUsd: number;
     try {
-      await sent.confirmed;
+      ({ feeUsd } = await sent.confirmed);
     } catch {
       // Submitted but unconfirmed (or reverted). Leave it 'pending' with its
-      // hash: it still counts as refunded and blocks a second send, which is
-      // the safe side until someone checks the hash.
+      // hash and the full reserved amount: it still counts as refunded and
+      // blocks a second send, which is the safe side until someone checks it.
       return { slug, amount, tx: sent.hash, status: "failed" };
     }
-    await supabase.from("viewer_refunds").update({ status: "sent" }).eq("id", claim.id);
-    return { slug, amount, tx: sent.hash, status: "sent" };
+    // Settle the row at exactly what left the treasury: the refund plus the
+    // fee it really cost (the estimate had headroom, which stays the viewer's).
+    const settled = Math.round((amount + feeUsd) * 1e6) / 1e6;
+    const { error: feeColumnError } = await supabase
+      .from("viewer_refunds")
+      .update({ status: "sent", amount_usdc: String(settled), fee_usdc: String(feeUsd) })
+      .eq("id", claim.id);
+    if (feeColumnError) {
+      // fee_usdc not migrated yet: keep the exact total, the fee split is lost.
+      await supabase
+        .from("viewer_refunds")
+        .update({ status: "sent", amount_usdc: String(settled) })
+        .eq("id", claim.id);
+    }
+    return { slug, amount, feeUsd, tx: sent.hash, status: "sent" };
   } catch {
     // Reached only before any send (reads failed), so nothing moved.
     await release();

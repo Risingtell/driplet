@@ -107,8 +107,8 @@ export default function Landing() {
             </div>
             <div className="h-8 w-px bg-border" />
             <div>
-              <p className="tabular font-mono text-xl font-semibold text-foreground">0 gas</p>
-              <p className="text-xs">for your fans</p>
+              <p className="tabular font-mono text-xl font-semibold text-foreground">USDC</p>
+              <p className="text-xs">the only token you need</p>
             </div>
           </div>
         </div>

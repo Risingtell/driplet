@@ -11,10 +11,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import { ARC, arcChain } from "./arc-network";
 
 /**
- * Gasless own-wallet payments. A viewer signs an EIP-3009
- * TransferWithAuthorization over Arc's USDC (no gas, no Gateway deposit — just a
- * signature in their wallet). The treasury relays it on-chain here, so the
- * viewer's own USDC moves to the payee.
+ * Treasury-side transfers. The house AI patron signs an EIP-3009
+ * TransferWithAuthorization and the treasury relays it here (house money paying
+ * for its own agent). Viewers no longer use this: Driplet pays no one's gas, so
+ * they send their own transfers (lib/own-wallet.ts) and the server only checks
+ * them (lib/viewer-payment.ts).
  */
 const USDC = ARC.usdc;
 const arc = arcChain;
@@ -84,16 +85,52 @@ export async function relayTransferWithAuthorization(
 }
 
 /**
+ * Gas on Arc is paid in USDC from the same balance (the native view has 18
+ * decimals, the ERC-20 view 6). Convert a native wei amount to dollars,
+ * rounding up so a fee is never understated.
+ */
+export function weiToUsd(wei: bigint): number {
+  return Number((wei + 10n ** 12n - 1n) / 10n ** 12n) / 1e6;
+}
+
+/**
+ * What the treasury will pay in gas to send `amountUsd` USDC to `to`, with
+ * headroom. Driplet never pays anyone's network fee, so whoever a treasury
+ * transfer serves has this taken out of their amount before it is sent.
+ */
+export async function estimateTreasuryUsdcFee(to: `0x${string}`, amountUsd: number): Promise<number> {
+  const key = process.env.SELLER_PRIVATE_KEY as `0x${string}` | undefined;
+  if (!key) throw new Error("Treasury wallet is not configured.");
+  const account = privateKeyToAccount(key);
+  const pub = createPublicClient({ chain: arc, transport: http() });
+  const [gas, block, priority] = await Promise.all([
+    pub.estimateContractGas({
+      account,
+      address: USDC,
+      abi: erc20Abi,
+      functionName: "transfer",
+      args: [to, parseUnits(amountUsd.toFixed(6), 6)],
+    }),
+    pub.getBlock(),
+    pub.estimateMaxPriorityFeePerGas(),
+  ]);
+  // A quarter on top of today's base fee and tip covers a price move before
+  // the transfer lands; the exact cost is read back from its receipt.
+  const price = (block.baseFeePerGas ?? 0n) + priority;
+  return weiToUsd((gas * price * 125n) / 100n);
+}
+
+/**
  * Send USDC from the treasury to `to` on Arc (the ERC-20 view, 6 decimals).
- * Used to refund a viewer's unwatched prepay. Resolves as soon as the transfer
- * is submitted, with `confirmed` settling once it is mined. Callers that keep a
+ * Resolves as soon as the transfer is submitted, with `confirmed` settling once
+ * it is mined, carrying the exact gas it cost in dollars. Callers that keep a
  * ledger need the split: a submitted transfer may still land even if waiting
  * for its receipt fails, so it must never be treated as unsent.
  */
 export async function sendTreasuryUsdc(
   to: `0x${string}`,
   amountUsd: number,
-): Promise<{ hash: `0x${string}`; confirmed: Promise<void> }> {
+): Promise<{ hash: `0x${string}`; confirmed: Promise<{ feeUsd: number }> }> {
   const key = process.env.SELLER_PRIVATE_KEY as `0x${string}` | undefined;
   if (!key) throw new Error("Treasury wallet is not configured.");
 
@@ -108,7 +145,8 @@ export async function sendTreasuryUsdc(
     args: [to, parseUnits(amountUsd.toFixed(6), 6)],
   });
   const confirmed = pub.waitForTransactionReceipt({ hash }).then((receipt) => {
-    if (receipt.status !== "success") throw new Error("The refund reverted on-chain.");
+    if (receipt.status !== "success") throw new Error("The transfer reverted on-chain.");
+    return { feeUsd: weiToUsd(receipt.gasUsed * receipt.effectiveGasPrice) };
   });
   // The caller awaits this later; until then a rejection must not count as
   // unhandled (Node would kill the function).

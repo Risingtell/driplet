@@ -19,7 +19,7 @@
 A creator goes live, and viewers pay a fraction of a cent for every second they watch. Stop watching, stop paying. No subscription, no bank account, no chargebacks. Each stream runs its own autonomous on-chain treasury that splits incoming drips in real time between the creator, a co-host, and a real AI agent it pays for live commentary, so money flows in from the audience and back out to people and agents with no platform in the middle.
 
 > Built for the **Lepton Agents Hackathon** (Canteen, with Circle on Arc). Answers **RFB #3, the "Owncast per-second streaming webhook sidecar"** from Canteen's request-for-payments-founders list, live at [`/sidecar`](https://trydriplet.vercel.app/sidecar).
-> **Circle stack used:** Gateway Nanopayments (batched EIP-3009, makes sub-cent payments viable) · x402 (every charge and agent call) · Developer-Controlled Wallets (creator payouts) · Modular Wallets passkey/Face ID (gasless viewer onboarding) · plus a gasless EIP-3009 relay for own-wallet pay.
+> **Circle stack used:** Gateway Nanopayments (batched EIP-3009, makes sub-cent payments viable) · x402 (every charge and agent call) · Developer-Controlled Wallets (creator payouts and email wallets) · Modular Wallets passkey/Face ID (viewer onboarding) · Gateway delegates for creator withdrawals.
 > Live: **https://trydriplet.vercel.app** · Proof feed: **/impact** · Demo video: **[youtu.be/PaQt4rzGJC4](https://youtu.be/PaQt4rzGJC4)** · X: **[@agentdriplet](https://x.com/agentdriplet)**
 
 ## The delta: everything here was built during Lepton
@@ -41,9 +41,9 @@ A payment worth a fraction of a cent was impossible when the fee cost more than 
 - **Jellyfin sidecar.** The same settlement core, second member of the sidecar family: a webhook subscriber for Jellyfin's on-demand video. Because a VOD viewer can pause or seek, it tracks each viewer's actual playback position rather than wall-clock time, and settles only the seconds that were genuinely played forward — pausing settles nothing.
 - **A budget-aware agent, with its reasoning on screen.** The co-host decides every cycle whether paying itself keeps it within its 10% share of what the stream actually earned, and pauses itself when it wouldn't, so the creator is always paid first. Its ledger ("income → my share cap → spent → decision") is shown live on the watch page and in the treasury panel.
 - **An autonomous AI patron that pays from its own wallet.** A viewer agent with its own funded USDC wallet looks at what's streaming (host on air, viewers present, chat activity, price) and decides with an LLM whether any stream deserves its money right now. When it pays, it signs a gasless EIP-3009 payment from its own address into the stream's treasury; when it doesn't, it says why. Every decision, including refusals, is public on [`/impact`](https://trydriplet.vercel.app/impact) — and anyone can trigger a cycle (`POST /api/agents/patron`, self-throttled) and watch it think. With the co-host earning on the other side, autonomous agents sit on **both sides** of the economy.
-- **Pay from your own wallet.** Viewers can optionally pay from their own wallet with a single gasless EIP-3009 signature (no gas, no Gateway deposit); the treasury relays it on-chain. The shared demo wallet stays the default so anyone can try it with zero setup.
+- **Pay from your own wallet.** Viewers can pay from their own Arc wallet with one ordinary USDC transfer; the server confirms it on-chain before counting it. The shared demo wallet stays the default so anyone can try it with zero setup.
 - **Email onboarding for people with no wallet.** The default no-wallet path: a viewer signs in with a one-time email code and gets a Circle developer-controlled wallet auto-created, the same mechanism the creator studio already uses. Payment happens server-side via Circle's Transaction API, no browser wallet, no passkey, no extension.
-- **Face ID onboarding, as a second option.** A viewer can instead create a gasless smart-account wallet right in the browser with a passkey (Circle Modular Wallets, ERC-4337, gas sponsored by Circle's paymaster) and pay from their own address.
+- **Face ID onboarding, as a second option.** A viewer can instead create a smart-account wallet right in the browser with a passkey (Circle Modular Wallets, ERC-4337) and pay from their own address.
 - **Live video, screen share, and chat.** Broadcast a camera (LiveKit) or post a recorded video, share your screen, flip front/back camera, and chat live. Video uploads are stored on Walrus (decentralized storage).
 - **Decentralized storage end to end.** Each stream's metadata and its Walrus blob pointer are recorded on-chain on Arc (a `StreamRegistry` contract); the video files live on Walrus. Metadata on Arc, blobs on Walrus, readable back at `/api/streams/[slug]/onchain`.
 - **Creator profiles and discovery.** Public profiles you can save (a browser bookmark, no account) and an Explore page to search streams and creators.
@@ -95,6 +95,8 @@ The Circle samples show a single buyer-to-seller x402 payment. Driplet adds the 
 
 The same record is machine-readable at [`deployments/arc-mainnet.json`](./deployments/arc-mainnet.json).
 
+**Who pays network fees on mainnet:** whoever the action serves, never Driplet. Arc charges gas in USDC, so a viewer's wallet pays the fee on its own prepay (about $0.001 for a normal wallet), a refund arrives minus its own fee, and a creator's withdrawal has its mint and transfer fees taken out of it. Nothing is sponsored.
+
 ## Traction
 
 Every testnet number in this README comes from the on-chain settlement log archived in [`history/lepton-testnet`](./history/lepton-testnet) (`npm run verify:history` re-derives them offline and checks the file hashes), and mainnet activity is logged the same way, live, at [`trydriplet.vercel.app/impact`](https://trydriplet.vercel.app/impact) (`npm run verify:impact` cross-checks it against the database): real per-second payments from real viewers, distinct wallets that paid from their own address (own-wallet or Face ID), the treasury's agent paying itself out of stream earnings, and the AI patron paying from its own wallet, every decision including refusals shown with its reasoning. See the current totals at the top of this README, or watch them update live on the page itself, so there's never two conflicting snapshots to reconcile.
@@ -104,7 +106,7 @@ Every testnet number in this README comes from the on-chain settlement log archi
 - **Next.js 16** (App Router) + **Tailwind v4** / shadcn UI, light and dark themes
 - **Circle Nanopayments** via **`@circle-fin/x402-batching`** (`GatewayClient` + `BatchFacilitatorClient`)
 - **x402** payment protocol, **Arc mainnet** settlement (USDC-native L1), with Arc testnet one env var away
-- **viem** for wallet and chain access, plus a gasless EIP-3009 relay for own-wallet pay
+- **viem** for wallet and chain access
 - **Supabase** (Postgres) for streams, the payment log, and chat
 - **LiveKit** for live video and screen share, **Walrus** for decentralized video storage
 - A free LLM (Groq) for the AI co-host
@@ -134,7 +136,7 @@ Open `/watch/ada-live`, press play, and watch the meter and the treasury split m
 | `/sidecar` | The sidecar family: Owncast (per-second live) and Jellyfin (per-minute VOD) |
 | `/impact` | Public real-time proof feed of every settlement |
 | `/api/watch/[slug]/charge` | x402 per-second charge |
-| `/api/watch/[slug]/own-pay` | Relay a viewer's gasless own-wallet payment |
+| `/api/watch/[slug]/own-pay` | Verify + record a payment sent from the viewer's own wallet |
 | `/api/watch/[slug]/passkey-pay` | Verify + record a Face ID smart-account payment |
 | `/api/agents/captions` | The real AI co-host, selling its work per call |
 | `/api/agents/patron` | The AI patron: GET its decisions, POST to trigger a cycle |
@@ -144,7 +146,7 @@ Open `/watch/ada-live`, press play, and watch the meter and the treasury split m
 
 ## Acknowledgements
 
-The settlement core is adapted from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample (Apache-2.0). Driplet adds the per-second streaming experience, the autonomous stream treasury, the real AI agent payee, the Owncast sidecar, gasless own-wallet payments, and the creator-facing product.
+The settlement core is adapted from Circle's open-source [`arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) sample (Apache-2.0). Driplet adds the per-second streaming experience, the autonomous stream treasury, the real AI agent payee, the Owncast sidecar, own-wallet payments, refunds of unwatched time, and the creator-facing product.
 
 ## License
 

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createPublicClient, http } from "viem";
 import { resolveStream } from "@/lib/streams-db";
-import { ARC, arcChain } from "@/lib/arc-network";
+import { recordViewerPrepay, isTxHash } from "@/lib/viewer-payment";
 
 // Reading a fresh receipt right after the userOp can take a moment.
 export const maxDuration = 60;
@@ -13,15 +12,8 @@ const supabase = createClient(
 );
 
 const SELLER = (process.env.SELLER_ADDRESS ?? "") as `0x${string}`;
-const ARC_NETWORK = ARC.caip2;
-const USDC = ARC.usdc;
-// keccak256("Transfer(address,address,uint256)")
-const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-
-const arc = arcChain;
 
 const isAddr = (a?: string | null): a is `0x${string}` => !!a && /^0x[0-9a-fA-F]{40}$/.test(a);
-const topicAddr = (t: string) => "0x" + t.slice(-40).toLowerCase();
 
 // Always pay the stream treasury, which auto-splits to the creator, co-host and
 // AI co-host. Paying the creator directly would skip the split and the agent.
@@ -38,10 +30,10 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ slug: stri
 }
 
 /**
- * POST → record a gasless passkey-wallet payment after verifying it on-chain.
- * The smart account already sent the USDC transfer (gas sponsored by Circle);
- * the client passes the tx hash + payer, and the server confirms a real USDC
- * Transfer to the stream's payee exists in that tx before recording it.
+ * POST → record a passkey-wallet prepay after verifying it on-chain. The smart
+ * account sent the USDC transfer itself and paid its own network fee (Driplet
+ * pays no one's gas); the client passes the tx hash and payer, and the server
+ * confirms a real USDC Transfer to the stream's payee before recording it.
  */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
@@ -49,72 +41,18 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   if (!stream) return NextResponse.json({ error: "Unknown stream" }, { status: 404 });
 
   const body = (await req.json().catch(() => ({}))) as { tx?: string; payer?: string };
-  const tx = body.tx;
-  const payer = body.payer;
-  if (!/^0x[0-9a-fA-F]{64}$/.test(tx ?? "") || !isAddr(payer)) {
+  if (!isTxHash(body.tx) || !isAddr(body.payer)) {
     return NextResponse.json({ error: "tx and payer required" }, { status: 400 });
   }
 
-  // Each on-chain transfer can be recorded once. The tx itself doesn't name a
-  // stream, so without this check the same hash could be replayed across slugs
-  // to inflate the payment feed.
-  const { data: existing } = await supabase
-    .from("payment_events")
-    .select("amount_usdc")
-    .eq("gateway_tx", tx)
-    .like("endpoint", "/passkey/%")
-    .limit(1);
-  if (existing && existing.length > 0) {
-    // Idempotent: a client retry still succeeds, but the payment is only
-    // counted once.
-    return NextResponse.json({
-      ok: true,
-      tx,
-      amount: Number(existing[0].amount_usdc ?? 0),
-      alreadyRecorded: true,
-    });
-  }
-
-  const expected = payToFor(stream.split);
-  const pub = createPublicClient({ chain: arc, transport: http() });
-
-  let receipt;
-  try {
-    receipt = await pub.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 30_000 });
-  } catch {
-    return NextResponse.json({ error: "Could not find that transaction on Arc" }, { status: 502 });
-  }
-  if (receipt.status !== "success") {
-    return NextResponse.json({ error: "Transaction reverted on-chain" }, { status: 400 });
-  }
-
-  // Find a USDC Transfer from the passkey wallet to this stream's payee.
-  const transfer = receipt.logs.find(
-    (l) =>
-      l.address.toLowerCase() === USDC &&
-      l.topics[0]?.toLowerCase() === TRANSFER_TOPIC &&
-      l.topics.length >= 3 &&
-      topicAddr(l.topics[1]!) === payer!.toLowerCase() &&
-      topicAddr(l.topics[2]!) === expected.toLowerCase(),
-  );
-  if (!transfer) {
-    return NextResponse.json(
-      { error: "No matching USDC payment to this stream was found in that transaction" },
-      { status: 400 },
-    );
-  }
-  const amount = Number(BigInt(transfer.data)) / 1e6;
-  if (!(amount > 0)) return NextResponse.json({ error: "Zero-value transfer" }, { status: 400 });
-
-  // Record with the smart account as the payer — a distinct, real paying wallet.
-  await supabase.from("payment_events").insert({
+  const result = await recordViewerPrepay(supabase, {
+    tx: body.tx,
+    payer: body.payer,
+    payTo: payToFor(stream.split),
+    slug,
     endpoint: `/passkey/${slug}`,
-    payer,
-    amount_usdc: String(amount),
-    network: ARC_NETWORK,
-    gateway_tx: tx,
-    raw: { wallet: "circle-passkey", paidTo: expected },
+    raw: { wallet: "circle-passkey" },
   });
-
-  return NextResponse.json({ ok: true, tx, amount, paidTo: expected });
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
+  return NextResponse.json(result);
 }

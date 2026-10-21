@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Database } from "lucide-react";
 import { resolveStream, creatorAddress } from "@/lib/streams-db";
-import { registryExplorerUrl } from "@/lib/stream-registry";
+import { getStreamOnChain, registryExplorerUrl } from "@/lib/stream-registry";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Stream } from "@/lib/streams";
@@ -85,7 +85,11 @@ async function WatchContent({ params }: { params: Promise<{ slug: string }> }) {
   const isOwner = await viewerOwnsStream(stream);
   const addr = creatorAddress(stream);
   const onWalrus = /\/api\/video\/[A-Za-z0-9_-]+/.test(stream.videoUrl);
-  const registry = registryExplorerUrl();
+  // Only streams actually recorded in the StreamRegistry say so. New streams
+  // aren't registered any more, and the badge used to show for every stream.
+  const registry = (await getStreamOnChain(stream.slug).catch(() => null))
+    ? registryExplorerUrl()
+    : null;
 
   return (
     <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">

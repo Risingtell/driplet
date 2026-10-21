@@ -1,31 +1,20 @@
 import { getEthereum } from "@/lib/arc-chain";
 import { ARC } from "@/lib/arc-network";
+import { paymentTag } from "@/lib/payment-tag";
 
 /**
- * Viewer "pay from my own wallet" via a gasless EIP-3009 signature. The viewer
- * signs a TransferWithAuthorization over Arc's USDC in their wallet (no gas, no
- * Gateway deposit); the server relays it. They only need testnet USDC in their
- * wallet.
+ * Viewer "pay from my own wallet". The viewer's wallet sends one ordinary USDC
+ * transfer on Arc to the stream treasury and pays its network fee itself, in
+ * USDC (Arc's gas token, so no second token is needed). Driplet relays nothing
+ * and pays no one's gas; the server only confirms the transfer on-chain.
  */
-const USDC = "0x3600000000000000000000000000000000000000";
-const CHAIN_ID = ARC.chainId;
+const USDC = ARC.usdc;
 
-export interface SignedAuthorization {
-  authorization: {
-    from: string;
-    to: string;
-    value: string;
-    validAfter: string;
-    validBefore: string;
-    nonce: string;
-  };
-  signature: string;
-}
-
-function randomNonce(): string {
-  const b = crypto.getRandomValues(new Uint8Array(32));
-  return "0x" + [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
+/**
+ * USDC left in the wallet for the transfer's own network fee. A transfer costs
+ * about $0.001 on Arc; this leaves room for a fee spike.
+ */
+export const OWN_WALLET_FEE_RESERVE = 0.005;
 
 /** Read a wallet's USDC balance (in dollars) via the injected provider. */
 export async function getUsdcBalance(address: string): Promise<number> {
@@ -44,53 +33,29 @@ export async function getUsdcBalance(address: string): Promise<number> {
 }
 
 /**
- * Ask the viewer's wallet to sign an authorization to pay `amountUsd` USDC to
- * `to`. Returns the signed authorization to POST to the own-pay route.
+ * Ask the viewer's wallet to send `amountUsd` USDC to `to` for stream `slug`.
+ * The wallet shows the transfer with its network fee for the viewer to
+ * confirm, and resolves with the transaction hash once it is submitted.
  */
-export async function signWatchAuthorization(
+export async function sendWatchPayment(
   from: string,
   to: string,
   amountUsd: number,
-): Promise<SignedAuthorization> {
+  slug: string,
+): Promise<`0x${string}`> {
   const eth = getEthereum();
   if (!eth) throw new Error("No wallet found.");
 
-  const now = Math.floor(Date.now() / 1000);
-  const authorization = {
-    from,
-    to,
-    value: Math.round(amountUsd * 1e6).toString(),
-    validAfter: "0",
-    validBefore: String(now + 3600),
-    nonce: randomNonce(),
-  };
+  const value = BigInt(Math.round(amountUsd * 1e6));
+  // transfer(address,uint256), then the stream's tag (see lib/payment-tag).
+  const data =
+    "0xa9059cbb" +
+    to.slice(2).toLowerCase().padStart(64, "0") +
+    value.toString(16).padStart(64, "0") +
+    paymentTag(slug);
 
-  const typedData = {
-    types: {
-      EIP712Domain: [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
-        { name: "verifyingContract", type: "address" },
-      ],
-      TransferWithAuthorization: [
-        { name: "from", type: "address" },
-        { name: "to", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "validAfter", type: "uint256" },
-        { name: "validBefore", type: "uint256" },
-        { name: "nonce", type: "bytes32" },
-      ],
-    },
-    domain: { name: "USDC", version: "2", chainId: CHAIN_ID, verifyingContract: USDC },
-    primaryType: "TransferWithAuthorization",
-    message: authorization,
-  };
-
-  const signature = (await eth.request({
-    method: "eth_signTypedData_v4",
-    params: [from, JSON.stringify(typedData)],
-  })) as string;
-
-  return { authorization, signature };
+  return (await eth.request({
+    method: "eth_sendTransaction",
+    params: [{ from, to: USDC, data }],
+  })) as `0x${string}`;
 }

@@ -14,6 +14,8 @@ interface Money {
   earnings: number;
   /** Earnings left after Gateway's fee for moving them. */
   withdrawable: number;
+  /** Network fees, in dollars, that come out of a withdrawal. */
+  networkFee: number;
 }
 
 export function WalletPanel({ address, ...initial }: { address: string } & Money) {
@@ -36,6 +38,7 @@ export function WalletPanel({ address, ...initial }: { address: string } & Money
         balance: info.balance ?? 0,
         earnings: info.earnings ?? 0,
         withdrawable: info.withdrawable ?? 0,
+        networkFee: info.networkFee ?? 0,
       });
     }
     setRefreshing(false);
@@ -51,7 +54,9 @@ export function WalletPanel({ address, ...initial }: { address: string } & Money
       setMsg({
         kind: "ok",
         text: res.txHash
-          ? `Sent. Gateway's fee was $${Number(res.fee ?? 0).toFixed(4)}.`
+          ? `Sent $${(res.received ?? 0).toFixed(4)} to that address. Gateway's fee ($${Number(
+              res.gatewayFee ?? 0,
+            ).toFixed(4)}) and network fees ($${(res.networkFee ?? 0).toFixed(4)}) came out of it.`
           : `Withdrawal submitted (${res.state ?? "pending"}).`,
         tx: res.txHash,
       });
@@ -84,7 +89,9 @@ export function WalletPanel({ address, ...initial }: { address: string } & Money
         <p className="mt-2 text-sm text-muted-foreground">
           Every payout from your streams lands here, held for your address by Circle Gateway.
           Up to <span className="tabular text-foreground">${money.withdrawable.toFixed(4)}</span>{" "}
-          can be withdrawn now, after a small network fee.
+          can be withdrawn now. Network fees of about{" "}
+          <span className="tabular text-foreground">${money.networkFee.toFixed(4)}</span> come out of
+          what you withdraw, so you never need USDC for gas.
         </p>
         {money.balance > 0 && (
           <p className="mt-1 text-sm text-muted-foreground">

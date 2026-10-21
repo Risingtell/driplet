@@ -22,8 +22,8 @@ const pillars = [
   },
   {
     icon: ShieldCheck,
-    title: "Gas-free for fans",
-    body: "Circle Gateway batches thousands of drips into one settlement, so viewers never touch gas or crypto plumbing.",
+    title: "Fees paid in USDC",
+    body: "Arc charges its network fee in USDC too, usually a fraction of a cent, so viewers never need a second token or any crypto plumbing.",
   },
   {
     icon: Globe,

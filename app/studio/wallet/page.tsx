@@ -14,6 +14,7 @@ export default async function WalletPage() {
       balance={info.balance ?? 0}
       earnings={info.earnings ?? 0}
       withdrawable={info.withdrawable ?? 0}
+      networkFee={info.networkFee ?? 0}
     />
   );
 }

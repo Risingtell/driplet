@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createStream } from "@/lib/streams-db";
 import { slugify, type Payee } from "@/lib/streams";
-import { registerStreamOnChain } from "@/lib/stream-registry";
 
 // Creating a stream now also records its metadata on Arc.
 export const maxDuration = 60;
@@ -102,17 +101,15 @@ export async function POST(req: NextRequest) {
         ratePerSecond: RATE_PER_SECOND,
         split,
       });
-      // Record the stream's metadata on Arc (files stay on Walrus). The blob id
-      // is in the video URL for uploaded videos; live camera streams have none.
-      const blobId = (videoUrl.match(/\/api\/video\/([A-Za-z0-9_-]+)/)?.[1]) ?? "";
-      const onchainTx = await registerStreamOnChain(stream.slug, blobId, creator, title).catch(
-        () => null,
-      );
+      // New streams are no longer written to the StreamRegistry on Arc: the
+      // treasury would pay that gas for the creator, and Driplet pays no one's
+      // gas (a new creator has no USDC to pay it with yet). Streams registered
+      // before 21 Oct 2026 keep their on-chain record.
       return NextResponse.json({
         ok: true,
         slug: stream.slug,
         watchUrl: `/watch/${stream.slug}`,
-        onchainTx,
+        onchainTx: null,
       });
     } catch (e) {
       if (attempt === 2) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { streams as demoStreams } from "@/lib/streams";
-import { getRefunded } from "@/lib/viewer-credit";
+import { getReturnedToViewers } from "@/lib/viewer-credit";
 
 // Next wraps the global fetch for caching. This endpoint must read the database
 // live every time (a count that came back empty on a fresh server's first call
@@ -130,7 +130,7 @@ export async function GET() {
       .not("endpoint", "like", "/agents/captions/%")
       .not("endpoint", "like", "/agents/patron/%")
       .limit(1),
-    getRefunded(supabase, {}),
+    getReturnedToViewers(supabase),
   ]);
 
   // Any failed query fails the response: a missing wallets or streams read

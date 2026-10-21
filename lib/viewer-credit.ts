@@ -41,6 +41,24 @@ export async function getRefunded(
   return (data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
 }
 
+/**
+ * What refunds actually put back in viewers' wallets: each sent refund's
+ * amount less the network fee that came out of it. (getRefunded counts the
+ * full amount, which is what left the treasury.) Null if unreadable.
+ */
+export async function getReturnedToViewers(supabase: SupabaseClient): Promise<number | null> {
+  const withFee = await supabase.from("viewer_refunds").select("amount_usdc, fee_usdc").eq("status", "sent");
+  if (!withFee.error) {
+    return (withFee.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0) - Number(r.fee_usdc ?? 0), 0);
+  }
+  if (MISSING_TABLE.has(withFee.error.code)) return 0;
+  // 42703 = fee_usdc not migrated yet: report the full amounts rather than nothing.
+  if (withFee.error.code !== "42703") return null;
+  const plain = await supabase.from("viewer_refunds").select("amount_usdc").eq("status", "sent");
+  if (plain.error) return null;
+  return (plain.data ?? []).reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
+}
+
 export interface ViewerCredit {
   prepaid: number;
   consumed: number;

@@ -102,13 +102,15 @@ export async function getCreatorAddress(): Promise<{ address?: string; error?: s
  * The signed-in creator's wallet address and money. Stream payouts arrive as a
  * Circle Gateway balance owned by that address (`earnings`), not as USDC in the
  * wallet itself (`balance`, only non-zero if someone sent USDC there directly).
- * `withdrawable` is the earnings left after Gateway's fee for moving them.
+ * `withdrawable` is the earnings left after Gateway's fee for moving them, and
+ * `networkFee` the network fees (in dollars) that come out of a withdrawal.
  */
 export async function getWalletInfo(): Promise<{
   address?: string;
   balance?: number;
   earnings?: number;
   withdrawable?: number;
+  networkFee?: number;
   error?: string;
 }> {
   const supabase = await createClient();
@@ -134,6 +136,7 @@ export async function getWalletInfo(): Promise<{
     balance: onchain.status === "fulfilled" ? onchain.value.amount : 0,
     earnings: gateway.status === "fulfilled" ? Number(formatUnits(gateway.value.balance, 6)) : 0,
     withdrawable: gateway.status === "fulfilled" ? Number(formatUnits(gateway.value.max, 6)) : 0,
+    networkFee: gateway.status === "fulfilled" ? gateway.value.networkFee : 0,
   };
 }
 
@@ -146,7 +149,10 @@ export async function withdraw(formData: FormData): Promise<{
   ok?: true;
   state?: string;
   txHash?: string;
-  fee?: string;
+  /** What reached the destination, after every fee. */
+  received?: number;
+  gatewayFee?: string;
+  networkFee?: number;
   error?: string;
 }> {
   const to = String(formData.get("to") ?? "").trim();
@@ -186,7 +192,14 @@ export async function withdraw(formData: FormData): Promise<{
         to: to as `0x${string}`,
         amount,
       });
-      return { ok: true, state: "CONFIRMED", txHash: res.txHash, fee: res.fee };
+      return {
+        ok: true,
+        state: "CONFIRMED",
+        txHash: res.txHash,
+        received: res.received,
+        gatewayFee: res.gatewayFee,
+        networkFee: res.networkFee,
+      };
     }
     const tx = await withdrawUsdc({ walletId: data.circle_wallet_id, to, amount });
     return { ok: true, state: tx.state };

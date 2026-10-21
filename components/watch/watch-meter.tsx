@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { LiveVideo } from "@/components/watch/live-video";
 import { naira } from "@/lib/currency";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
-import { signWatchAuthorization, getUsdcBalance } from "@/lib/own-wallet";
+import { sendWatchPayment, getUsdcBalance, OWN_WALLET_FEE_RESERVE } from "@/lib/own-wallet";
+import { paymentTag } from "@/lib/payment-tag";
 import type { Stream } from "@/lib/streams";
 import { ARC } from "@/lib/arc-network";
 
@@ -284,8 +285,10 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         const info = (await fetch(`/api/watch/${stream.slug}/passkey-pay`).then((r) => r.json())) as {
           payTo: `0x${string}`;
         };
-        const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
-        const tx = await session.pay(info.payTo, budget);
+        // pay() sets the network fee aside itself (the wallet pays its own gas)
+        // and sends the rest, up to the chosen prepay.
+        const budget = Math.min(amountUsd, bal);
+        const tx = await session.pay(info.payTo, budget, paymentTag(stream.slug));
         const res = await fetch(`/api/watch/${stream.slug}/passkey-pay`, {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -309,7 +312,11 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       } catch (e) {
         const msg = (e as Error).message || "Could not set up your passkey wallet";
         let friendly = msg;
-        if (/reject|denied|cancel|NotAllowed|abort/i.test(msg)) friendly = "Sign-in cancelled.";
+        if ((e as Error).name === "NotEnoughForFeeError") {
+          // Show the wallet's address again so they can add a little more.
+          setPkNeedsFunds(true);
+          friendly = msg;
+        } else if (/reject|denied|cancel|NotAllowed|abort/i.test(msg)) friendly = "Sign-in cancelled.";
         // Circle's client key is registered to one domain, and a passkey is bound
         // to one domain by the WebAuthn spec regardless — so on any other host
         // (the bare Vercel alias, localhost) every Circle call 401s with an empty
@@ -320,7 +327,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           friendly = "Face ID sign-in isn't available right now. Use your own wallet instead.";
         else if (/timed out|timeout/i.test(msg))
           friendly =
-            "Circle's gasless network is taking longer than usual to confirm this payment. Your wallet and funds are safe. Try again in a minute, or connect an existing wallet below to pay directly instead.";
+            "Arc is taking longer than usual to confirm this payment. Your wallet and funds are safe. Try again in a minute, or connect an existing wallet below to pay directly instead.";
         setOwnErr(friendly);
       } finally {
         setPkBusy(false);
@@ -370,7 +377,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         }
         setEmailNeedsFunds(false);
 
-        const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
+        // The wallet pays its own network fee from the same USDC, so leave room.
+        const budget = Math.min(amountUsd, bal - OWN_WALLET_FEE_RESERVE);
+        if (budget < 0.005) {
+          setEmailNeedsFunds(true);
+          return;
+        }
         const res = await fetch(`/api/watch/${stream.slug}/email-pay`, {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -457,13 +469,18 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       const info = (await fetch(`/api/watch/${stream.slug}/own-pay`).then((r) => r.json())) as {
         payTo: string;
       };
-      // Prepay the chosen amount, capped by what's in the wallet.
-      const budget = Math.min(amountUsd, Math.max(0.005, bal - 0.001));
-      const { authorization, signature } = await signWatchAuthorization(addr, info.payTo, budget);
+      // Prepay the chosen amount, capped by what's in the wallet less room for
+      // the transfer's own network fee, which the viewer's wallet pays.
+      const budget = Math.min(amountUsd, bal - OWN_WALLET_FEE_RESERVE);
+      if (budget < 0.005) {
+        setOwnErr(`This wallet needs a little more USDC on ${ARC.name} to cover the payment and its network fee.`);
+        return;
+      }
+      const tx = await sendWatchPayment(addr, info.payTo, budget, stream.slug);
       const res = await fetch(`/api/watch/${stream.slug}/own-pay`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ authorization, signature }),
+        body: JSON.stringify({ tx, payer: addr }),
       });
       const j = (await res.json()) as { ok?: boolean; tx?: string; amount?: number; error?: string };
       if (!res.ok || !j.ok) throw new Error(j.error ?? "Payment failed");
@@ -481,8 +498,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
       videoRef.current?.play().catch(() => {});
     } catch (e) {
       const msg = (e as Error).message || "Could not pay from your wallet";
-      // A user rejecting the signature in their wallet isn't an error worth shouting about.
-      setOwnErr(/reject|denied|user/i.test(msg) ? "Signature cancelled." : msg);
+      // A viewer declining the payment in their wallet isn't an error worth shouting about.
+      setOwnErr(/reject|denied|user/i.test(msg) ? "Payment cancelled." : msg);
     } finally {
       setOwnBusy(false);
     }
@@ -856,8 +873,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             <div className="w-full max-w-xs">
               <p className="text-sm font-semibold text-white">Your free preview ended</p>
               <p className="mt-1 text-xs text-white/70">
-                Keep watching {stream.creator} from your own wallet. It takes seconds and the gas
-                is on us.
+                Keep watching {stream.creator} from your own wallet. It takes seconds, and network
+                fees are paid in USDC, usually a fraction of a cent.
               </p>
               <div className="mt-3 flex flex-col gap-2">
                 {pkOffer && (
@@ -982,8 +999,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 </>
               ) : (
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  Network: {ARC.name} (chain id {ARC.chainId}). Gas is USDC too, so nothing else is needed.
-                  A dollar covers hours of watching.
+                  Network: {ARC.name} (chain id {ARC.chainId}). Fees are paid in USDC too, so nothing
+                  else is needed. About a dollar covers hours of watching and its network fees.
                 </p>
               )}
               <Button
@@ -1001,8 +1018,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             <div>
               <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Gas is on us. No app, no seed phrase, no extension. You&apos;re on the free demo
-                wallet until you connect.
+                No app, no seed phrase, no extension. Network fees on Arc are paid in USDC,
+                usually a fraction of a cent. You&apos;re on the free demo wallet until you connect.
               </p>
 
               {pkOffer ? (
@@ -1096,7 +1113,8 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             )}
             {!needTopup && (
               <p className="mt-1 text-xs text-muted-foreground">
-                Leave this stream and whatever you haven&apos;t watched goes back to your wallet.
+                Leave this stream and whatever you haven&apos;t watched goes back to your wallet,
+                less a fraction of a cent network fee.
               </p>
             )}
             {needTopup && (

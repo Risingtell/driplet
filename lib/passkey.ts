@@ -20,11 +20,11 @@ import { ARC, arcChain } from "@/lib/arc-network";
 
 /**
  * Passkey onboarding for viewers via Circle Modular Wallets. A viewer creates
- * (or signs into) a gasless smart-account wallet on Arc with Face ID /
- * Touch ID — no MetaMask extension, no seed phrase. The smart account then pays
- * the creator in the same Arc USDC the rest of the app uses, gas sponsored by
- * Circle's paymaster (ERC-4337). This removes the #1 friction real viewers hit:
- * not being able to connect a wallet.
+ * (or signs into) a smart-account wallet on Arc with Face ID / Touch ID, with
+ * no MetaMask extension and no seed phrase. The smart account then pays the
+ * stream in the same Arc USDC the rest of the app uses (ERC-4337). It pays its
+ * own network fee from that USDC, which is Arc's gas token: Driplet sponsors no
+ * one's gas.
  */
 
 // The ERC-20 USDC the whole app accounts in (NOT Arc's 18-decimal native token).
@@ -54,6 +54,33 @@ const erc20Abi = [
   },
 ] as const;
 
+// EntryPoint deposits: what an account has left there from earlier operations,
+// which the next operation's prefund draws on first (native wei, 18 decimals).
+const entryPointDepositAbi = [
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+/** The wallet holds too little USDC to cover a payment's network fee. */
+export class NotEnoughForFeeError extends Error {
+  constructor(readonly reserveUsd: number) {
+    super(
+      `Add a little more USDC. Your wallet pays its own network fee, and this payment needs up to $${reserveUsd.toFixed(
+        2,
+      )} set aside for it (most of that comes back for your next payment).`,
+    );
+    this.name = "NotEnoughForFeeError";
+  }
+}
+
+// Smallest prepay worth sending once the fee is set aside: $0.005.
+const MIN_PAYMENT = 5_000n;
+
 export function passkeysSupported(): boolean {
   return (
     !!CLIENT_KEY &&
@@ -65,7 +92,8 @@ export function passkeysSupported(): boolean {
 type Session = {
   address: `0x${string}`;
   // Send a gasless USDC transfer from the smart account; resolves to the tx hash.
-  pay: (to: `0x${string}`, amountUsd: number) => Promise<`0x${string}`>;
+  /** `tag`: the stream's payment tag (lib/payment-tag), appended to the transfer. */
+  pay: (to: `0x${string}`, amountUsd: number, tag?: string) => Promise<`0x${string}`>;
   // Read the smart account's USDC balance in dollars.
   balance: () => Promise<number>;
 };
@@ -116,10 +144,9 @@ function readCredential(): StoredCredential | null {
  * circle_getUserOperationGasPrice is the bundler stating its own terms, so it
  * tracks whatever the floor moves to.
  *
- * The "high" tier is deliberate: gas is paymaster-sponsored, so bidding above
- * the floor costs the viewer nothing, while bidding under it silently drops
- * their payment. Drop to `medium` if sponsorship cost ever matters more than
- * inclusion.
+ * The viewer pays this fee from their own USDC, so this takes the "medium"
+ * tier: still the bundler's own quoted price, so never underpriced, without
+ * the premium "high" adds.
  *
  * Returns undefined if the bundler can't be reached, which leaves the fees
  * unset so viem estimates them and applies its own buffer.
@@ -129,7 +156,7 @@ async function userOperationFees(
 ): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } | undefined> {
   try {
     const price = await getUserOperationGasPrice(client);
-    const level = price?.high ?? price?.medium ?? price?.low;
+    const level = price?.medium ?? price?.high ?? price?.low;
     if (!level?.maxFeePerGas || !level?.maxPriorityFeePerGas) return undefined;
     return {
       maxFeePerGas: BigInt(level.maxFeePerGas),
@@ -167,18 +194,73 @@ async function buildSession(credential: { id: string; publicKey: Hex }): Promise
       })) as bigint;
       return Number(raw) / 1e6;
     },
-    async pay(to, amountUsd) {
-      const value = BigInt(Math.round(amountUsd * 1e6));
-      const data = encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "transfer",
-        args: [to, value],
-      }) as Hex;
+    async pay(to, amountUsd, tag) {
+      // The transfer carries the stream's tag after its arguments, so the
+      // server can tell which stream it pays for (see lib/payment-tag).
+      const transfer = (value: bigint) => ({
+        to: USDC,
+        data: (encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [to, value] }) +
+          (tag ?? "")) as Hex,
+      });
+      const wanted = BigInt(Math.round(amountUsd * 1e6));
       const fees = await userOperationFees(client);
+
+      // The viewer pays this operation's network fee from the same USDC. Before
+      // validation the EntryPoint takes the most the operation could cost (its
+      // gas limits times the max fee), less any deposit left from earlier
+      // payments, and keeps what goes unused as that deposit for next time. So
+      // the transfer must leave that much in the wallet.
+      let op;
+      try {
+        op = await bundlerClient.prepareUserOperation({
+          account: smartAccount,
+          calls: [transfer(wanted)],
+          ...(fees ?? {}),
+        });
+      } catch (e) {
+        // Simulation refuses an account that can't pay its own prefund.
+        if (/AA21|prefund|insufficient/i.test((e as Error).message)) throw new NotEnoughForFeeError(0.1);
+        throw e;
+      }
+      const [balance, deposit] = await Promise.all([
+        client.readContract({
+          address: USDC,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [smartAccount.address],
+        }) as Promise<bigint>,
+        (
+          client.readContract({
+            address: smartAccount.entryPoint.address,
+            abi: entryPointDepositAbi,
+            functionName: "balanceOf",
+            args: [smartAccount.address],
+          }) as Promise<bigint>
+        ).catch(() => 0n),
+      ]);
+      const gasLimits = {
+        callGasLimit: BigInt(op.callGasLimit),
+        verificationGasLimit: BigInt(op.verificationGasLimit),
+        preVerificationGas: BigInt(op.preVerificationGas),
+      };
+      const maxFeePerGas = BigInt(op.maxFeePerGas);
+      const maxGas = gasLimits.callGasLimit + gasLimits.verificationGasLimit + gasLimits.preVerificationGas;
+      const prefundWei = maxGas * maxFeePerGas;
+      const depositWei = BigInt(deposit);
+      const missingWei = prefundWei > depositWei ? prefundWei - depositWei : 0n;
+      // Native wei (18 decimals) to USDC units (6), rounded up, plus $0.001.
+      const reserve = (missingWei + 10n ** 12n - 1n) / 10n ** 12n + 1_000n;
+      const spendable = BigInt(balance) - reserve;
+      if (spendable < MIN_PAYMENT) throw new NotEnoughForFeeError(Number(reserve) / 1e6);
+      const value = spendable < wanted ? spendable : wanted;
+
+      // Same calldata size as the estimate, so reuse its gas limits: the prefund
+      // set aside above is exactly the one the EntryPoint will ask for.
       const userOpHash = await bundlerClient.sendUserOperation({
-        calls: [{ to: USDC, data }],
-        paymaster: true,
-        ...(fees ?? {}),
+        calls: [transfer(value)],
+        ...gasLimits,
+        maxFeePerGas,
+        maxPriorityFeePerGas: BigInt(op.maxPriorityFeePerGas),
       });
       // Give the bundler more room than viem's default (~6 retries) before giving
       // up — observed inclusion can lag well past that under load.
