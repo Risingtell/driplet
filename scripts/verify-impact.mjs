@@ -40,6 +40,20 @@ async function supabaseSelect(path, params) {
   return { data, count: total };
 }
 
+// Every matching row, paging past Supabase's 1000-rows-per-request cap.
+async function allRows(path, params) {
+  const rows = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data } = await supabaseSelect(path, { ...params, limit: "1000", offset: String(offset) });
+    rows.push(...data);
+    if (data.length < 1000) return rows;
+  }
+}
+
+const sumUsd = (rows) => rows.reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
+// Dollar totals are sums of decimal strings; compare them to the micro-dollar.
+const usd6 = (n) => Number(Number(n).toFixed(6));
+
 function check(label, expected, actual) {
   const pass = expected === actual;
   console.log(`${pass ? "✓" : "✗"} ${label}: live=${expected} independent=${actual}${pass ? "" : "  <-- MISMATCH"}`);
@@ -67,10 +81,11 @@ async function main() {
   });
 
   // 3. Distinct paying wallets (own-pay, Face ID, email onboarding), minus infra.
-  const { data: walletRows } = await supabaseSelect("payment_events", {
-    select: "payer",
+  //    The same rows are the viewer prepays, so their sum is "prepaid by viewers".
+  const walletRows = await allRows("payment_events", {
+    select: "payer,amount_usdc",
     or: "(endpoint.like./own/*,endpoint.like./passkey/*,endpoint.like./email/*)",
-    limit: "10000",
+    order: "id",
   });
   const uniqueWallets = new Set(
     walletRows.map((r) => (r.payer ?? "").toLowerCase()).filter((a) => isWallet(a) && !INFRA_WALLETS.has(a)),
@@ -86,11 +101,32 @@ async function main() {
       .filter((a) => isWallet(a)),
   ).size;
 
+  // 5. Paid to creators: every payout the stream treasuries made to their human
+  //    payees for seconds watched, sidecars included.
+  const payoutRows = await allRows("payment_events", {
+    select: "amount_usdc",
+    endpoint: "like./payout/*",
+    order: "id",
+  });
+
+  // 6. Payments settled: every row except bookkeeping (per-stream agent markers
+  //    mirror a payment already counted; patron decisions move no money).
+  const { count: settledCount } = await supabaseSelect("payment_events", {
+    select: "id",
+    and: "(endpoint.not.like./agents/captions/*,endpoint.not.like./agents/patron/*)",
+    limit: "1",
+  });
+
   const results = [
     check("watchCount", live.watchCount, watchCount),
     check("agentCount", live.agentCount, agentCount),
     check("uniqueWallets", live.uniqueWallets, uniqueWallets),
     check("uniqueCreators", live.uniqueCreators, uniqueCreators),
+    check("prepaidUsd", usd6(live.prepaidUsd), usd6(sumUsd(walletRows))),
+    check("prepayCount", live.prepayCount, walletRows.length),
+    check("paidToCreatorsUsd", usd6(live.paidToCreatorsUsd), usd6(sumUsd(payoutRows))),
+    check("payoutCount", live.payoutCount, payoutRows.length),
+    check("settledCount", live.settledCount, settledCount),
   ];
 
   // 5. Internal consistency: derive the per-unit rate from the live totals
@@ -107,6 +143,12 @@ async function main() {
     `${agentPriceSane ? "✓" : "✗"} agentPaid / agentCount = $${derivedAgentPrice.toFixed(6)}/call (sane sub-dollar price)`,
   );
   results.push(rateSane, agentPriceSane);
+
+  // Refunds live in a server-only table the public key can't read, so they
+  // can't be re-derived here; check they're at least a sane non-negative sum.
+  const refundSane = typeof live.refundedUsd === "number" && live.refundedUsd >= 0;
+  console.log(`${refundSane ? "✓" : "✗"} refundedUsd = $${Number(live.refundedUsd).toFixed(4)} (non-negative)`);
+  results.push(refundSane);
 
   const allPass = results.every(Boolean);
   console.log(`\n${allPass ? "VERIFIED ✓" : "MISMATCH ✗"} — ${results.filter(Boolean).length}/${results.length} checks passed.`);

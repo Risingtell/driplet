@@ -24,15 +24,29 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+// Links are shared as trydriplet.vercel.app (the one host Face ID works on), so
+// production builds absolute URLs, like the link-preview image, against it.
+const defaultUrl =
+  process.env.VERCEL_ENV === "production"
+    ? "https://trydriplet.vercel.app"
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
+
+const description =
+  "Driplet lets creators get paid by the second in USDC as people watch, no subscriptions, no bank, no chargebacks. Streaming nanopayments settled on Arc.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Driplet, get paid by the second",
-  description:
-    "Driplet lets creators get paid by the second in USDC as people watch, no subscriptions, no bank, no chargebacks. Streaming nanopayments settled on Arc.",
+  title: { default: "Driplet | Get paid by the second", template: "%s | Driplet" },
+  description,
+  openGraph: {
+    siteName: "Driplet",
+    type: "website",
+    title: "Driplet | Get paid by the second",
+    description,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 const geistSans = Geist({

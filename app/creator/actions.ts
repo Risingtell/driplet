@@ -80,6 +80,25 @@ export async function ensureWallet(): Promise<{ address?: string; error?: string
 }
 
 /**
+ * Just the signed-in creator's payout address, from our own table. For screens
+ * that only need to know who the creator is; getWalletInfo below also asks
+ * Circle and Gateway for balances, which takes seconds.
+ */
+export async function getCreatorAddress(): Promise<{ address?: string; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+  const { data } = await adminClient()
+    .from("creators")
+    .select("address")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return data?.address ? { address: data.address } : { error: "No wallet yet." };
+}
+
+/**
  * The signed-in creator's wallet address and money. Stream payouts arrive as a
  * Circle Gateway balance owned by that address (`earnings`), not as USDC in the
  * wallet itself (`balance`, only non-zero if someone sent USDC there directly).
@@ -312,7 +331,7 @@ export async function updateStreamSplit(
     }
     if (AGENT_ROLES.has(p.role) && Math.abs(share - p.share) > 0.0005) {
       return {
-        error: `${p.name}'s share is fixed and can't be changed here — it's paid separately from its own budget.`,
+        error: `${p.name}'s share is fixed and can't be changed here, because it's paid separately from its own budget.`,
       };
     }
     sum += share;

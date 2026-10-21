@@ -1,13 +1,32 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Clapperboard, Play, Radio } from "lucide-react";
 import { listStreams, creatorAddress } from "@/lib/streams-db";
-import type { Stream } from "@/lib/streams";
+import { isHostBroadcasting } from "@/lib/livekit";
 import { SiteHeader } from "@/components/site-header";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
 import { SaveCreatorButton } from "@/components/save-creator-button";
 import { Button } from "@/components/ui/button";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ address: string }>;
+}): Promise<Metadata> {
+  const { address } = await params;
+  const mine = (await listStreams()).filter(
+    (s) => (creatorAddress(s) ?? "").toLowerCase() === address.toLowerCase(),
+  );
+  const name = mine[0]?.creator || "Creator";
+  return {
+    title: name,
+    description: `Watch ${name} on Driplet and pay by the second in USDC.`,
+  };
+}
 
 export default function CreatorProfilePage({
   params,
@@ -15,11 +34,12 @@ export default function CreatorProfilePage({
   params: Promise<{ address: string }>;
 }) {
   return (
-    <main className="relative mx-auto flex min-h-screen max-w-4xl flex-col px-4 sm:px-5">
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
       <SiteHeader />
       <Suspense fallback={<div className="py-10 text-sm text-muted-foreground">Loading…</div>}>
         <ProfileContent params={params} />
       </Suspense>
+      <LandingFooter />
       <BackToTop />
     </main>
   );
@@ -27,9 +47,15 @@ export default function CreatorProfilePage({
 
 async function ProfileContent({ params }: { params: Promise<{ address: string }> }) {
   const { address } = await params;
+  // Live status must reflect the moment of the request, never build time.
+  await connection();
   const all = await listStreams();
   const mine = all.filter((s) => (creatorAddress(s) ?? "").toLowerCase() === address.toLowerCase());
   if (mine.length === 0) notFound();
+  // Same rule as Explore: a live-type stream is only LIVE while its host is
+  // actually on air. Otherwise it showed LIVE, and "Watch live" opened a stream
+  // that was waiting for its host.
+  const onAir = await Promise.all(mine.map((s) => (s.isLive ? isHostBroadcasting(s.slug) : false)));
 
   const name = mine[0].creator || "Creator";
   const location = mine[0].location;
@@ -57,14 +83,18 @@ async function ProfileContent({ params }: { params: Promise<{ address: string }>
         Save {name} above to come back and re-watch anytime.
       </p>
 
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-        {mine.map((s: Stream) => (
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {mine.map((s, i) => (
           <li key={s.slug} className="glass flex flex-col rounded-xl border border-border/60 p-4">
             <div className="flex items-start justify-between gap-2">
               <span className="font-medium">{s.title}</span>
-              {s.isLive ? (
+              {onAir[i] ? (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded bg-destructive/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                   <span className="size-1 rounded-full bg-white animate-live" /> LIVE
+                </span>
+              ) : s.isLive ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  <span className="size-1 rounded-full bg-muted-foreground/50" /> Offline
                 </span>
               ) : (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -74,7 +104,7 @@ async function ProfileContent({ params }: { params: Promise<{ address: string }>
             </div>
             <Link href={`/watch/${s.slug}`} className="mt-3">
               <Button size="sm" variant="outline" className="w-full">
-                <Play className="size-3.5" /> {s.isLive ? "Watch live" : "Re-watch"}
+                <Play className="size-3.5" /> {onAir[i] ? "Watch live" : s.isLive ? "Open" : "Re-watch"}
               </Button>
             </Link>
           </li>

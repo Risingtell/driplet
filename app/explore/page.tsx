@@ -2,13 +2,20 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { listStreams, creatorAddress } from "@/lib/streams-db";
 import { isHostBroadcasting } from "@/lib/livekit";
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
 import { ExploreList, type ExploreItem } from "@/components/explore/explore-list";
 
+export const metadata: Metadata = {
+  title: "Explore streams",
+  description: "Find creators streaming on Driplet. Press play and pay by the second in USDC.",
+};
+
 export default function ExplorePage() {
   return (
-    <main className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-4 sm:px-5">
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
       <SiteHeader />
       <section className="py-6">
         <h1 className="text-2xl font-semibold tracking-tight">Explore streams</h1>
@@ -23,6 +30,7 @@ export default function ExplorePage() {
           </Suspense>
         </div>
       </section>
+      <LandingFooter />
       <BackToTop />
     </main>
   );

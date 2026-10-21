@@ -22,7 +22,7 @@ import { withGateway } from "@/lib/x402";
 const handler = async (_req: NextRequest) => {
   return NextResponse.json({
     quote:
-      "The best way to predict the future is to invent it. — Alan Kay",
+      "The best way to predict the future is to invent it. (Alan Kay)",
     category: "technology",
     timestamp: new Date().toISOString(),
   });

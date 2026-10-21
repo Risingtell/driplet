@@ -20,11 +20,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { withGateway } from "@/lib/x402";
 
 const clues = [
-  "The treasure is hidden where the sun meets the ocean — latitude 34.0195° N.",
+  "The treasure is hidden where the sun meets the ocean, latitude 34.0195° N.",
   "Look for the old lighthouse on the western shore. The keeper left a journal.",
   "Page 42 of the journal mentions a cave behind the waterfall at mile marker 7.",
   "Inside the cave, follow the left passage. The markings on the wall spell coordinates.",
-  "Final coordinates: 34.0195° N, 118.4912° W — X marks the spot.",
+  "Final coordinates: 34.0195° N, 118.4912° W. X marks the spot.",
 ];
 
 const handler = async (_req: NextRequest) => {

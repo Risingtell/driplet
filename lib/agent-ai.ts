@@ -13,7 +13,7 @@ const BASE_URL = process.env.AI_BASE_URL ?? "https://api.groq.com/openai/v1";
 const MODEL = process.env.AI_MODEL ?? "openai/gpt-oss-20b";
 
 const FALLBACK = [
-  "Welcome in — glad you're here.",
+  "Welcome in, glad you're here.",
   "Loving the energy in here today.",
   "Drop a hello in the chat!",
   "Every second you watch supports the creator.",

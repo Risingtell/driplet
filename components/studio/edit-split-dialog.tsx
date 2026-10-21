@@ -115,7 +115,7 @@ export function EditSplitDialog({ slug, split }: { slug: string; split: Payee[] 
           <div
             className={`text-right text-xs ${balanced ? "text-muted-foreground" : "text-amber-500"}`}
           >
-            Total: {total.toFixed(1)}%{!balanced && " — must equal 100%"}
+            Total: {total.toFixed(1)}%{!balanced && " (must equal 100%)"}
           </div>
           {error && <p className="text-sm text-amber-500">{error}</p>}
           <DialogFooter>

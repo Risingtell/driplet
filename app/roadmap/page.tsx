@@ -6,18 +6,26 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
 
 export const metadata: Metadata = {
-  title: "Roadmap · Driplet",
+  title: "Roadmap",
   description: "What Driplet has shipped, what's being built next, and the big bet after that.",
 };
 
 const shipped = [
   {
+    title: "Live on Arc mainnet",
+    body: "Real USDC since 3 October. Creators are paid for every second watched and can withdraw to any wallet, and the StreamRegistry contract is source-verified on Sourcify.",
+  },
+  {
     title: "Per-second payments",
-    body: "Sub-cent USDC per second watched, over x402 and Circle Gateway on Arc. Tens of thousands of real settlements, zero failures — live count at /impact.",
+    body: "Sub-cent USDC per second watched, over x402 and Circle Gateway on Arc. 37,091 per-second payments on testnet before the move to mainnet, where every payment is counted live at /impact.",
   },
   {
     title: "Autonomous stream treasury",
     body: "Every stream splits its income live between the creator, a co-host, and its AI agent, each to their own wallet, no human in the loop.",
+  },
+  {
+    title: "Pay only for what you watch",
+    body: "Viewers prepay a small amount and watch it down by the second. Whatever they don't watch goes back to their wallet when they leave, so it can be spent on another creator.",
   },
   {
     title: "A real AI co-host that earns",
@@ -28,12 +36,20 @@ const shipped = [
     body: "An autonomous viewer agent with its own funded wallet decides what deserves its money and pays gaslessly from its own address. Every decision, refusals included, is public on the live proof page.",
   },
   {
-    title: "Face ID wallet onboarding",
-    body: "A passkey creates a gasless smart-account wallet right in the browser (Circle Modular Wallets). No app, no seed phrase, no extension.",
-  },
-  {
     title: "Pay from your own wallet, gas-free",
     body: "One EIP-3009 signature and the treasury relays it on-chain. No gas, no deposit, no plumbing.",
+  },
+  {
+    title: "Withdraw earnings to any wallet",
+    body: "Creator earnings collect in Circle Gateway and come out to any Arc address from the studio. The treasury submits the transfer and pays its gas, so creators never need gas money.",
+  },
+  {
+    title: "Creator studio with auto-created wallets",
+    body: "Google or email sign-in creates a Circle wallet on Arc automatically. Go live, watch earnings settle, and see exactly what you've been paid.",
+  },
+  {
+    title: "Editable revenue splits",
+    body: "Creators set their own terms from the studio: what share of every second each payee gets, re-split any time.",
   },
   {
     title: "Real live video, screen share, and chat",
@@ -51,20 +67,16 @@ const shipped = [
     title: "Jellyfin per-minute VOD sidecar",
     body: "Second member of the sidecar family, same settlement core. Tracks each viewer's actual playback position rather than wall-clock time, so pausing or seeking never gets billed as watched.",
   },
-  {
-    title: "Creator studio with auto-created wallets",
-    body: "Email sign-in creates a Circle wallet on Arc automatically. Go live, watch earnings settle, withdraw USDC.",
-  },
-  {
-    title: "Editable revenue splits",
-    body: "Creators set their own terms from the studio: what share of every second each payee gets, re-split any time.",
-  },
 ];
 
 const next = [
   {
+    title: "Face ID on mainnet",
+    body: "Face ID wallets already ran on testnet: no app, no seed phrase, no extension. On mainnet they switch on once Circle issues the mainnet client key. Email and your own wallet work today.",
+  },
+  {
     title: "Passkey login for creators",
-    body: "Creators sign in and self-custody their payout wallet with Face ID, the same way viewers already pay.",
+    body: "Creators sign in and self-custody their payout wallet with Face ID, the same way viewers pay.",
   },
   {
     title: "Live transcription for the co-host",
@@ -73,10 +85,6 @@ const next = [
   {
     title: "The sidecar family, continued",
     body: "PeerTube next (payments plugin), plus a native Owncast plugin when v0.3.0's plugin system lands. Owncast and Jellyfin are already live today.",
-  },
-  {
-    title: "Mainnet",
-    body: "From testnet proof to real earnings for the creators this was built for.",
   },
 ];
 

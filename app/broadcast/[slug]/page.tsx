@@ -7,6 +7,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { BackButton } from "@/components/back-button";
 import { Broadcaster } from "@/components/broadcast/broadcaster";
 import { LiveChat } from "@/components/chat/live-chat";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Broadcast",
+  description: "Go live on Driplet and get paid by the second.",
+};
 
 export default function BroadcastPage({
   params,

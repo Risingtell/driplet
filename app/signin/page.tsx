@@ -5,6 +5,12 @@ import { getUserSafe } from "@/lib/supabase/server";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SignInForm } from "@/components/creator/signin-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Creator sign in",
+  description: "Sign in to Driplet with Google or your email. We create your payout wallet for you.",
+};
 
 export default function SignInPage() {
   return (

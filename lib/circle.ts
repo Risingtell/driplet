@@ -103,7 +103,7 @@ export async function payAndConfirm(opts: {
     throw new Error(`Payment ${result.state.toLowerCase()}.`);
   }
   if (!result.txHash) {
-    throw new Error("Payment is still confirming — try again in a moment.");
+    throw new Error("Payment is still confirming. Try again in a moment.");
   }
   return { txHash: result.txHash, state: result.state };
 }

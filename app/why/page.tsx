@@ -2,6 +2,12 @@ import { Zap, Wallet, ShieldCheck, Globe } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Why this couldn't exist before",
+  description: "Why sub-cent, per-second payments to creators only became possible with nanopayments on Arc.",
+};
 
 const pillars = [
   {

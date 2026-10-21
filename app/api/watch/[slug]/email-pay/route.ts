@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     .eq("user_id", user.id)
     .maybeSingle();
   if (!wallet) {
-    return NextResponse.json({ error: "No wallet yet — sign in again to create one." }, { status: 400 });
+    return NextResponse.json({ error: "No wallet yet. Sign in again to create one." }, { status: 400 });
   }
 
   try {

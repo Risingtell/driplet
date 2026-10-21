@@ -292,8 +292,10 @@ export async function runPatronCycle(): Promise<PatronCycleResult> {
     tx: string | null,
   ) => {
     // A quiet night is one fact, not hundreds of rows: consecutive skips are
-    // recorded at most every 10 minutes. Watches and stops always record.
-    if (action === "skip" && lastAction === "skip" && Date.now() - lastAt < 10 * 60_000) {
+    // recorded at most every 10 minutes, and an empty wallet's repeated stop at
+    // most hourly. Watches always record.
+    const quiet = action === "skip" ? 10 * 60_000 : action === "stop" ? 60 * 60_000 : 0;
+    if (quiet && action === lastAction && Date.now() - lastAt < quiet) {
       return;
     }
     await supabase.from("payment_events").insert({
@@ -307,7 +309,7 @@ export async function runPatronCycle(): Promise<PatronCycleResult> {
   };
 
   if (balance < MIN_BALANCE_USD) {
-    const rationale = `My wallet is down to $${balance.toFixed(4)} — I've spent my funds supporting creators. Stopping until I'm topped up.`;
+    const rationale = `My wallet is down to $${balance.toFixed(4)}. I've spent my funds supporting creators and will start again once I'm topped up.`;
     await record("stop", null, rationale, 0, null);
     return { ok: true, action: "stop", slug: null, rationale, balance };
   }
@@ -363,8 +365,17 @@ export interface PatronStatus {
     rationale: string;
     paidUsd: number;
     tx: string | null;
+    /** How many identical decisions in a row this entry stands for. */
+    repeats: number;
+    /** When the first of those repeats happened. */
+    since: string;
   }[];
 }
+
+// Decisions shown on /impact. Older rows are read too so a run of identical
+// ones (an empty wallet saying "stop" every cycle) collapses into one line.
+const DECISIONS_SHOWN = 8;
+const DECISIONS_READ = 60;
 
 /** Public status: who the patron is, what it holds, and its recent decisions. */
 export async function getPatronStatus(): Promise<PatronStatus> {
@@ -376,31 +387,55 @@ export async function getPatronStatus(): Promise<PatronStatus> {
       .select("created_at, raw")
       .eq("endpoint", DECISION_ENDPOINT)
       .order("created_at", { ascending: false })
-      .limit(8),
+      .limit(DECISIONS_READ),
     address ? patronBalance(address).catch(() => 0) : Promise.resolve(0),
   ]);
   const rows = paid.data ?? [];
+
+  const collapsed: PatronStatus["decisions"] = [];
+  for (const d of decisions.data ?? []) {
+    const raw = (d.raw ?? {}) as {
+      action?: string;
+      slug?: string | null;
+      rationale?: string;
+      paidUsd?: number;
+      tx?: string | null;
+    };
+    const entry = {
+      at: d.created_at as string,
+      action: raw.action ?? "skip",
+      slug: raw.slug ?? null,
+      // Same clean-up new LLM rationales already get when recorded; older rows
+      // and the old canned stop line predate it.
+      rationale: plainText(raw.rationale ?? ""),
+      paidUsd: raw.paidUsd ?? 0,
+      tx: raw.tx ?? null,
+      repeats: 1,
+      since: d.created_at as string,
+    };
+    const prev = collapsed[collapsed.length - 1];
+    // Rows arrive newest first. A payment is its own event and never merges;
+    // the same non-paying decision again just extends the run backwards.
+    if (
+      prev &&
+      entry.action !== "watch" &&
+      prev.action === entry.action &&
+      prev.slug === entry.slug &&
+      prev.rationale === entry.rationale
+    ) {
+      prev.repeats += 1;
+      prev.since = entry.at;
+      continue;
+    }
+    if (collapsed.length === DECISIONS_SHOWN) break;
+    collapsed.push(entry);
+  }
+
   return {
     address,
     balance,
     totalPaid: rows.reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0),
     paymentCount: rows.length,
-    decisions: (decisions.data ?? []).map((d) => {
-      const raw = (d.raw ?? {}) as {
-        action?: string;
-        slug?: string | null;
-        rationale?: string;
-        paidUsd?: number;
-        tx?: string | null;
-      };
-      return {
-        at: d.created_at as string,
-        action: raw.action ?? "skip",
-        slug: raw.slug ?? null,
-        rationale: raw.rationale ?? "",
-        paidUsd: raw.paidUsd ?? 0,
-        tx: raw.tx ?? null,
-      };
-    }),
+    decisions: collapsed,
   };
 }

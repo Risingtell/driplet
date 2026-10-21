@@ -315,12 +315,12 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         // (the bare Vercel alias, localhost) every Circle call 401s with an empty
         // body, which surfaces as a raw JSON-parse error. Say something useful.
         else if (typeof window !== "undefined" && window.location.hostname !== PASSKEY_HOST)
-          friendly = `Face ID only works on ${PASSKEY_HOST} — open this stream there, or pay with email below.`;
+          friendly = `Face ID only works on ${PASSKEY_HOST}. Open this stream there, or pay with email below.`;
         else if (/entity config|not found in the system/i.test(msg))
           friendly = "Face ID sign-in isn't available right now. Use your own wallet instead.";
         else if (/timed out|timeout/i.test(msg))
           friendly =
-            "Circle's gasless network is taking longer than usual to confirm this payment. Your wallet and funds are safe — try again in a minute, or connect an existing wallet below to pay directly instead.";
+            "Circle's gasless network is taking longer than usual to confirm this payment. Your wallet and funds are safe. Try again in a minute, or connect an existing wallet below to pay directly instead.";
         setOwnErr(friendly);
       } finally {
         setPkBusy(false);
@@ -424,7 +424,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         const { error } = await supabase.auth.verifyOtp({ email: emailInput, token: code, type: "email" });
-        if (error) throw new Error("That code didn't work. It may have expired — request a new one.");
+        if (error) throw new Error("That code didn't work. It may have expired, so request a new one.");
         setEmailStep("ready");
         setEmailBusy(false);
         await payWithEmailWallet(SESSION_USD);
@@ -678,7 +678,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
     streaming: "Paying the creator, live",
     retrying: "Reconnecting…",
     waiting: "Waiting for the host, not charging yet",
-    preview: "Free preview ended — connect to keep watching",
+    preview: "Free preview ended. Connect to keep watching",
   };
 
   // The email sign-in form (request code → confirm code). Primary when Face ID
@@ -739,7 +739,13 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
         {/* Live streams show the host's real camera (LiveKit); recorded streams
             autoplay the video file (Watch resumes + pays, Stop pauses it). */}
         {stream.isLive ? (
-          <LiveVideo slug={stream.slug} onLiveChange={setHostLive} muted={muted} active={playing} />
+          <LiveVideo
+            slug={stream.slug}
+            onLiveChange={setHostLive}
+            muted={muted}
+            active={playing}
+            playButton={!watching && !previewEnded}
+          />
         ) : (
           <video
             ref={videoRef}
@@ -821,10 +827,16 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 p-3 text-xs text-white/70">
-          <Radio className="size-3.5 text-primary" />
-          {stream.creator} · {stream.location}
-        </div>
+        {/* On a live stream the player shows its own status line ("Waiting for
+            the host…") until the picture is flowing, and on a phone there isn't
+            room for that, the play button and this caption at once. The creator
+            is named right above the player anyway, so the caption waits. */}
+        {(!stream.isLive || (hostLive && playing)) && (
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 p-3 text-xs text-white/70">
+            <Radio className="size-3.5 text-primary" />
+            {stream.creator} · {stream.location}
+          </div>
+        )}
 
         {!watching && !previewEnded && (
           <button
@@ -844,7 +856,7 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
             <div className="w-full max-w-xs">
               <p className="text-sm font-semibold text-white">Your free preview ended</p>
               <p className="mt-1 text-xs text-white/70">
-                Keep watching {stream.creator} from your own wallet — it takes seconds and the gas
+                Keep watching {stream.creator} from your own wallet. It takes seconds and the gas
                 is on us.
               </p>
               <div className="mt-3 flex flex-col gap-2">
@@ -982,14 +994,14 @@ export function WatchMeter({ stream, isOwner = false }: { stream: Stream; isOwne
                 }
                 disabled={pkBusy || emailBusy}
               >
-                {(pkNeedsFunds ? pkBusy : emailBusy) ? "Checking…" : "I've funded it — continue"}
+                {(pkNeedsFunds ? pkBusy : emailBusy) ? "Checking…" : "I've funded it, continue"}
               </Button>
             </div>
           ) : (
             <div>
               <p className="text-sm font-medium text-foreground">Watch from your own wallet</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Gas is on us — no app, no seed phrase, no extension. You&apos;re on the free demo
+                Gas is on us. No app, no seed phrase, no extension. You&apos;re on the free demo
                 wallet until you connect.
               </p>
 

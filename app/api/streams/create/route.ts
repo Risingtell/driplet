@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
   if (!isAddress(body.hostAddress)) {
     return NextResponse.json(
-      { error: "Connect a wallet — a valid host payout address is required" },
+      { error: "Connect a wallet. A valid host payout address is required." },
       { status: 400 },
     );
   }

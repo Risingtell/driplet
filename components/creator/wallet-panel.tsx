@@ -66,7 +66,7 @@ export function WalletPanel({ address, ...initial }: { address: string } & Money
 
       <div className="glass drip-glow rounded-2xl p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-          <Wallet className="size-4" /> Your earnings
+          <Wallet className="size-4" /> Earnings balance
         </div>
         <div className="mt-2 flex items-end gap-3">
           <div>

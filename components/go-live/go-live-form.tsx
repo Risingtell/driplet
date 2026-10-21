@@ -7,7 +7,7 @@ import { Check, Copy, Film, Radio, UploadCloud, Video, Wallet } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { connectArcWallet, shortAddress } from "@/lib/arc-chain";
 import { uploadToWalrus, WALRUS_MAX_BYTES } from "@/lib/walrus";
-import { getWalletInfo } from "@/app/creator/actions";
+import { getCreatorAddress } from "@/app/creator/actions";
 import { ARC, arcTxUrl } from "@/lib/arc-network";
 
 /** The Go Live form (camera or video). Lives inside the Creator Studio layout. */
@@ -36,7 +36,7 @@ export function GoLiveForm() {
   const [uploadedName, setUploadedName] = useState<string | null>(null);
 
   useEffect(() => {
-    getWalletInfo().then((info) => {
+    getCreatorAddress().then((info) => {
       if (info.address) {
         setHost(info.address);
         setCreatorWallet(info.address);
@@ -311,7 +311,7 @@ export function GoLiveForm() {
         <p className="text-xs text-muted-foreground">
           Split: 70% you · 20% co-host · 10% AI co-host (90/10 if no co-host). The AI co-host does
           real work and is paid into its own wallet too. You and your co-host&apos;s shares can be
-          changed any time from the studio — the AI co-host&apos;s is fixed.
+          changed any time from the studio. The AI co-host&apos;s share is fixed.
         </p>
 
         {error && <p className="text-sm text-amber-500">{error}</p>}

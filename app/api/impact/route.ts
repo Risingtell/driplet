@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { streams as demoStreams } from "@/lib/streams";
+import { getRefunded } from "@/lib/viewer-credit";
 
+// Next wraps the global fetch for caching. This endpoint must read the database
+// live every time (a count that came back empty on a fresh server's first call
+// was published as 0), so every request from this client opts out of that.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) } },
 );
 
 const AGENT_ENDPOINT = "/agents/captions";
@@ -25,27 +31,62 @@ const INFRA_WALLETS = new Set(
 );
 const isWallet = (a: string) => /^0x[0-9a-f]{40}$/.test(a);
 
+// Viewer prepays: a lump from the viewer's own wallet (own wallet, Face ID or
+// email onboarding) that they then watch down a second at a time.
+const PREPAY_FILTER = "endpoint.like./own/%,endpoint.like./passkey/%,endpoint.like./email/%";
+
+type Row = { endpoint: string; amount_usdc: string | number | null; payer?: string | null };
+
+/** Every matching row, paging past the 1000-row REST limit. */
+async function allRows(
+  client: SupabaseClient,
+  build: (from: number, to: number) => PromiseLike<{ data: Row[] | null; error: { message: string } | null }>,
+): Promise<{ rows: Row[]; error: string | null }> {
+  const rows: Row[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await build(from, from + 999);
+    if (error) return { rows, error: error.message };
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) return { rows, error: null };
+  }
+}
+
+const sum = (rows: Row[]) => rows.reduce((s, r) => s + Number(r.amount_usdc ?? 0), 0);
+
+/** The stream slug inside a payment endpoint, if it names one. */
+function slugOf(endpoint: string): string | null {
+  const parts = endpoint.split("/");
+  if (parts[1] === "payout") return parts.length === 5 ? parts[3] : (parts[2] ?? null);
+  if (["watch", "own", "passkey", "email", "patron"].includes(parts[1])) return parts[2] ?? null;
+  return null;
+}
+
 /**
- * Public, real-time proof-of-impact feed. Aggregates every settled per-second
- * payment across all streams plus the autonomous agent payments, and returns
- * the most recent settlements with their Circle Gateway settlement ids — so
- * anyone (judges included) can open /impact and watch real USDC settle on Arc
- * live, not take our word for a counter.
+ * Public, real-time proof-of-impact feed, and the numbers on /impact.
+ *
+ * On mainnet most viewers prepay a small lump from their own wallet and watch
+ * it down, so the money story is: prepaid by viewers -> paid out to creators
+ * for the seconds actually watched -> anything unwatched returned to the
+ * viewer. The per-second demo drips (/watch/...) are still counted, and the
+ * original fields stay exactly as they were, because `npm run verify:impact`
+ * re-derives them independently from the database.
  */
 export async function GET() {
   // Exact counts (uncapped past the 1000-row REST page limit): every per-second
   // watch payment is the same fixed price across all streams, so total =
   // count x price. Counting by the /watch/ endpoint prefix includes every
   // creator-created stream automatically.
-  const [watch, agent, recent, wallets, streams] = await Promise.all([
+  const [watch, agent, recent, prepays, streams, payouts, settled, refunded] = await Promise.all([
     supabase
       .from("payment_events")
-      .select("id", { count: "exact", head: true })
-      .like("endpoint", "/watch/%"),
+      .select("id", { count: "exact" })
+      .like("endpoint", "/watch/%")
+      .limit(1),
     supabase
       .from("payment_events")
-      .select("id", { count: "exact", head: true })
-      .eq("endpoint", AGENT_ENDPOINT),
+      .select("id", { count: "exact" })
+      .eq("endpoint", AGENT_ENDPOINT)
+      .limit(1),
     supabase
       .from("payment_events")
       .select("id, created_at, endpoint, amount_usdc, network, gateway_tx")
@@ -57,23 +98,58 @@ export async function GET() {
       .not("endpoint", "like", "/agents/patron/%")
       .order("created_at", { ascending: false })
       .limit(12),
-    // Distinct wallets that paid from their OWN wallet (own-pay, Face ID, or
-    // email onboarding), i.e. real people, not the shared demo wallet.
-    supabase
-      .from("payment_events")
-      .select("payer")
-      .or("endpoint.like./own/%,endpoint.like./passkey/%,endpoint.like./email/%"),
+    // Every viewer prepay. Its payers are the distinct wallets that paid from
+    // their OWN wallet, i.e. real people, not the shared demo wallet.
+    allRows(supabase, (from, to) =>
+      supabase
+        .from("payment_events")
+        .select("endpoint, amount_usdc, payer")
+        .or(PREPAY_FILTER)
+        .order("id")
+        .range(from, to),
+    ),
     // Distinct creators: each stream's payout split names one payee with
     // role "Creator" — dedupe by that address to count real streamers, not
     // stream count (one person can run several streams).
-    supabase.from("streams").select("split"),
+    supabase.from("streams").select("slug, split, rate_per_second"),
+    // What the stream treasuries actually paid their human payees (creators
+    // and co-hosts) for seconds watched, sidecars included.
+    allRows(supabase, (from, to) =>
+      supabase
+        .from("payment_events")
+        .select("endpoint, amount_usdc")
+        .like("endpoint", "/payout/%")
+        .order("id")
+        .range(from, to),
+    ),
+    // Every settled payment, minus bookkeeping rows: per-stream agent markers
+    // mirror an agent payment already counted, and patron decisions move no money.
+    supabase
+      .from("payment_events")
+      .select("id", { count: "exact" })
+      .not("endpoint", "like", "/agents/captions/%")
+      .not("endpoint", "like", "/agents/patron/%")
+      .limit(1),
+    getRefunded(supabase, {}),
   ]);
 
   // Any failed query fails the response: a missing wallets or streams read
   // must not quietly publish 0 users or 0 creators.
-  const err = watch.error ?? agent.error ?? recent.error ?? wallets.error ?? streams.error;
+  const err =
+    watch.error?.message ??
+    agent.error?.message ??
+    recent.error?.message ??
+    prepays.error ??
+    streams.error?.message ??
+    payouts.error ??
+    settled.error?.message ??
+    (refunded === null ? "Could not read viewer refunds." : null) ??
+    // An exact count that comes back empty is a failed read too, not a zero.
+    (watch.count === null || agent.count === null || settled.count === null
+      ? "A payment count came back empty."
+      : null);
   if (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err }, { status: 500 });
   }
 
   const watchCount = watch.count ?? 0;
@@ -83,33 +159,69 @@ export async function GET() {
 
   // Unique real users = distinct paying wallets minus infrastructure wallets.
   const uniqueWallets = new Set(
-    (wallets.data ?? [])
+    prepays.rows
       .map((r) => (r.payer ?? "").toLowerCase())
       .filter((a) => isWallet(a) && !INFRA_WALLETS.has(a)),
   ).size;
 
+  const streamRows = (streams.data ?? []) as {
+    slug: string;
+    split: unknown;
+    rate_per_second: number | string;
+  }[];
   const uniqueCreators = new Set(
-    (streams.data ?? [])
+    streamRows
       .flatMap((r) => (Array.isArray(r.split) ? r.split : []))
       .filter((p: { role?: string }) => p.role === "Creator")
       .map((p: { address?: string }) => (p.address ?? "").toLowerCase())
       .filter((a) => isWallet(a)),
   ).size;
 
-  const feed = (recent.data ?? []).map((r) => ({
-    id: r.id as string,
-    at: r.created_at as string,
-    kind:
-      r.endpoint === AGENT_ENDPOINT
+  // Seconds watched, recovered from the creator's payouts: each one pays the
+  // creator share x seconds x rate for an interval actually watched, so
+  // seconds = amount / (share x rate). Paid-for demo drips are settled the same
+  // way, so this counts every watched second exactly once.
+  const terms = new Map<string, { share: number; rate: number }>();
+  for (const s of demoStreams) {
+    const share = s.split.find((p) => p.role === "Creator")?.share ?? 0;
+    terms.set(s.slug, { share, rate: s.ratePerSecond });
+  }
+  for (const r of streamRows) {
+    const split = Array.isArray(r.split) ? (r.split as { role?: string; share?: number }[]) : [];
+    const share = Number(split.find((p) => p.role === "Creator")?.share ?? 0);
+    terms.set(r.slug, { share, rate: Number(r.rate_per_second) || RATE_PER_SECOND });
+  }
+  let secondsWatched = 0;
+  for (const row of payouts.rows) {
+    if (!row.endpoint.endsWith("/Creator")) continue;
+    const t = terms.get(slugOf(row.endpoint) ?? "");
+    if (!t || !(t.share > 0) || !(t.rate > 0)) continue;
+    secondsWatched += Number(row.amount_usdc ?? 0) / (t.share * t.rate);
+  }
+
+  const feed = (recent.data ?? []).map((r) => {
+    const endpoint = r.endpoint as string;
+    const kind =
+      endpoint === AGENT_ENDPOINT
         ? "agent"
-        : (r.endpoint as string).startsWith("/patron/")
+        : endpoint.startsWith("/patron/")
           ? "patron"
-          : "stream",
-    endpoint: r.endpoint as string,
-    amount: r.amount_usdc as string,
-    network: r.network as string,
-    settlement: (r.gateway_tx as string | null) ?? null,
-  }));
+          : endpoint.startsWith("/payout/")
+            ? "payout"
+            : /^\/(own|passkey|email)\//.test(endpoint)
+              ? "prepay"
+              : "stream";
+    return {
+      id: r.id as string,
+      at: r.created_at as string,
+      kind,
+      endpoint,
+      slug: slugOf(endpoint),
+      amount: r.amount_usdc as string,
+      network: r.network as string,
+      settlement: (r.gateway_tx as string | null) ?? null,
+    };
+  });
 
   return NextResponse.json(
     {
@@ -120,6 +232,13 @@ export async function GET() {
       agentPaid,
       uniqueWallets,
       uniqueCreators,
+      prepaidUsd: sum(prepays.rows),
+      prepayCount: prepays.rows.length,
+      paidToCreatorsUsd: sum(payouts.rows),
+      payoutCount: payouts.rows.length,
+      minutesWatched: secondsWatched / 60,
+      settledCount: settled.count ?? 0,
+      refundedUsd: refunded,
       feed,
       updatedAt: new Date().toISOString(),
     },

@@ -59,6 +59,12 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
     };
   }, [stream.slug]);
 
+  // Same rule as /api/watch/[slug]/agent-pay, so the ledger never promises a
+  // payment the agent will refuse to make.
+  const agentEarned = data.earned ?? 0;
+  const agentCap = Math.max(0.005, agentEarned * 0.1);
+  const agentCanPay = agentEarned > 0 && data.agentPaid + 0.005 <= agentCap;
+
   return (
     <div className="glass mt-5 rounded-2xl p-5 sm:p-6">
       <div className="flex items-center justify-between">
@@ -94,7 +100,8 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
           <span className="tabular font-mono text-foreground/80">
             ${(data.held ?? 0).toFixed(4)}
           </span>{" "}
-          of prepaid viewer credit — split as it&apos;s watched, not before.
+          of viewers&apos; prepaid credit. It is paid out only as it&apos;s watched, and anything
+          not watched goes back to the viewer.
         </p>
       )}
 
@@ -112,19 +119,23 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
       {/* payees */}
       <ul className="mt-4 space-y-3">
         {data.payees.map((p, i) => (
-          <li key={p.name} className="flex items-center justify-between gap-3">
-            <span className="flex min-w-0 items-center gap-2.5">
+          <li key={p.name} className="flex items-start justify-between gap-3">
+            {/* Name on its own line, role and address under it, so a phone shows
+                all of it instead of cutting the role off mid-word. */}
+            <span className="flex min-w-0 items-start gap-2.5">
               <span
-                className={`size-2.5 shrink-0 rounded-full ${roleColor[i % roleColor.length]}`}
+                className={`mt-1.5 size-2.5 shrink-0 rounded-full ${roleColor[i % roleColor.length]}`}
               />
-              <span className="shrink-0 text-sm font-medium">{p.name}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {p.role} · {Math.round(p.share * 100)}%
-                {p.address ? (
-                  <span className="ml-1 font-mono">
-                    → {p.address.slice(0, 6)}…{p.address.slice(-4)}
-                  </span>
-                ) : null}
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{p.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {p.role} · {Math.round(p.share * 100)}%
+                  {p.address ? (
+                    <span className="ml-1 font-mono">
+                      → {p.address.slice(0, 6)}…{p.address.slice(-4)}
+                    </span>
+                  ) : null}
+                </span>
               </span>
             </span>
             <span className="shrink-0 text-right">
@@ -143,22 +154,26 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
 
       {/* autonomous agent outflow */}
       <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
-        <div className="flex items-center justify-between gap-3">
-          <span className="flex min-w-0 items-center gap-2 text-sm">
-            <span className="size-2 shrink-0 rounded-full bg-primary animate-live" />
-            <span className="truncate font-medium">Autonomously paid the AI co-host</span>
+        <div className="flex items-start justify-between gap-3">
+          <span className="flex min-w-0 items-start gap-2 text-sm">
+            <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary animate-live" />
+            <span className="font-medium">Autonomously paid the AI co-host</span>
           </span>
           <span className="tabular shrink-0 font-mono text-sm">
             ${data.agentPaid.toFixed(4)}
             <span className="ml-1.5 text-muted-foreground">{data.agentCount}×</span>
           </span>
         </div>
-        {/* the agent's live budget ledger — its spending decision, in numbers */}
+        {/* The agent's live budget ledger, its spending decision in numbers. It
+            mirrors /agent-pay exactly: the cap is 10% of what the stream has
+            EARNED (watched), never of prepaid cash it merely holds. */}
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          <span className="font-medium text-foreground/80">Agent budget ledger:</span> income $
-          {data.total.toFixed(4)} → agent share cap (10%) $
-          {Math.max(0.005, data.total * 0.1).toFixed(4)} → spent ${data.agentPaid.toFixed(4)} →{" "}
-          {data.agentPaid + 0.005 <= Math.max(0.005, data.total * 0.1) ? (
+          <span className="font-medium text-foreground/80">Agent budget ledger:</span> earned $
+          {agentEarned.toFixed(4)} → agent share cap (10%) ${agentCap.toFixed(4)} → spent $
+          {data.agentPaid.toFixed(4)} →{" "}
+          {agentEarned <= 0 ? (
+            <span className="text-amber-500">nothing earned yet, the agent waits for viewers</span>
+          ) : agentCanPay ? (
             <span className="text-emerald-500">next $0.005 is within budget, the agent will pay itself</span>
           ) : (
             <span className="text-amber-500">
@@ -170,10 +185,11 @@ export function TreasuryPanel({ stream }: { stream: Stream }) {
 
       <p className="mt-4 text-xs text-muted-foreground">
         The stream holds its own balance and splits each payment across its people in real time.
-        Wallet prepays (like a $5 Face ID session) arrive up front and stream out to the payees per
-        second actually watched. The treasury pays the AI co-host it runs only while that stays
-        within the agent&apos;s earned share, and the agent pauses itself when funds run low so the
-        creator is always paid first. Agent-to-agent, no human in the loop.
+        Viewers prepay a small amount when they start watching (usually $0.50). It is paid out to
+        the payees second by second as they actually watch, and whatever they don&apos;t watch goes
+        back to their wallet when they leave. The AI co-host is paid only out of its share of what
+        the stream has earned, and it pauses itself once that share is spent, so the creator is
+        always paid first. Agent-to-agent, no human in the loop.
       </p>
     </div>
   );

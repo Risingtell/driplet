@@ -8,6 +8,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { StudioSidebar } from "@/components/studio/sidebar";
 import { ensureWallet, signOutCreator } from "@/app/creator/actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Studio",
+  description: "Your Driplet studio: go live, see what you've earned and withdraw.",
+};
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
   return (

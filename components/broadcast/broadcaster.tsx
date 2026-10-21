@@ -146,7 +146,7 @@ export function Broadcaster({ slug, title }: { slug: string; title: string }) {
       // button still works wherever the browser does support screen capture.
       if (err?.name === "NotSupportedError" || /getdisplaymedia|not supported|not implemented/i.test(msg)) {
         setError(
-          "Screen sharing isn't available in this browser. Open Driplet in desktop Chrome, Edge, or Safari to share your screen — your camera works fine here.",
+          "Screen sharing isn't available in this browser. Open Driplet in desktop Chrome, Edge, or Safari to share your screen. Your camera works fine here.",
         );
         return;
       }

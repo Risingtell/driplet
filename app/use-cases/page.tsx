@@ -9,6 +9,12 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Use cases",
+  description: "Classes, music, events, gaming and self-hosted streams: who gets paid by the second on Driplet.",
+};
 
 const useCases = [
   {

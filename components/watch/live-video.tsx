@@ -27,6 +27,7 @@ export function LiveVideo({
   onLiveChange,
   muted = false,
   active = false,
+  playButton = false,
 }: {
   slug: string;
   /** Fires true once the host's video is playing, false while waiting/ended. */
@@ -35,6 +36,8 @@ export function LiveVideo({
   muted?: boolean;
   /** The viewer is watching and paying: only then do picture and sound flow. */
   active?: boolean;
+  /** The meter's big play button is showing in the middle of this surface. */
+  playButton?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioWrap = useRef<HTMLDivElement>(null);
@@ -154,6 +157,10 @@ export function LiveVideo({
     };
   }, [slug]);
 
+  // While the meter's big play button sits dead centre on this surface, the
+  // status line moves down below it instead of being covered by it.
+  const statusPos = playButton ? "translate-y-14" : "";
+
   return (
     <>
       <video
@@ -165,7 +172,7 @@ export function LiveVideo({
       <div ref={audioWrap} className="hidden" />
       {state === "live" && !active && (
         <div className="absolute inset-0 grid place-items-center bg-black/80 text-center text-sm text-white/80">
-          <span className="flex items-center gap-2">
+          <span className={`flex items-center gap-2 ${statusPos}`}>
             <Pause className="size-4 text-primary" /> The host is live. Press Watch to tune in.
           </span>
         </div>
@@ -173,16 +180,18 @@ export function LiveVideo({
       {state !== "live" && (
         <div className="absolute inset-0 grid place-items-center bg-black/70 text-center text-sm text-white/80">
           {state === "connecting" && (
-            <span className="flex items-center gap-2">
+            <span className={`flex items-center gap-2 ${statusPos}`}>
               <Loader2 className="size-4 animate-spin" /> Connecting to the live stream…
             </span>
           )}
           {state === "waiting" && (
-            <span className="flex items-center gap-2">
+            <span className={`flex items-center gap-2 ${statusPos}`}>
               <Radio className="size-4 text-primary" /> Waiting for the host to go live…
             </span>
           )}
-          {state === "error" && <span>Live video isn&apos;t available right now.</span>}
+          {state === "error" && (
+            <span className={statusPos}>Live video isn&apos;t available right now.</span>
+          )}
         </div>
       )}
     </>

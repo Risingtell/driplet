@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Coins, Hash, Plug, Webhook } from "lucide-react";
-import { Logo } from "@/components/brand/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { CircleCheck, Coins, Hash, Plug, Webhook } from "lucide-react";
+import { SiteHeader } from "@/components/site-header";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { BackToTop } from "@/components/back-to-top";
 
 interface SidecarStats {
@@ -38,19 +38,30 @@ function useSidecarStats(endpoint: string): SidecarStats | null {
 }
 
 function StatsRow({ stats }: { stats: SidecarStats | null }) {
+  // Two cards reading $0.0000 and 0 look broken rather than new, so a sidecar
+  // with no mainnet traffic yet says that plainly instead.
+  if (stats && stats.settlementCount === 0) {
+    return (
+      <p className="flex items-start gap-2 rounded-2xl border border-border/60 p-4 text-sm text-muted-foreground">
+        <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+        Live and ready on mainnet. Nothing has settled through it on mainnet yet; it was proven end
+        to end against a real server on testnet.
+      </p>
+    );
+  }
   return (
     <section className="grid grid-cols-2 gap-3">
       <div className="glass rounded-2xl border border-border/60 p-5">
         <Coins className="h-5 w-5 text-muted-foreground" />
         <div className="mt-3 text-2xl font-bold tabular-nums">
-          {stats ? `$${stats.totalSettled.toFixed(4)}` : "—"}
+          {stats ? `$${stats.totalSettled.toFixed(4)}` : "…"}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">Settled via this sidecar</div>
       </div>
       <div className="glass rounded-2xl border border-border/60 p-5">
         <Hash className="h-5 w-5 text-muted-foreground" />
         <div className="mt-3 text-2xl font-bold tabular-nums">
-          {stats ? stats.settlementCount.toLocaleString() : "—"}
+          {stats ? stats.settlementCount.toLocaleString() : "…"}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">Sidecar settlements</div>
       </div>
@@ -63,20 +74,10 @@ export default function SidecarPage() {
   const jellyfinStats = useSidecarStats("/api/sidecar/jellyfin");
 
   return (
-    <main className="relative mx-auto flex min-h-screen max-w-3xl flex-col px-5">
-      <header className="flex items-center justify-between py-6">
-        <Logo />
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Home
-          </Link>
-          <ThemeToggle />
-        </div>
-      </header>
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-5">
+      <SiteHeader />
 
+      <div className="mx-auto w-full max-w-3xl">
       <section className="py-8">
         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-4 py-1.5 text-sm font-medium text-emerald-500">
           <Plug className="h-4 w-4" /> The sidecar family
@@ -93,7 +94,7 @@ export default function SidecarPage() {
 
       <section className="glass rounded-2xl border border-border/60 p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Webhook className="h-5 w-5 text-emerald-500" /> Owncast — per-second live
+          <Webhook className="h-5 w-5 text-emerald-500" /> Owncast: per-second live
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Owncast is open-source, self-hosted live streaming. It fires a webhook the moment a
@@ -116,13 +117,13 @@ export default function SidecarPage() {
 
       <section className="glass mt-6 rounded-2xl border border-border/60 p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Webhook className="h-5 w-5 text-emerald-500" /> Jellyfin — per-minute VOD
+          <Webhook className="h-5 w-5 text-emerald-500" /> Jellyfin: per-minute VOD
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Jellyfin is open-source, self-hosted on-demand video. On-demand means a viewer can pause
           or seek, so the sidecar tracks each viewer&apos;s actual <em>playback position</em>{" "}
-          rather than wall-clock time — pausing settles nothing, only the seconds genuinely played
-          forward do.
+          rather than wall-clock time, so pausing settles nothing and only the seconds genuinely
+          played forward are paid.
         </p>
         <p className="mt-3 text-sm text-muted-foreground">
           Install Jellyfin&apos;s community <strong>Webhook</strong> plugin, add a generic
@@ -145,14 +146,17 @@ export default function SidecarPage() {
         </div>
       </section>
 
-      <p className="mb-16 mt-6 text-center text-sm text-muted-foreground">
-        Same settlement core both times — no fork, no proxy in the video path, the operator
-        installs it at the deployment layer. Watch settlements land in real time on the{" "}
+      <p className="mb-6 mt-6 text-center text-sm text-muted-foreground">
+        The same settlement core runs both, with no fork and no proxy in the video path. The
+        operator installs it at the deployment layer. Watch settlements land in real time on the{" "}
         <Link href="/impact" className="text-emerald-500 hover:underline">
           live proof feed
         </Link>
         .
       </p>
+      </div>
+
+      <LandingFooter />
       <BackToTop />
     </main>
   );

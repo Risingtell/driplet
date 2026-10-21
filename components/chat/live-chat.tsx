@@ -28,7 +28,26 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const nameRef = useRef<string>(host ? "Host" : guestName());
+  // A random guest name picked during render came out different on the server
+  // and in the browser, which broke hydration on every watch page. Pick it once
+  // after mount instead, and keep it so a viewer has the same name next visit.
+  const nameRef = useRef<string>(host ? "Host" : "");
+  const [name, setName] = useState(host ? "Host" : "");
+  useEffect(() => {
+    if (host) return;
+    let n = "";
+    try {
+      n = localStorage.getItem("driplet_chat_name") ?? "";
+    } catch {}
+    if (!n) {
+      n = guestName();
+      try {
+        localStorage.setItem("driplet_chat_name", n);
+      } catch {}
+    }
+    nameRef.current = n;
+    setName(n);
+  }, [host]);
   const listRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
 
@@ -64,7 +83,7 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
       await fetch(`/api/chat/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameRef.current, text: t, host }),
+        body: JSON.stringify({ name: nameRef.current || guestName(), text: t, host }),
       });
       await refresh();
     } catch {
@@ -79,7 +98,7 @@ export function LiveChat({ slug, host = false }: { slug: string; host?: boolean 
       <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3 text-sm font-medium">
         <MessageCircle className="size-4 text-primary" /> Live chat
         <span className="ml-auto text-xs font-normal text-muted-foreground">
-          you&apos;re {nameRef.current}
+          {name && <>you&apos;re {name}</>}
         </span>
       </div>
 

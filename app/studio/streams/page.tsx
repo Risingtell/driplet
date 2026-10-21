@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { EditSplitDialog } from "@/components/studio/edit-split-dialog";
 import { naira } from "@/lib/currency";
 import { isHostBroadcasting } from "@/lib/livekit";
-import { getCreatorStreams, getWalletInfo } from "@/app/creator/actions";
+import { getCreatorStreams, getCreatorAddress } from "@/app/creator/actions";
 
 export default async function StreamsPage() {
-  const [streams, info] = await Promise.all([getCreatorStreams(), getWalletInfo()]);
+  const [streams, info] = await Promise.all([getCreatorStreams(), getCreatorAddress()]);
   // A live-type stream is only "LIVE" if the creator is actually broadcasting now.
   const broadcasting = await Promise.all(
     streams.map((s) => (s.isLive ? isHostBroadcasting(s.slug) : Promise.resolve(false))),

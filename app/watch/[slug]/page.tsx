@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Database } from "lucide-react";
@@ -13,6 +14,28 @@ import { WatchMeter } from "@/components/watch/watch-meter";
 import { TreasuryPanel } from "@/components/watch/treasury-panel";
 import { ViewerCount } from "@/components/watch/viewer-count";
 import { LiveChat } from "@/components/chat/live-chat";
+
+// Each stream gets its own tab title and link preview, so a shared link says
+// whose stream it is before anyone taps it.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const stream = await resolveStream(slug);
+  if (!stream) return { title: "Stream not found" };
+  const title = `${stream.title} with ${stream.creator}`;
+  const description = `Watch ${stream.title} on Driplet and pay ${stream.creator} by the second in USDC. Stop watching, stop paying.`;
+  // A page's openGraph/twitter replace the root's rather than merging, so the
+  // site name and the large card are restated here.
+  return {
+    title,
+    description,
+    openGraph: { title, description, siteName: "Driplet", type: "website" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default function WatchPage({ params }: { params: Promise<{ slug: string }> }) {
   return (

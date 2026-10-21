@@ -105,7 +105,7 @@ export function TopBarGatewayControls() {
           <span className="text-muted-foreground font-sans">Gateway:</span>
           <span className="font-mono leading-none translate-y-px inline-flex items-center gap-1">
             {loading && !balances ? <Loader2 size={12} className="animate-spin" /> : null}
-            {balances ? `$${balances.gateway.available} USDC` : loading ? "Loading..." : "—"}
+            {balances ? `$${balances.gateway.available} USDC` : loading ? "Loading..." : "…"}
           </span>
           <GatewayBalanceDialog
             balances={balances}
