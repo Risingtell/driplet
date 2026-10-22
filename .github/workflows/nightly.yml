@@ -1,0 +1,43 @@
+name: Nightly
+
+on:
+  push:
+    branches: [master, mainnet]
+  pull_request:
+  # An advisory filed against a version already shipped is the case a push never
+  # sees, and the testnet database pauses after a quiet week, so both checks also
+  # run on a clock.
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+# Both jobs only read; nothing here should be able to write to the repo.
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Fails the run on a high or critical advisory in anything that ships to
+      # viewers. Dev-only tooling never reaches the site, so it is not gated.
+      - run: npm audit --omit=dev --audit-level=high
+
+  testnet-ledger:
+    # driplet-testnet.vercel.app still serves the Lepton-era ledger live from the
+    # testnet Supabase project, and Supabase pauses a free project after a week
+    # without traffic. The endpoint is no-store, so one read a day reaches the
+    # database and keeps it awake, and the run fails loudly if it paused anyway.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          body=$(curl -sf --max-time 60 "https://driplet-testnet.vercel.app/api/impact")
+          echo "$body" | jq -e '.watchCount > 0' > /dev/null
+          echo "testnet ledger answered: $(echo "$body" | jq -c '{watchCount, uniqueWallets, totalStreamed}')"
