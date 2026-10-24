@@ -27,7 +27,8 @@ jobs:
       - run: npm ci --ignore-scripts
       # Fails the run on a high or critical advisory in anything that ships to
       # viewers. Dev-only tooling never reaches the site, so it is not gated.
-      - run: npm audit --omit=dev --audit-level=high
+      # Advisories with no usable fix are listed, with reasons, in the script.
+      - run: node scripts/audit-gate.mjs --omit=dev
 
   testnet-ledger:
     # driplet-testnet.vercel.app still serves the Lepton-era ledger live from the
